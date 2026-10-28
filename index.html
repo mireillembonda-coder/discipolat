@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Discipolat</title>
+<meta name="description" content="Suivi hebdomadaire des disciples — ICC Centre-Ville">
+<meta name="theme-color" content="#6A2BD9">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+  :root{ --bg:#F6F1FF; --violet:#6A2BD9; --ink:#22113D; --muted:#8676A6; }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#120923; --violet:#A47BFF; --ink:#F5EFFF; --muted:#9A89BE; }
+  }
+  html,body{margin:0;height:100%;background:var(--bg);}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);}
+  #app{position:fixed;inset:0;width:100%;height:100%;border:0;display:block;}
+  #splash{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:var(--bg);transition:opacity .3s;}
+  #splash img{width:96px;height:96px;border-radius:24px;}
+  #splash p{margin:0;color:var(--muted);font-size:.95rem;}
+  #splash.hidden{opacity:0;pointer-events:none;}
+  #offline{display:none;padding:0 24px;text-align:center;}
+  #offline button{margin-top:12px;padding:10px 20px;border:0;border-radius:999px;background:var(--violet);color:#fff;font-size:1rem;font-weight:700;}
+</style>
+</head>
+<body>
+  <iframe id="app" title="Discipolat" allow="clipboard-write"></iframe>
+  <div id="splash">
+    <img src="icons/icon-192.png" alt="">
+    <p id="loading">Chargement…</p>
+    <div id="offline">
+      <p>Pas de connexion internet.<br>Discipolat a besoin d'internet pour lire et enregistrer vos données.</p>
+      <button type="button" onclick="location.reload()">Réessayer</button>
+    </div>
+  </div>
+<script>
+  // Adresse de l'application Apps Script (le lien partagé)
+  var APP_URL = 'https://script.google.com/macros/s/AKfycbyNXdW6FmBmK3yr0oQWpCBfAk-rrKkz0bv8WBuYwyqLxZ48hFlXCiCqFenPh23TQhwQ/exec';
+
+  var splash = document.getElementById('splash');
+  if (!navigator.onLine) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('offline').style.display = 'block';
+  } else {
+    var frame = document.getElementById('app');
+    frame.addEventListener('load', function(){ splash.classList.add('hidden'); });
+    frame.src = APP_URL;
+  }
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js'); });
+  }
+</script>
+</body>
+</html>
