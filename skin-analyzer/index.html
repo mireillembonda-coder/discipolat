@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jireh Skin Analyzer — Diagnostic dermocosmétique personnalisé</title>
+<title>Jireh Skin Analyzer — Dermoconseil</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -14,15 +14,17 @@
   --pink: #E91E8C;
   --pink-dark: #c2185b;
   --pink-soft: #fde8f3;
+  --amber: #8a6100;
+  --amber-soft: #fff4d6;
+  --red: #c62828;
+  --red-soft: #fdecec;
   --dark: #14142B;
   --grey: #6E6E8A;
   --grey-light: #F7F7FC;
   --cream: #FAF7F2;
   --border: #E8E8F0;
-  --white: #ffffff;
   --shadow-sm: 0 2px 8px rgba(20,20,43,0.06);
   --shadow-md: 0 8px 24px rgba(20,20,43,0.08);
-  --shadow-lg: 0 16px 48px rgba(20,20,43,0.12);
 }
 * { margin:0; padding:0; box-sizing:border-box; }
 html { scroll-behavior:smooth; }
@@ -47,76 +49,48 @@ body {
   z-index: 50;
   box-shadow: var(--shadow-md);
 }
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
+.logo { display: flex; align-items: center; gap: 12px; }
 .logo-mark {
-  width: 40px;
-  height: 40px;
+  width: 40px; height: 40px;
   background: linear-gradient(135deg, var(--green), var(--pink));
   border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   color: white;
   font-family: 'Cormorant Garamond', serif;
-  font-weight: 700;
-  font-size: 22px;
-  font-style: italic;
+  font-weight: 700; font-size: 22px; font-style: italic;
 }
 .logo-text { line-height: 1.2; }
 .logo-text .name {
   font-family: 'Cormorant Garamond', serif;
-  font-weight: 600;
-  font-size: 18px;
-  color: white;
-  letter-spacing: 0.5px;
+  font-weight: 600; font-size: 18px; color: white; letter-spacing: 0.5px;
 }
 .logo-text .tag {
-  font-size: 11px;
-  color: var(--green);
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  font-weight: 500;
+  font-size: 11px; color: var(--green);
+  letter-spacing: 1.5px; text-transform: uppercase; font-weight: 500;
 }
 .header-pill {
   background: rgba(233,30,140,0.15);
   border: 1px solid rgba(233,30,140,0.4);
   color: #ff5fb4;
-  font-size: 11px;
-  font-weight: 600;
-  padding: 5px 14px;
-  border-radius: 20px;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
+  font-size: 11px; font-weight: 600;
+  padding: 5px 14px; border-radius: 20px;
+  letter-spacing: 1.5px; text-transform: uppercase;
 }
 
 /* ── PROGRESS ── */
 .progress-bar-wrap {
   background: white;
   border-bottom: 1px solid var(--border);
-  padding: 18px 24px;
-  position: sticky;
-  top: 68px;
-  z-index: 40;
+  padding: 16px 24px;
+  position: sticky; top: 68px; z-index: 40;
 }
 .progress-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-  font-size: 13px;
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 10px; font-size: 13px;
 }
 .progress-step { color: var(--grey); font-weight: 500; }
 .progress-percent { color: var(--pink); font-weight: 700; }
-.progress-track {
-  height: 6px;
-  background: var(--border);
-  border-radius: 10px;
-  overflow: hidden;
-}
+.progress-track { height: 6px; background: var(--border); border-radius: 10px; overflow: hidden; }
 .progress-fill {
   height: 100%;
   background: linear-gradient(90deg, var(--green), var(--pink));
@@ -126,516 +100,344 @@ body {
 }
 
 /* ── MAIN ── */
-main {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 40px 24px 80px;
-}
+main { max-width: 760px; margin: 0 auto; padding: 36px 20px 80px; }
 
-/* ── INTRO SCREEN ── */
-.intro {
-  text-align: center;
-  padding: 24px 0;
-}
-.intro-badge {
+/* ── INTRO ── */
+.intro { text-align: center; padding: 24px 0; }
+.intro-badge, .results-badge {
   display: inline-block;
-  background: var(--pink-soft);
-  color: var(--pink-dark);
-  font-size: 12px;
-  font-weight: 600;
-  padding: 6px 16px;
-  border-radius: 20px;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  margin-bottom: 24px;
+  font-size: 12px; font-weight: 600;
+  padding: 6px 16px; border-radius: 20px;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  margin-bottom: 20px;
 }
+.intro-badge { background: var(--pink-soft); color: var(--pink-dark); }
+.results-badge { background: var(--green-soft); color: var(--green-dark); }
 .intro h1 {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 48px;
-  font-weight: 600;
-  line-height: 1.1;
+  font-size: 48px; font-weight: 600; line-height: 1.1;
   margin-bottom: 16px;
-  color: var(--dark);
 }
-.intro h1 em {
-  font-style: italic;
-  color: var(--pink);
-}
+.intro h1 em, .results-header h2 em { font-style: italic; color: var(--pink); }
 .intro p.lead {
-  font-size: 17px;
-  color: var(--grey);
-  max-width: 520px;
-  margin: 0 auto 36px;
-  line-height: 1.6;
+  font-size: 17px; color: var(--grey);
+  max-width: 540px; margin: 0 auto 36px; line-height: 1.6;
 }
 .intro-features {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 16px;
-  margin-bottom: 40px;
-  text-align: left;
+  gap: 16px; margin-bottom: 40px; text-align: left;
 }
-.feature {
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 20px;
-}
+.feature { background: white; border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
 .feature-icon {
-  width: 36px;
-  height: 36px;
-  background: var(--green-soft);
-  color: var(--green-dark);
+  width: 36px; height: 36px;
+  background: var(--green-soft); color: var(--green-dark);
   border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 12px;
-  font-size: 18px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 12px; font-size: 18px;
 }
-.feature h3 {
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-.feature p {
-  font-size: 13px;
-  color: var(--grey);
-  line-height: 1.4;
-}
+.feature h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.feature p { font-size: 13px; color: var(--grey); line-height: 1.4; }
+.intro-note { margin-top: 20px; font-size: 13px; color: var(--grey); }
+
+/* ── BUTTONS ── */
 .btn-primary {
-  background: var(--dark);
-  color: white;
-  border: none;
-  padding: 18px 44px;
-  border-radius: 100px;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  letter-spacing: 0.5px;
+  background: var(--dark); color: white; border: none;
+  padding: 16px 40px; border-radius: 100px;
+  font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600;
+  cursor: pointer; letter-spacing: 0.5px;
   transition: all 0.3s;
   box-shadow: 0 4px 12px rgba(20,20,43,0.2);
 }
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(20,20,43,0.3);
-  background: var(--pink);
-}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20,20,43,0.3); background: var(--pink); }
 .btn-secondary {
-  background: transparent;
-  color: var(--dark);
+  background: transparent; color: var(--dark);
   border: 1.5px solid var(--border);
-  padding: 14px 28px;
-  border-radius: 100px;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
+  padding: 14px 28px; border-radius: 100px;
+  font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+  cursor: pointer; transition: all 0.2s;
 }
-.btn-secondary:hover {
-  border-color: var(--dark);
-}
-.intro-note {
-  margin-top: 20px;
-  font-size: 13px;
-  color: var(--grey);
-}
+.btn-secondary:hover { border-color: var(--dark); }
 
-/* ── QUESTION SCREEN ── */
-.question-screen {
-  display: none;
-}
-.question-screen.active {
-  display: block;
-  animation: fadeSlide 0.4s ease;
-}
+/* ── FORM STEPS ── */
+.step { animation: fadeSlide 0.4s ease; }
 @keyframes fadeSlide {
   from { opacity: 0; transform: translateX(20px); }
   to { opacity: 1; transform: translateX(0); }
 }
-.question-number {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--pink);
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  margin-bottom: 12px;
+.step-head { margin-bottom: 24px; }
+.step-who {
+  display: inline-block;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 4px 12px; border-radius: 20px; margin-bottom: 10px;
 }
-.question-title {
+.step-who.patiente { background: var(--pink-soft); color: var(--pink-dark); }
+.step-who.pharmacienne { background: var(--green-soft); color: var(--green-dark); }
+.step-title {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 32px;
-  font-weight: 600;
-  line-height: 1.2;
-  margin-bottom: 10px;
-  color: var(--dark);
+  font-size: 34px; font-weight: 600; line-height: 1.15;
 }
-.question-hint {
-  font-size: 14px;
-  color: var(--grey);
-  margin-bottom: 28px;
-}
-.options {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 32px;
-}
-.option {
+.step-intro { font-size: 14px; color: var(--grey); margin-top: 6px; }
+
+.form-card {
   background: white;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 24px;
+}
+.field { margin-bottom: 22px; }
+.field:last-child { margin-bottom: 0; }
+.field-label { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+.field-label .req { color: var(--pink); }
+.field-hint { font-size: 12px; color: var(--grey); margin: -4px 0 8px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
   border: 1.5px solid var(--border);
-  border-radius: 14px;
-  padding: 18px 22px;
+  background: white;
+  color: var(--dark);
+  border-radius: 100px;
+  padding: 8px 15px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
   cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  text-align: left;
+  transition: all 0.15s;
 }
-.option:hover {
-  border-color: var(--pink);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
-}
-.option.selected {
+.chip:hover { border-color: var(--pink); }
+.chip.on {
   border-color: var(--pink);
   background: var(--pink-soft);
+  color: var(--pink-dark);
+  font-weight: 600;
 }
-.option-radio {
-  width: 22px;
-  height: 22px;
-  border: 2px solid var(--border);
-  border-radius: 50%;
-  flex-shrink: 0;
-  margin-top: 2px;
-  position: relative;
-  transition: all 0.2s;
-}
-.option.selected .option-radio {
-  border-color: var(--pink);
-}
-.option.selected .option-radio::after {
-  content: '';
-  position: absolute;
-  inset: 4px;
-  background: var(--pink);
-  border-radius: 50%;
-}
-.option-content { flex: 1; }
-.option-label {
-  font-size: 15px;
-  font-weight: 500;
-  margin-bottom: 2px;
-}
-.option-desc {
-  font-size: 13px;
-  color: var(--grey);
-  line-height: 1.4;
-}
-
-/* Multi-select variant */
-.option.multi .option-radio {
-  border-radius: 6px;
-}
-.option.multi.selected .option-radio::after {
-  content: '✓';
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--pink);
-  color: white;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-/* Text input */
-.text-input {
+.input {
   width: 100%;
-  padding: 16px 18px;
+  padding: 12px 14px;
   border: 1.5px solid var(--border);
-  border-radius: 14px;
+  border-radius: 12px;
   font-family: 'DM Sans', sans-serif;
   font-size: 15px;
   background: white;
-  margin-bottom: 32px;
+  color: var(--dark);
   transition: border-color 0.2s;
 }
-.text-input:focus {
-  outline: none;
-  border-color: var(--pink);
+.input:focus { outline: none; border-color: var(--pink); }
+textarea.input { min-height: 80px; resize: vertical; }
+.input-suffix { display: flex; align-items: center; gap: 8px; }
+.input-suffix .input { max-width: 140px; }
+.input-suffix span { color: var(--grey); font-size: 14px; }
+
+.isac-row {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 12px; padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.isac-row:last-of-type { border-bottom: none; }
+.isac-row .lbl { font-size: 14px; }
+.isac-total {
+  margin-top: 14px; padding: 12px 16px;
+  background: var(--grey-light); border-radius: 12px;
+  font-size: 14px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+}
+.isac-total strong { color: var(--pink-dark); }
+
+.score-row {
+  display: grid;
+  grid-template-columns: 1fr 96px 120px;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.score-row:last-child { border-bottom: none; }
+.score-row .lbl { font-size: 14px; }
+.score-row .input { padding: 9px 10px; text-align: center; }
+.band {
+  font-size: 12px; font-weight: 600;
+  padding: 5px 10px; border-radius: 20px; text-align: center;
+  background: var(--grey-light); color: var(--grey);
+}
+.band.ok { background: var(--green-soft); color: var(--green-dark); }
+.band.watch { background: var(--amber-soft); color: var(--amber); }
+.band.prio { background: var(--pink-soft); color: var(--pink-dark); }
+.hydra-inputs { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.hydra-inputs .input { width: 90px; text-align: center; }
+.note {
+  font-size: 13px; color: var(--grey);
+  background: var(--grey-light);
+  border-radius: 10px; padding: 12px 14px; margin-bottom: 16px;
+  line-height: 1.5;
 }
 
-.nav-buttons {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-}
+.nav-buttons { display: flex; justify-content: space-between; gap: 12px; }
 
-/* ── RESULTS SCREEN ── */
-.results-screen { display: none; }
-.results-screen.active {
-  display: block;
-  animation: fadeSlide 0.5s ease;
-}
-.results-header {
-  text-align: center;
-  margin-bottom: 32px;
-}
-.results-badge {
-  display: inline-block;
-  background: var(--green-soft);
-  color: var(--green-dark);
-  font-size: 12px;
-  font-weight: 600;
-  padding: 6px 16px;
-  border-radius: 20px;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  margin-bottom: 16px;
-}
+/* ── RESULTS ── */
+.results-header { text-align: center; margin-bottom: 28px; }
 .results-header h2 {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 38px;
-  font-weight: 600;
-  line-height: 1.1;
-  margin-bottom: 8px;
+  font-size: 38px; font-weight: 600; line-height: 1.1; margin-bottom: 6px;
 }
-.results-header h2 em {
-  font-style: italic;
-  color: var(--pink);
+.results-header p { color: var(--grey); font-size: 15px; }
+
+.alert {
+  border-radius: 12px; padding: 13px 16px; margin-bottom: 10px;
+  font-size: 14px; line-height: 1.5;
 }
-.results-header p {
-  color: var(--grey);
-  font-size: 15px;
-}
+.alert strong { display: block; margin-bottom: 2px; }
+.alert.red { background: var(--red-soft); border-left: 4px solid var(--red); }
+.alert.orange { background: var(--amber-soft); border-left: 4px solid #e0a000; }
+.alert.info { background: var(--grey-light); border-left: 4px solid var(--grey); }
 
 .diagnostic-card {
   background: linear-gradient(135deg, var(--dark) 0%, #1f1f3d 100%);
   color: white;
   border-radius: 20px;
-  padding: 32px;
-  margin-bottom: 24px;
+  padding: 30px;
+  margin: 18px 0 20px;
   position: relative;
   overflow: hidden;
 }
 .diagnostic-card::before {
   content: '';
-  position: absolute;
-  top: -50%;
-  right: -20%;
-  width: 300px;
-  height: 300px;
+  position: absolute; top: -50%; right: -20%;
+  width: 300px; height: 300px;
   background: radial-gradient(circle, rgba(233,30,140,0.3), transparent 70%);
   pointer-events: none;
 }
 .diag-label {
-  font-size: 12px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--green);
-  margin-bottom: 8px;
-  position: relative;
+  font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--green); margin-bottom: 8px; position: relative;
 }
 .diag-type {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 36px;
-  font-weight: 600;
-  margin-bottom: 12px;
-  position: relative;
+  font-size: 34px; font-weight: 600; margin-bottom: 10px; position: relative;
 }
-.diag-desc {
-  font-size: 15px;
-  line-height: 1.6;
-  opacity: 0.85;
-  position: relative;
-}
+.diag-meta { font-size: 14px; opacity: 0.85; position: relative; line-height: 1.7; }
 
 .section-block {
   background: white;
   border-radius: 16px;
-  padding: 28px;
+  padding: 26px;
   margin-bottom: 16px;
   border: 1px solid var(--border);
 }
 .section-block h3 {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 24px;
-  font-weight: 600;
-  margin-bottom: 18px;
-  color: var(--dark);
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  font-size: 24px; font-weight: 600;
+  margin-bottom: 16px;
+  display: flex; align-items: center; gap: 10px;
 }
 .section-block h3::before {
-  content: '';
-  width: 4px;
-  height: 24px;
-  background: var(--pink);
-  border-radius: 4px;
+  content: ''; width: 4px; height: 24px;
+  background: var(--pink); border-radius: 4px;
 }
+.prio-list { list-style: none; counter-reset: prio; }
+.prio-list li {
+  counter-increment: prio;
+  padding: 10px 0 10px 38px;
+  position: relative;
+  border-bottom: 1px solid var(--border);
+}
+.prio-list li:last-child { border-bottom: none; }
+.prio-list li::before {
+  content: counter(prio);
+  position: absolute; left: 0; top: 10px;
+  width: 26px; height: 26px;
+  background: var(--pink); color: white;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700;
+}
+.prio-list .p-title { font-weight: 600; font-size: 15px; }
+.prio-list .p-src { font-size: 13px; color: var(--grey); }
 
-.routine-block {
-  background: var(--grey-light);
-  border-radius: 12px;
-  padding: 18px;
-  margin-bottom: 12px;
-}
+.mesure-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.mesure-table td { padding: 8px 4px; border-bottom: 1px solid var(--border); }
+.mesure-table tr:last-child td { border-bottom: none; }
+.mesure-table td:nth-child(2) { text-align: right; font-weight: 600; white-space: nowrap; }
+.mesure-table td:nth-child(3) { text-align: right; width: 130px; }
+
+.phase { margin-bottom: 18px; }
+.phase:last-child { margin-bottom: 0; }
+.phase-title { font-weight: 700; font-size: 15px; }
+.phase-sub { font-size: 13px; color: var(--grey); margin-bottom: 10px; }
+.routine-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.routine-block { background: var(--grey-light); border-radius: 12px; padding: 16px; }
 .routine-time {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--pink);
-  margin-bottom: 12px;
+  font-size: 12px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--pink); margin-bottom: 8px;
 }
 .routine-step {
-  display: flex;
-  gap: 12px;
-  padding: 10px 0;
+  display: flex; gap: 10px;
+  padding: 8px 0;
   border-bottom: 1px solid rgba(0,0,0,0.05);
 }
 .routine-step:last-child { border-bottom: none; }
 .step-num {
-  width: 26px;
-  height: 26px;
-  background: var(--dark);
-  color: white;
+  width: 24px; height: 24px;
+  background: var(--dark); color: white;
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  font-weight: 700;
-  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; flex-shrink: 0;
 }
 .step-content { flex: 1; }
-.step-title { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+.step-title { font-weight: 600; font-size: 14px; }
 .step-detail { font-size: 13px; color: var(--grey); line-height: 1.4; }
+.tag-new {
+  display: inline-block;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase;
+  background: var(--green-soft); color: var(--green-dark);
+  padding: 2px 8px; border-radius: 10px; margin-left: 6px;
+  vertical-align: middle;
+}
+.later { font-size: 13px; color: var(--grey); margin-top: 8px; }
 
 .advice-list { list-style: none; }
 .advice-list li {
-  padding: 10px 0;
-  padding-left: 28px;
+  padding: 10px 0 10px 28px;
   position: relative;
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 14px; line-height: 1.5;
   border-bottom: 1px solid var(--border);
 }
 .advice-list li:last-child { border-bottom: none; }
 .advice-list li::before {
   content: '✓';
-  position: absolute;
-  left: 0;
-  top: 10px;
-  width: 20px;
-  height: 20px;
-  background: var(--green-soft);
-  color: var(--green-dark);
+  position: absolute; left: 0; top: 10px;
+  width: 20px; height: 20px;
+  background: var(--green-soft); color: var(--green-dark);
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700;
 }
 
-.cta-consultation {
-  background: linear-gradient(135deg, var(--pink) 0%, var(--pink-dark) 100%);
-  color: white;
-  border-radius: 20px;
-  padding: 32px;
-  text-align: center;
-  margin-bottom: 24px;
-}
-.cta-consultation h3 {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 28px;
-  font-weight: 600;
-  margin-bottom: 8px;
-  color: white;
-  display: block;
-}
-.cta-consultation h3::before { display: none; }
-.cta-consultation p {
-  opacity: 0.95;
-  margin-bottom: 20px;
-  font-size: 15px;
-  line-height: 1.5;
-}
-.cta-buttons {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-.btn-white {
-  background: white;
-  color: var(--pink-dark);
-  border: none;
-  padding: 14px 24px;
-  border-radius: 100px;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform 0.2s;
-  text-decoration: none;
-  display: inline-block;
-}
-.btn-white:hover { transform: translateY(-2px); }
-.btn-outline-white {
-  background: transparent;
-  color: white;
-  border: 1.5px solid white;
-  padding: 14px 24px;
-  border-radius: 100px;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-decoration: none;
-  display: inline-block;
-}
-.btn-outline-white:hover { background: white; color: var(--pink-dark); }
-
-.action-buttons {
-  display: flex;
-  gap: 12px;
-  margin-top: 24px;
-  flex-wrap: wrap;
-}
+.action-buttons { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
 .action-buttons button { flex: 1; min-width: 200px; }
 
 .disclaimer {
-  font-size: 12px;
-  color: var(--grey);
+  font-size: 12px; color: var(--grey);
   text-align: center;
-  margin-top: 24px;
-  padding: 16px;
+  margin-top: 24px; padding: 16px;
   background: var(--grey-light);
-  border-radius: 10px;
-  line-height: 1.5;
+  border-radius: 10px; line-height: 1.5;
 }
 
-footer {
-  text-align: center;
-  padding: 32px 16px;
-  color: var(--grey);
-  font-size: 13px;
-}
+footer { text-align: center; padding: 32px 16px; color: var(--grey); font-size: 13px; }
 
 @media (max-width: 640px) {
   .intro h1 { font-size: 36px; }
-  .question-title { font-size: 26px; }
+  .step-title { font-size: 28px; }
   .results-header h2 { font-size: 30px; }
   .diag-type { font-size: 28px; }
-  .diagnostic-card, .section-block, .cta-consultation { padding: 22px; }
+  .grid2, .routine-cols { grid-template-columns: 1fr; }
+  .score-row { grid-template-columns: 1fr 80px; }
+  .score-row .band { grid-column: 1 / -1; justify-self: start; }
+  .diagnostic-card, .section-block, .form-card { padding: 20px; }
 }
 </style>
 </head>
@@ -649,99 +451,49 @@ footer {
       <div class="tag">Skin Analyzer</div>
     </div>
   </div>
-  <div class="header-pill">Diagnostic</div>
+  <div class="header-pill">Dermoconseil</div>
 </header>
 
 <div class="progress-bar-wrap" id="progressBar" style="display:none">
   <div class="progress-info">
-    <span class="progress-step" id="progressStep">Question 1 sur 10</span>
-    <span class="progress-percent" id="progressPercent">10%</span>
+    <span class="progress-step" id="progressStep"></span>
+    <span class="progress-percent" id="progressPercent"></span>
   </div>
-  <div class="progress-track">
-    <div class="progress-fill" id="progressFill"></div>
-  </div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
 </div>
 
-<main>
+<main id="main">
 
   <!-- INTRO -->
   <section class="intro" id="introScreen">
-    <div class="intro-badge">Diagnostic dermocosmétique</div>
+    <div class="intro-badge">Fiche d'anamnèse dermoconseil</div>
     <h1>Votre peau,<br><em>votre histoire</em>.</h1>
-    <p class="lead">Un questionnaire clinique conçu par votre pharmacienne dermocosmétologue pour identifier votre type de peau et vous proposer une routine adaptée — pensée spécifiquement pour les peaux africaines.</p>
+    <p class="lead">L'anamnèse de la Parapharmacie Jireh, l'examen clinique et les mesures du Skin Analyzer O1-PRO, réunis pour établir un diagnostic dermocosmétique et une routine progressive — pensés pour les peaux africaines.</p>
 
     <div class="intro-features">
       <div class="feature">
-        <div class="feature-icon">🔬</div>
-        <h3>Anamnèse clinique</h3>
-        <p>10 questions précises sur votre peau, votre mode de vie et vos habitudes.</p>
+        <div class="feature-icon">📝</div>
+        <h3>Anamnèse complète</h3>
+        <p>Identification, motif, antécédents, mode de vie et routine actuelle.</p>
       </div>
       <div class="feature">
-        <div class="feature-icon">✨</div>
-        <h3>Routine personnalisée</h3>
-        <p>Étapes matin et soir adaptées à votre profil et phototype.</p>
+        <div class="feature-icon">🔬</div>
+        <h3>Examen + O1-PRO</h3>
+        <p>Examen clinique, score ISAC et mesures de l'appareil croisés entre eux.</p>
       </div>
       <div class="feature">
         <div class="feature-icon">📄</div>
         <h3>Fiche PDF</h3>
-        <p>Votre diagnostic et votre routine à télécharger et conserver.</p>
+        <p>Diagnostic, alertes, routine en 2 phases et suivi, à imprimer ou envoyer.</p>
       </div>
     </div>
 
-    <button class="btn-primary" onclick="startQuiz()">Commencer mon diagnostic</button>
-    <p class="intro-note">⏱ Environ 3 minutes — gratuit et confidentiel</p>
+    <button class="btn-primary" onclick="startForm()">Nouvelle fiche</button>
+    <p class="intro-note">⏱ Environ 10 minutes · Les données restent sur cette tablette, rien n'est envoyé.</p>
   </section>
 
-  <!-- QUESTIONS (injectées en JS) -->
-  <section id="questionContainer"></section>
-
-  <!-- RESULTS -->
-  <section class="results-screen" id="resultsScreen">
-    <div class="results-header">
-      <div class="results-badge">Votre diagnostic</div>
-      <h2>Votre profil <em>cutané</em></h2>
-      <p>Établi selon vos réponses au questionnaire clinique</p>
-    </div>
-
-    <div class="diagnostic-card">
-      <div class="diag-label">Type de peau identifié</div>
-      <div class="diag-type" id="diagType">—</div>
-      <div class="diag-desc" id="diagDesc">—</div>
-    </div>
-
-    <div class="section-block">
-      <h3>Routine matin recommandée</h3>
-      <div class="routine-block" id="routineMatin"></div>
-    </div>
-
-    <div class="section-block">
-      <h3>Routine soir recommandée</h3>
-      <div class="routine-block" id="routineSoir"></div>
-    </div>
-
-    <div class="section-block">
-      <h3>Conseils mode de vie</h3>
-      <ul class="advice-list" id="adviceList"></ul>
-    </div>
-
-    <div class="cta-consultation">
-      <h3>Allons plus loin ensemble</h3>
-      <p>Pour un accompagnement personnalisé adapté à votre cas, prenez rendez-vous avec votre pharmacienne dermocosmétologue à Parapharmacie Jireh, Soa.</p>
-      <div class="cta-buttons">
-        <a class="btn-white" href="https://wa.me/237696123374?text=Bonjour,%20je%20souhaite%20prendre%20rendez-vous%20pour%20une%20consultation%20dermocosmétique" target="_blank">📱 WhatsApp</a>
-        <a class="btn-outline-white" href="tel:+237696123374">📞 Appeler</a>
-      </div>
-    </div>
-
-    <div class="action-buttons">
-      <button class="btn-primary" onclick="downloadPDF()">📄 Télécharger ma fiche PDF</button>
-      <button class="btn-secondary" onclick="restart()">↻ Refaire le diagnostic</button>
-    </div>
-
-    <p class="disclaimer">
-      ⚠ Ce diagnostic est un outil d'orientation, non un acte médical. En cas de problème cutané persistant, consultez un professionnel de santé.
-    </p>
-  </section>
+  <section id="stepContainer"></section>
+  <section id="resultsScreen"></section>
 
 </main>
 
@@ -751,526 +503,849 @@ footer {
 
 <script>
 // ═══════════════════════════════════════════════════════════
-// QUESTIONNAIRE CLINIQUE
+// FICHE D'ANAMNÈSE — PARAPHARMACIE JIREH
 // ═══════════════════════════════════════════════════════════
-const questions = [
+const SEBUM_OPTS = [
+  ['tres_insuff', "Très insuffisant"],
+  ['leg_insuff',  "Légèrement insuffisant"],
+  ['leg_abond',   "Légèrement abondant"],
+  ['tres_abond',  "Très abondant"],
+];
+const SCORES = [
+  ['sc_pores',        "Pores"],
+  ['sc_points_noirs', "Points noirs"],
+  ['sc_porphyrines',  "Porphyrines"],
+  ['sc_acne',         "Acné"],
+  ['sc_acne_uv',      "Acné UV"],
+  ['sc_sensibilite',  "Sensibilité"],
+  ['sc_taches',       "Taches"],
+  ['sc_pigmentation', "Pigmentation"],
+  ['sc_rides',        "Rides"],
+  ['sc_texture',      "Texture"],
+];
+const ISAC = [
+  ['isac_rougeur',    "Rougeur réactionnelle"],
+  ['isac_prurit',     "Prurit / picotements"],
+  ['isac_secheresse', "Sécheresse / tiraillement"],
+  ['isac_reactivite', "Réactivité cosmétique"],
+];
+
+const STEPS = [
   {
-    id: 'sensation',
-    title: "Quelle est la sensation dominante de votre peau au quotidien ?",
-    hint: "Choisissez celle qui revient le plus souvent",
-    type: 'single',
-    options: [
-      { value: 'grasse',  label: "Brillante, luisante",     desc: "Surtout sur le front, le nez et le menton" },
-      { value: 'seche',   label: "Tiraillements, inconfort", desc: "Sensation de peau qui « tire » après lavage" },
-      { value: 'mixte',   label: "Mixte",                    desc: "Zone T grasse, joues normales ou sèches" },
-      { value: 'normale', label: "Équilibrée, confortable",  desc: "Ni grasse ni sèche, peu de désagréments" },
+    titre: "Identification", qui: 'patiente',
+    fields: [
+      { id: 'nom', type: 'text', label: "Nom & prénom", required: true },
+      { id: 'sexe', type: 'single', label: "Sexe", options: [['F', "Femme"], ['M', "Homme"]] },
+      { id: 'age', type: 'number', label: "Âge", min: 5, max: 110, suffix: "ans" },
+      { id: 'phototype', type: 'single', label: "Phototype (Fitzpatrick)", options: [['III', "III"], ['IV', "IV"], ['V', "V"], ['VI', "VI"]] },
+      { id: 'profession', type: 'text', label: "Profession" },
+      { id: 'ville', type: 'text', label: "Ville / quartier" },
+      { id: 'contact', type: 'text', label: "Contact" },
+      { id: 'email', type: 'text', label: "Email" },
+      { id: 'grossesse', type: 'single', label: "Grossesse / allaitement",
+        hint: "Certains actifs sont contre-indiqués",
+        options: [['non', "Non"], ['enceinte', "Enceinte"], ['allaitante', "Allaitante"], ['projet', "Projet de grossesse"]],
+        showIf: a => a.sexe === 'F' },
     ]
   },
   {
-    id: 'pores',
-    title: "Comment décririez-vous vos pores ?",
-    type: 'single',
-    options: [
-      { value: 'dilates_global', label: "Dilatés sur tout le visage" },
-      { value: 'dilates_zoneT',  label: "Dilatés surtout sur la zone T (front, nez, menton)" },
-      { value: 'fins',           label: "Fins et peu visibles" },
-      { value: 'sais_pas',       label: "Je ne saurais pas dire" },
+    titre: "Motif de consultation", qui: 'patiente',
+    fields: [
+      { id: 'motif_cat', type: 'multi', label: "Préoccupations", options: [
+        ['taches', "Taches / hyperpigmentation"], ['acne', "Acné, boutons"],
+        ['brillance', "Brillance, pores dilatés"], ['secheresse', "Sécheresse, tiraillements"],
+        ['sensibilite', "Sensibilité, picotements"], ['rides', "Rides, relâchement"],
+        ['eclat', "Teint terne, manque d'éclat"] ] },
+      { id: 'motif', type: 'textarea', label: "Préoccupation principale exprimée par le client" },
+      { id: 'duree', type: 'single', label: "Durée du problème", options: [
+        ['moins_1m', "Moins d'1 mois"], ['1_6m', "1 à 6 mois"], ['6_12m', "6 mois à 1 an"], ['plus_1a', "Plus d'1 an"] ] },
     ]
   },
   {
-    id: 'sensibilite',
-    title: "Votre peau réagit-elle facilement ?",
-    hint: "Rougeurs, picotements, tiraillements après un produit ou une exposition",
-    type: 'single',
-    options: [
-      { value: 'tres_reactive', label: "Très souvent",  desc: "Plusieurs produits courants la font réagir" },
-      { value: 'parfois',       label: "Parfois",       desc: "Surtout après un changement de produit" },
-      { value: 'rarement',      label: "Rarement",      desc: "Je tolère bien la plupart des produits" },
+    titre: "Antécédents personnels & familiaux", qui: 'patiente',
+    fields: [
+      { id: 'atcd', type: 'multi', label: "Antécédents cutanés personnels", options: [
+        ['acne', "Acné"], ['eczema', "Eczéma / dermatite"], ['psoriasis', "Psoriasis"],
+        ['hyperpigmentation', "Hyperpigmentation"], ['rosacee', "Rosacée"], ['keratose', "Kératose pilaire"],
+        ['cheloides', "Cicatrices chéloïdes"], ['allergie', "Allergie cosmétique"], ['sensibilite', "Sensibilité réactive"],
+        ['xerose', "Xérose chronique"], ['melasma', "Mélasma"], ['autre', "Autre"] ] },
+      { id: 'atcd_autre', type: 'text', label: "Autre antécédent", showIf: a => has(a.atcd, 'autre') },
+      { id: 'familial', type: 'single', label: "Antécédents familiaux (même problème ?)", options: [['non', "Non"], ['oui', "Oui"]] },
+      { id: 'familial_detail', type: 'text', label: "Préciser", showIf: a => a.familial === 'oui' },
+      { id: 'maladies', type: 'multi', label: "Maladies systémiques / traitement médical en cours", exclusive: 'aucune', options: [
+        ['aucune', "Aucune"], ['diabete', "Diabète"], ['hta', "HTA"], ['hypothyroidie', "Hypothyroïdie"], ['autre', "Autre"] ] },
+      { id: 'maladies_autre', type: 'text', label: "Autre maladie", showIf: a => has(a.maladies, 'autre') },
+      { id: 'medicaments', type: 'text', label: "Médicaments actuels", placeholder: "Laisser vide si aucun" },
+      { id: 'contraceptifs', type: 'text', label: "Contraceptifs", placeholder: "Laisser vide si aucun", showIf: a => a.sexe !== 'M' },
     ]
   },
   {
-    id: 'preoccupation',
-    title: "Quelle est votre préoccupation principale ?",
-    hint: "Vous pouvez sélectionner plusieurs réponses",
-    type: 'multi',
-    options: [
-      { value: 'hpi',         label: "Taches / hyperpigmentation",     desc: "Marques sombres après bouton, blessure ou soleil" },
-      { value: 'acne',        label: "Acné, boutons",                  desc: "Imperfections fréquentes ou kystiques" },
-      { value: 'rides',       label: "Rides, perte de fermeté",        desc: "Premiers signes de l'âge" },
-      { value: 'sensibilite', label: "Sensibilité, rougeurs",          desc: "Peau qui réagit, picote, tire" },
-      { value: 'eclat',       label: "Manque d'éclat, teint terne" },
-      { value: 'deshydratation', label: "Déshydratation" },
+    titre: "Mode de vie & environnement", qui: 'patiente',
+    fields: [
+      { id: 'alimentation', type: 'single', label: "Alimentation", options: [
+        ['equilibree', "Équilibrée"], ['sucres', "Riche en sucres"], ['graisses', "Riche en graisses"], ['vegetarienne', "Végétarienne / vegan"] ] },
+      { id: 'eau', type: 'single', label: "Hydratation (eau par jour)", options: [
+        ['moins_1', "Moins d'1 litre"], ['1_1.5', "1 à 1,5 litre"], ['1.5_2', "1,5 à 2 litres"], ['plus_2', "Plus de 2 litres"] ] },
+      { id: 'sommeil', type: 'single', label: "Sommeil", options: [
+        ['moins_6', "Moins de 6 h"], ['6_7', "6 à 7 h"], ['7_8', "7 à 8 h"], ['plus_8', "Plus de 8 h"] ] },
+      { id: 'stress', type: 'single', label: "Niveau de stress", options: [
+        ['faible', "Faible"], ['modere', "Modéré"], ['eleve', "Élevé"], ['tres_eleve', "Très élevé"] ] },
+      { id: 'soleil', type: 'single', label: "Exposition solaire", options: [
+        ['minimale', "Minimale"], ['moderee', "Modérée"], ['importante', "Importante (> 2 h/j)"], ['pro', "Professionnelle"] ] },
+      { id: 'sport', type: 'single', label: "Activité physique", options: [
+        ['sedentaire', "Sédentaire"], ['1_2', "1 à 2× / semaine"], ['3_5', "3 à 5× / semaine"], ['quotidienne', "Quotidienne"] ] },
     ]
   },
   {
-    id: 'phototype',
-    title: "Comment réagit votre peau au soleil ?",
-    type: 'single',
-    options: [
-      { value: 'IV',  label: "Bronze facilement, ne brûle quasi jamais", desc: "Phototype IV (peau matée)" },
-      { value: 'V',   label: "Brunit beaucoup, brûle très rarement",     desc: "Phototype V (peau brune)" },
-      { value: 'VI',  label: "Peau noire, ne brûle jamais",              desc: "Phototype VI" },
-      { value: 'III', label: "Brunit modérément, peut brûler au début",  desc: "Phototype III (peau claire)" },
+    titre: "Routine cosmétique actuelle", qui: 'patiente',
+    fields: [
+      { id: 'produits', type: 'multi', label: "Produits utilisés actuellement", options: [
+        ['savon', "Savon corps / visage"], ['gel', "Gel nettoyant"], ['micellaire', "Eau micellaire"], ['lait', "Lait nettoyant"],
+        ['tonique', "Tonique / lotion"], ['serum', "Sérum"], ['creme', "Crème hydratante"], ['huile', "Huile"],
+        ['gommage', "Gommage"], ['masque', "Masque"], ['spf', "Crème solaire (SPF)"], ['fdt', "Fond de teint"] ] },
+      { id: 'depig', type: 'single', label: "Produits dépigmentants / éclaircissants", options: [['non', "Non"], ['oui', "Oui"]] },
+      { id: 'depig_detail', type: 'text', label: "Lesquels ?", showIf: a => a.depig === 'oui' },
+      { id: 'recents', type: 'textarea', label: "Produits récemment introduits ou retirés de la routine" },
+      { id: 'reactions', type: 'multi', label: "Réactions observées aux cosmétiques", exclusive: 'aucune', options: [
+        ['aucune', "Aucune"], ['rougeurs', "Rougeurs"], ['brulures', "Brûlures / picotements"], ['eruptions', "Éruptions / boutons"] ] },
     ]
   },
   {
-    id: 'spf',
-    title: "Utilisez-vous une protection solaire au quotidien ?",
-    type: 'single',
-    options: [
-      { value: 'oui_tous_jours', label: "Oui, tous les jours" },
-      { value: 'parfois',        label: "Parfois, surtout en saison sèche" },
-      { value: 'rarement',       label: "Rarement" },
-      { value: 'jamais',         label: "Jamais" },
+    titre: "Examen clinique (visuel & manuel)", qui: 'pharmacienne',
+    fields: [
+      { id: 'type_peau', type: 'single', label: "Type de peau", options: [
+        ['grasse', "Grasse"], ['normale', "Normale"], ['seche', "Sèche"], ['mixte', "Mixte"] ] },
+      { id: 'teint', type: 'single', label: "Teint global", options: [
+        ['uniforme', "Uniforme"], ['terne', "Terne"], ['irregulier', "Irrégulier"] ] },
+      { id: 'epaisseur', type: 'single', label: "Épaisseur cutanée", options: [
+        ['fine', "Fine"], ['normale', "Normale"], ['epaisse', "Épaisse"] ] },
+      { id: 'zones', type: 'multi', label: "Zones d'attention", options: [
+        ['front', "Front"], ['nez', "Nez"], ['joues', "Joues"], ['menton', "Menton"],
+        ['yeux', "Contour des yeux"], ['cou', "Cou / décolleté"], ['corps', "Corps"], ['autre', "Autre"] ] },
+      { id: 'zones_autre', type: 'text', label: "Autre zone", showIf: a => has(a.zones, 'autre') },
+      { id: 'lesions', type: 'multi', label: "Lésions observées", options: [
+        ['comedons_o', "Comédons ouverts"], ['comedons_f', "Comédons fermés"], ['papules', "Papules / pustules"], ['kystes', "Kystes"],
+        ['macules', "Macules hyperpigmentées"], ['taches_blanches', "Taches blanches"], ['erytheme', "Érythème / rougeur"], ['desquamation', "Desquamation"],
+        ['pores', "Pores dilatés"], ['brillance', "Brillance excessive"], ['secheresse', "Sécheresse / tiraillement"], ['cicatrices', "Cicatrices"] ] },
+      { type: 'isac' },
     ]
   },
   {
-    id: 'routine',
-    title: "Quelle est votre routine actuelle ?",
-    type: 'single',
-    options: [
-      { value: 'complete',     label: "Nettoyant + sérum + crème + SPF", desc: "Routine structurée matin et soir" },
-      { value: 'basique',      label: "Nettoyant + crème",               desc: "Routine simple" },
-      { value: 'minimale',     label: "Juste du savon" },
-      { value: 'aucune',       label: "Aucune routine" },
+    titre: "Mesures Skin Analyzer O1-PRO", qui: 'pharmacienne',
+    intro: "Facultatif. Recopiez les valeurs du rapport ; laissez vide ce qui n'a pas été mesuré.",
+    fields: [
+      { type: 'note', html: "Les scores vont de 0 à 100 : <strong>plus le score est haut, mieux c'est</strong>. L'indicateur « teint » de l'appareil n'est volontairement pas utilisé : son échelle classe les peaux foncées comme un problème." },
+      { id: 'conditions', type: 'multi', label: "Conditions de mesure respectées", options: [
+        ['repos', "15 min de repos au frais"], ['sans_produit', "Pas de produit depuis 2 h (ou nettoyage standard sur place)"] ] },
+      { id: 'sebum_t', type: 'single', label: "Sébum zone T", options: SEBUM_OPTS },
+      { id: 'sebum_u', type: 'single', label: "Sébum zone U (joues)", options: SEBUM_OPTS },
+      { type: 'hydra' },
+      { type: 'scores' },
+      { id: 'fluo', type: 'single', label: "Agent fluorescent (lumière de Wood)", options: [
+        ['non', "Non observé"], ['doute', "Douteux"], ['oui', "Observé"] ] },
     ]
   },
-  {
-    id: 'hydratation',
-    title: "Combien de litres d'eau buvez-vous par jour ?",
-    type: 'single',
-    options: [
-      { value: 'plus_2',  label: "Plus de 2 litres" },
-      { value: '1_2',     label: "Entre 1 et 2 litres" },
-      { value: 'moins_1', label: "Moins d'1 litre" },
-    ]
-  },
-  {
-    id: 'stress',
-    title: "Comment évaluez-vous votre niveau de stress ?",
-    type: 'single',
-    options: [
-      { value: 'eleve',  label: "Élevé",  desc: "Stress quotidien, sommeil perturbé" },
-      { value: 'modere', label: "Modéré", desc: "Variable selon les périodes" },
-      { value: 'faible', label: "Faible", desc: "Globalement détendue" },
-    ]
-  },
-  {
-    id: 'prenom',
-    title: "Pour personnaliser votre fiche",
-    hint: "Votre prénom (optionnel)",
-    type: 'text',
-    placeholder: "Ex. Mireille"
-  }
 ];
 
 // ═══════════════════════════════════════════════════════════
-// ÉTAT
+// ÉTAT & OUTILS
 // ═══════════════════════════════════════════════════════════
-let currentQ = 0;
-const answers = {};
+let currentStep = 0;
+let A = {};
+
+const has = (arr, v) => Array.isArray(arr) && arr.includes(v);
+const esc = s => String(s == null ? '' : s)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const num = v => (v === '' || v == null || isNaN(Number(v))) ? null : Number(v);
+const score = id => { const v = num(A[id]); return v != null && v >= 0 && v <= 100 ? v : null; };
+
+const FIELD_INDEX = {};
+STEPS.forEach(s => s.fields.forEach(f => { if (f.id) FIELD_INDEX[f.id] = f; }));
+function optLabel(id, value) {
+  const f = FIELD_INDEX[id];
+  const o = f && f.options && f.options.find(o => o[0] === value);
+  return o ? o[1] : '';
+}
+function optLabels(id) {
+  const v = A[id];
+  if (Array.isArray(v)) return v.map(x => optLabel(id, x)).filter(Boolean).join(', ');
+  return v ? optLabel(id, v) : '';
+}
+function band(v) {
+  if (v == null) return { cls: '', txt: '—' };
+  if (v >= 61) return { cls: 'ok', txt: 'Satisfaisant' };
+  if (v >= 41) return { cls: 'watch', txt: 'À surveiller' };
+  return { cls: 'prio', txt: 'Priorité' };
+}
+function hydraMean() {
+  const hs = ['hydra1', 'hydra2', 'hydra3'].map(k => num(A[k])).filter(v => v != null && v >= 0 && v <= 100);
+  return hs.length ? Math.round(hs.reduce((s, v) => s + v, 0) / hs.length) : null;
+}
+function hydraText(m) {
+  if (m == null) return '—';
+  return m < 30 ? 'Déshydratation marquée' : m < 40 ? 'Déshydratation légère' : 'Correcte';
+}
+function isacTotal() {
+  return ISAC.reduce((s, [k]) => s + (Number(A[k]) || 0), 0);
+}
+const ISAC_LEVELS = ["Non sensible", "Légèrement sensible", "Modérément sensible", "Très sensible"];
+const isacLevel = t => t <= 3 ? 0 : t <= 6 ? 1 : t <= 9 ? 2 : 3;
 
 // ═══════════════════════════════════════════════════════════
-// DÉMARRAGE
+// AFFICHAGE DES ÉTAPES
 // ═══════════════════════════════════════════════════════════
-function startQuiz() {
+function startForm() {
   document.getElementById('introScreen').style.display = 'none';
+  document.getElementById('resultsScreen').innerHTML = '';
   document.getElementById('progressBar').style.display = 'block';
-  renderQuestion();
+  renderStep();
 }
 
-function renderQuestion() {
-  const q = questions[currentQ];
-  const container = document.getElementById('questionContainer');
+function chipsHTML(f, kind) {
+  return '<div class="chips">' + f.options.map(([v, l]) => {
+    const on = kind === 'multi' ? has(A[f.id], v) : A[f.id] === v;
+    return `<button type="button" class="chip ${on ? 'on' : ''}" data-field="${f.id}" data-value="${esc(v)}" data-kind="${kind}">${esc(l)}</button>`;
+  }).join('') + '</div>';
+}
 
-  // Progress
-  const pct = Math.round(((currentQ + 1) / questions.length) * 100);
-  document.getElementById('progressStep').textContent = `Question ${currentQ + 1} sur ${questions.length}`;
+function fieldHTML(f) {
+  if (f.showIf && !f.showIf(A)) return '';
+  const label = f.label ? `<div class="field-label">${esc(f.label)}${f.required ? ' <span class="req">*</span>' : ''}</div>` : '';
+  const hint = f.hint ? `<div class="field-hint">${esc(f.hint)}</div>` : '';
+  switch (f.type) {
+    case 'text':
+      return `<div class="field">${label}${hint}<input class="input" type="text" data-field="${f.id}" value="${esc(A[f.id])}" placeholder="${esc(f.placeholder || '')}"></div>`;
+    case 'textarea':
+      return `<div class="field">${label}${hint}<textarea class="input" data-field="${f.id}">${esc(A[f.id])}</textarea></div>`;
+    case 'number':
+      return `<div class="field">${label}${hint}<div class="input-suffix"><input class="input" type="number" inputmode="numeric" min="${f.min}" max="${f.max}" data-field="${f.id}" value="${esc(A[f.id])}"><span>${esc(f.suffix || '')}</span></div></div>`;
+    case 'single':
+    case 'multi':
+      return `<div class="field">${label}${hint}${chipsHTML(f, f.type)}</div>`;
+    case 'note':
+      return `<div class="note">${f.html}</div>`;
+    case 'isac': {
+      const rows = ISAC.map(([k, l]) => `
+        <div class="isac-row"><span class="lbl">${l}</span>
+          ${chipsHTML({ id: k, options: [['0', '0'], ['1', '1'], ['2', '2'], ['3', '3']] }, 'single')}
+        </div>`).join('');
+      const t = isacTotal();
+      return `<div class="field"><div class="field-label">Score ISAC (Indice de Sensibilité Cutanée)</div>${rows}
+        <div class="isac-total"><span>Score total : <strong>${t} / 12</strong></span><span>${ISAC_LEVELS[isacLevel(t)]}</span></div></div>`;
+    }
+    case 'hydra': {
+      const inputs = ['hydra1', 'hydra2', 'hydra3'].map((k, i) =>
+        `<input class="input" type="number" inputmode="numeric" min="0" max="100" placeholder="${['Front', 'Joue G', 'Joue D'][i]}" data-field="${k}" data-live="1" value="${esc(A[k])}">`).join('');
+      const m = hydraMean();
+      return `<div class="field"><div class="field-label">Hydratation (stylo d'humidité, %)</div>
+        <div class="field-hint">3 mesures aux mêmes endroits ; la moyenne est calculée. Repères : &lt; 30 marquée · 30–40 légère · 40 et plus correcte.</div>
+        <div class="hydra-inputs">${inputs}<span class="band" id="hydraMean">${m == null ? 'Moyenne —' : 'Moyenne ' + m + ' % · ' + hydraText(m)}</span></div></div>`;
+    }
+    case 'scores': {
+      const rows = SCORES.map(([k, l]) => {
+        const b = band(score(k));
+        return `<div class="score-row"><span class="lbl">${l}</span>
+          <input class="input" type="number" inputmode="numeric" min="0" max="100" data-field="${k}" data-live="1" value="${esc(A[k])}" placeholder="0–100">
+          <span class="band ${b.cls}" id="band_${k}">${b.txt}</span></div>`;
+      }).join('');
+      return `<div class="field"><div class="field-label">Scores O1-PRO (0–100)</div>
+        <div class="field-hint">Satisfaisant ≥ 61 · À surveiller 41–60 · Priorité ≤ 40 (à confirmer par l'examen)</div>${rows}</div>`;
+    }
+  }
+  return '';
+}
+
+function renderStep() {
+  const s = STEPS[currentStep];
+  const pct = Math.round(((currentStep + 1) / STEPS.length) * 100);
+  document.getElementById('progressStep').textContent = `Étape ${currentStep + 1} sur ${STEPS.length} — ${s.titre}`;
   document.getElementById('progressPercent').textContent = pct + '%';
   document.getElementById('progressFill').style.width = pct + '%';
 
-  let optionsHTML = '';
-  if (q.type === 'text') {
-    optionsHTML = `<input type="text" class="text-input" id="textInput" placeholder="${q.placeholder || ''}">`;
-  } else {
-    optionsHTML = '<div class="options">' + q.options.map(opt => {
-      const isSelected = q.type === 'multi'
-        ? (answers[q.id] || []).includes(opt.value)
-        : answers[q.id] === opt.value;
-      return `
-        <div class="option ${q.type === 'multi' ? 'multi' : ''} ${isSelected ? 'selected' : ''}"
-             data-value="${opt.value}" onclick="selectOption(this, '${q.id}', '${q.type}')">
-          <div class="option-radio"></div>
-          <div class="option-content">
-            <div class="option-label">${opt.label}</div>
-            ${opt.desc ? `<div class="option-desc">${opt.desc}</div>` : ''}
-          </div>
-        </div>`;
-    }).join('') + '</div>';
-  }
-
-  container.innerHTML = `
-    <div class="question-screen active">
-      <div class="question-number">Question ${currentQ + 1}</div>
-      <h2 class="question-title">${q.title}</h2>
-      ${q.hint ? `<p class="question-hint">${q.hint}</p>` : ''}
-      ${optionsHTML}
-      <div class="nav-buttons">
-        <button class="btn-secondary" onclick="prevQuestion()" ${currentQ === 0 ? 'style="visibility:hidden"' : ''}>← Précédent</button>
-        <button class="btn-primary" onclick="nextQuestion()">${currentQ === questions.length - 1 ? 'Voir mon diagnostic' : 'Suivant →'}</button>
+  const last = currentStep === STEPS.length - 1;
+  document.getElementById('stepContainer').innerHTML = `
+    <div class="step">
+      <div class="step-head">
+        <span class="step-who ${s.qui}">${s.qui === 'patiente' ? 'Patiente' : 'Pharmacienne'}</span>
+        <h2 class="step-title">${s.titre}</h2>
+        ${s.intro ? `<p class="step-intro">${s.intro}</p>` : ''}
       </div>
-    </div>
-  `;
-
-  // Prénom remis via .value pour ne pas casser le HTML (guillemets, chevrons…)
-  if (q.type === 'text') {
-    document.getElementById('textInput').value = answers[q.id] || '';
-  }
+      <div class="form-card">${s.fields.map(fieldHTML).join('')}</div>
+      <div class="nav-buttons">
+        <button class="btn-secondary" onclick="prevStep()">← ${currentStep === 0 ? 'Accueil' : 'Précédent'}</button>
+        <button class="btn-primary" onclick="nextStep()">${last ? 'Voir la synthèse' : 'Suivant →'}</button>
+      </div>
+    </div>`;
 }
 
-function selectOption(el, qid, type) {
-  const value = el.dataset.value;
-  if (type === 'multi') {
-    if (!answers[qid]) answers[qid] = [];
-    const idx = answers[qid].indexOf(value);
-    if (idx > -1) { answers[qid].splice(idx, 1); el.classList.remove('selected'); }
-    else { answers[qid].push(value); el.classList.add('selected'); }
+// Clics sur les puces (choix simple ou multiple)
+document.getElementById('main').addEventListener('click', e => {
+  const c = e.target.closest('.chip');
+  if (!c) return;
+  const { field, value, kind } = c.dataset;
+  if (kind === 'multi') {
+    const f = FIELD_INDEX[field];
+    let arr = Array.isArray(A[field]) ? A[field].slice() : [];
+    if (arr.includes(value)) arr = arr.filter(v => v !== value);
+    else if (f && f.exclusive === value) arr = [value];
+    else arr = arr.filter(v => !(f && f.exclusive === v)).concat(value);
+    A[field] = arr;
   } else {
-    answers[qid] = value;
-    el.parentElement.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
-    el.classList.add('selected');
+    A[field] = A[field] === value ? undefined : value;
   }
+  const y = window.scrollY;
+  renderStep();
+  window.scrollTo(0, y);
+});
+
+// Saisie texte / chiffres (sans redessiner, pour garder le curseur)
+document.getElementById('main').addEventListener('input', e => {
+  const el = e.target;
+  if (!el.dataset || !el.dataset.field) return;
+  A[el.dataset.field] = el.value;
+  if (!el.dataset.live) return;
+  const m = hydraMean();
+  const hm = document.getElementById('hydraMean');
+  if (hm) hm.textContent = m == null ? 'Moyenne —' : `Moyenne ${m} % · ${hydraText(m)}`;
+  SCORES.forEach(([k]) => {
+    const span = document.getElementById('band_' + k);
+    if (!span) return;
+    const b = band(score(k));
+    span.className = 'band ' + b.cls;
+    span.textContent = b.txt;
+  });
+});
+
+function nextStep() {
+  if (currentStep === 0 && !(A.nom || '').trim()) {
+    alert("Merci d'indiquer le nom et le prénom.");
+    return;
+  }
+  if (currentStep < STEPS.length - 1) {
+    currentStep++;
+    renderStep();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return;
+  }
+  if (!A.type_peau && !(A.sebum_t && A.sebum_u) &&
+      !confirm("Le type de peau n'est renseigné ni à l'examen clinique ni par les mesures de sébum. Afficher la synthèse quand même ?")) return;
+  showResults();
 }
 
-function nextQuestion() {
-  const q = questions[currentQ];
-  if (q.type === 'text') {
-    answers[q.id] = document.getElementById('textInput').value.trim();
-  } else if (q.type === 'single' && !answers[q.id]) {
-    alert('Merci de choisir une réponse pour continuer.');
-    return;
-  } else if (q.type === 'multi' && (!answers[q.id] || answers[q.id].length === 0)) {
-    alert('Merci de sélectionner au moins une réponse.');
+function prevStep() {
+  if (currentStep === 0) {
+    document.getElementById('stepContainer').innerHTML = '';
+    document.getElementById('progressBar').style.display = 'none';
+    document.getElementById('introScreen').style.display = 'block';
     return;
   }
-  if (currentQ < questions.length - 1) {
-    currentQ++;
-    renderQuestion();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  } else {
-    showResults();
-  }
-}
-
-function prevQuestion() {
-  if (currentQ > 0) {
-    currentQ--;
-    renderQuestion();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
+  currentStep--;
+  renderStep();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ═══════════════════════════════════════════════════════════
 // MOTEUR DE DIAGNOSTIC
 // ═══════════════════════════════════════════════════════════
-function diagnose() {
-  const a = answers;
-  let type, desc;
+const SEBUM_VAL = { tres_insuff: -2, leg_insuff: -1, leg_abond: 1, tres_abond: 2 };
+const TYPE_LABELS = { grasse: 'Peau grasse', normale: 'Peau normale', seche: 'Peau sèche', mixte: 'Peau mixte' };
+const TYPE_FAMILIES = {
+  'Peau grasse': ['grasse'], 'Peau mixte': ['mixte'], 'Peau sèche': ['seche'], 'Peau normale': ['normale'],
+  'Peau normale à tendance mixte': ['normale', 'mixte'], 'Peau normale à tendance sèche': ['normale', 'seche'],
+};
 
-  // Détermination du type de peau
-  if (a.sensation === 'grasse' && a.pores === 'dilates_global') {
-    type = 'Peau grasse';
-    desc = "Votre peau produit du sébum en excès sur l'ensemble du visage. Cela lui confère un aspect brillant et favorise la dilatation des pores. C'est une peau résistante mais qui demande des soins équilibrants.";
-  } else if (a.sensation === 'mixte' || a.pores === 'dilates_zoneT') {
-    type = 'Peau mixte';
-    desc = "Votre peau présente une production sébacée différenciée : zone T (front, nez, menton) grasse, joues normales à sèches. Une routine adaptée par zones est idéale.";
-  } else if (a.sensation === 'seche') {
-    type = 'Peau sèche';
-    desc = "Votre peau manque de lipides. Elle peut tirailler, présenter des plaques rugueuses et marquer plus rapidement. Elle a besoin d'être nourrie et protégée.";
+function deviceType() {
+  const t = SEBUM_VAL[A.sebum_t], u = SEBUM_VAL[A.sebum_u];
+  if (t == null || u == null) return null;
+  if (t > 0 && u > 0) return 'Peau grasse';
+  if (t > 0 && u < 0) return (t === 1 && u === -1) ? 'Peau normale à tendance mixte' : 'Peau mixte';
+  if (t < 0 && u < 0) return (t === -1 && u === -1) ? 'Peau normale à tendance sèche' : 'Peau sèche';
+  return 'Atypique';
+}
+
+function analyse() {
+  const L = A.lesions || [], M = A.motif_cat || [], AT = A.atcd || [], P = A.produits || [];
+  const low = id => { const v = score(id); return v != null && v <= 40; };
+  const alertes = [];
+
+  // ── Type de peau : l'examen clinique prime, la mesure confirme ──
+  const dev = deviceType();
+  const clin = TYPE_LABELS[A.type_peau] || null;
+  const type = clin || (dev && dev !== 'Atypique' ? dev : null) || 'Type non déterminé';
+  const typeSource = clin ? 'examen clinique' : (type !== 'Type non déterminé' ? 'mesure O1-PRO du sébum' : '');
+  if (dev === 'Atypique') {
+    alertes.push({ niv: 'orange', titre: "Mesure de sébum atypique",
+      texte: "Zone T peu grasse mais joues grasses : refaire la mesure (transpiration, produit appliqué ?)." });
+  } else if (clin && dev && !TYPE_FAMILIES[dev].includes(A.type_peau)) {
+    alertes.push({ niv: 'orange', titre: "Examen et mesure divergent",
+      texte: `Examen clinique : ${clin.toLowerCase()} ; O1-PRO : ${dev.toLowerCase()}. L'examen est retenu — vérifier les conditions de mesure (chaleur, sueur, produit).` });
+  }
+  const fam = TYPE_FAMILIES[type] || [];
+  const oily = fam.includes('grasse') || fam.includes('mixte');
+  const dry = fam.includes('seche');
+
+  // ── Hydratation ──
+  const hydra = hydraMean();
+  const deshydrate = hydra != null && hydra < 40;
+
+  // ── Sensibilité : ISAC, relevé (jamais abaissé) par l'anamnèse et l'appareil ──
+  const isacSet = ISAC.some(([k]) => A[k] != null);
+  const isac = isacTotal();
+  let sens = isacLevel(isac);
+  const sensWhy = [];
+  if (isacSet) sensWhy.push(`ISAC ${isac}/12`);
+  const raise = (min, why) => { if (sens < min) sens = min; sensWhy.push(why); };
+  if (has(A.reactions, 'rougeurs') || has(A.reactions, 'brulures')) raise(1, "réactions aux cosmétiques déclarées");
+  const atcdSens = ['sensibilite', 'allergie', 'eczema', 'rosacee'].filter(k => has(AT, k));
+  if (atcdSens.length) raise(1, "antécédents : " + atcdSens.map(k => optLabel('atcd', k).toLowerCase()).join(', '));
+  const ss = score('sc_sensibilite');
+  if (ss != null && ss <= 20) raise(2, `O1-PRO sensibilité ${ss}/100`);
+  else if (ss != null && ss <= 40) raise(1, `O1-PRO sensibilité ${ss}/100`);
+  const gentle = sens >= 2;
+
+  // ── Priorités : chaque source est citée ──
+  const prio = [];
+  const lesions = keys => { const l = keys.filter(k => has(L, k)).map(k => optLabel('lesions', k).toLowerCase()); return l.length ? ['examen : ' + l.join(', ')] : []; };
+  const motif = key => has(M, key) ? ['motif de consultation'] : [];
+  const atcd = keys => { const l = keys.filter(k => has(AT, k)).map(k => optLabel('atcd', k).toLowerCase()); return l.length ? ['antécédents : ' + l.join(', ')] : []; };
+  const device = keys => { const l = keys.filter(low).map(k => `${SCORES.find(s => s[0] === k)[1].toLowerCase()} ${score(k)}/100`); return l.length ? ['O1-PRO : ' + l.join(', ')] : []; };
+  const add = (key, label, src) => { if (src.length) prio.push({ key, label, src }); };
+
+  add('acne', "Acné / imperfections", [...lesions(['comedons_o', 'comedons_f', 'papules', 'kystes']), ...motif('acne'), ...device(['sc_acne', 'sc_acne_uv', 'sc_porphyrines'])]);
+  add('taches', "Taches / hyperpigmentation", [...lesions(['macules']), ...motif('taches'), ...atcd(['hyperpigmentation', 'melasma']), ...device(['sc_taches', 'sc_pigmentation'])]);
+  add('sebum', "Excès de sébum / pores", [...lesions(['pores', 'brillance']), ...motif('brillance'), ...device(['sc_pores', 'sc_points_noirs'])]);
+  add('hydra', "Sécheresse / déshydratation", [...lesions(['secheresse', 'desquamation']), ...motif('secheresse'), ...atcd(['xerose']), ...(deshydrate ? [`O1-PRO : hydratation ${hydra} %`] : [])]);
+  add('sens', "Sensibilité cutanée", [...(sens >= 1 ? [ISAC_LEVELS[sens].toLowerCase() + ' (' + sensWhy.join(' ; ') + ')'] : []), ...motif('sensibilite')]);
+  add('rides', "Rides / relâchement", [...motif('rides'), ...device(['sc_rides', 'sc_texture'])]);
+  add('eclat', "Teint terne / manque d'éclat", [...motif('eclat'), ...(A.teint === 'terne' ? ['examen : teint terne'] : [])]);
+  prio.sort((a, b) => b.src.length - a.src.length);
+  if (gentle) { const i = prio.findIndex(p => p.key === 'sens'); if (i > 0) prio.unshift(prio.splice(i, 1)[0]); }
+  const is = k => prio.some(p => p.key === k);
+
+  // ── Alertes ──
+  const preg = ['enceinte', 'allaitante', 'projet'].includes(A.grossesse);
+  const depig = A.depig === 'oui';
+  if (depig) alertes.unshift({ niv: 'red', titre: "Produits éclaircissants en cours",
+    texte: `${A.depig_detail ? A.depig_detail + ' — ' : ''}sevrage prioritaire. Aucun actif dépigmentant pendant les 4 premières semaines. Si corticoïdes, hydroquinone forte ou mercure : orientation médicale.` });
+  if (preg) alertes.unshift({ niv: 'red', titre: optLabel('grossesse', A.grossesse),
+    texte: "Pas de rétinoïdes (rétinol, rétinal, adapalène) ni d'hydroquinone. Privilégier niacinamide et acide azélaïque." });
+  if (has(L, 'kystes') || (score('sc_acne') != null && score('sc_acne') <= 20))
+    alertes.unshift({ niv: 'red', titre: "Acné possiblement sévère",
+      texte: "Kystes ou score acné très bas : orientation vers un médecin ou un dermatologue. La routine accompagne mais ne remplace pas un traitement." });
+  if (A.fluo === 'oui' && !depig) alertes.push({ niv: 'orange', titre: "Fluorescence en lumière de Wood",
+    texte: "Observée alors qu'aucun éclaircissant n'est déclaré : en reparler avec tact. C'est un signal, pas une preuve (SPF, azurants et fibres fluorescent aussi)." });
+  else if (A.fluo === 'doute' && !depig) alertes.push({ niv: 'info', titre: "Fluorescence douteuse",
+    texte: "Reposer la question des produits utilisés, y compris pour le corps." });
+  if (has(AT, 'melasma')) alertes.push({ niv: 'orange', titre: "Mélasma",
+    texte: `Composante hormonale${A.contraceptifs ? ' (contraception : ' + A.contraceptifs + ')' : ''}. Photoprotection stricte, actifs doux, aucun soin irritant ; avis médical si étendu.` });
+  if (has(AT, 'cheloides')) alertes.push({ niv: 'orange', titre: "Terrain chéloïdien",
+    texte: "Éviter les soins invasifs : peeling moyen, microneedling, extractions agressives." });
+  const derm = ['eczema', 'psoriasis', 'rosacee'].filter(k => has(AT, k));
+  if (derm.length) alertes.push({ niv: 'orange', titre: "Dermatose connue",
+    texte: `${derm.map(k => optLabel('atcd', k)).join(', ')} : formules minimalistes ; avis médical en cas de poussée.` });
+  if ((A.medicaments || '').trim()) alertes.push({ niv: 'orange', titre: "Traitement en cours",
+    texte: `${A.medicaments.trim()} — vérifier la compatibilité (isotrétinoïne, corticoïdes, médicaments photosensibilisants…).` });
+  if (has(A.maladies, 'diabete')) alertes.push({ niv: 'orange', titre: "Diabète",
+    texte: "Cicatrisation plus lente : prudence avec tout soin invasif." });
+  const mesures = A.sebum_t || A.sebum_u || hydra != null || SCORES.some(([k]) => score(k) != null);
+  if (mesures && !(has(A.conditions, 'repos') && has(A.conditions, 'sans_produit')))
+    alertes.push({ niv: 'info', titre: "Conditions de mesure non confirmées",
+      texte: "Interpréter le sébum et l'hydratation avec prudence (chaleur, sueur et produits faussent ces valeurs)." });
+
+  // ── Actifs, introduits un à la fois ──
+  const actifs = [];
+  if (is('acne') || is('taches') || is('sebum'))
+    actifs.push({ k: 'nia', moment: 'matin', titre: "Sérum niacinamide",
+      detail: gentle ? "4–5 %, le matin" : "5–10 %, le matin — régule le sébum, apaise, uniformise" });
+  if (is('taches') || is('acne'))
+    actifs.push({ k: 'aza', moment: 'soir', titre: "Acide azélaïque 10 %",
+      detail: "Le soir, en couche fine — taches post-inflammatoires et imperfections" + (preg ? " (compatible grossesse)" : "") });
+  if (is('rides') && !preg)
+    actifs.push(gentle
+      ? { k: 'bak', moment: 'soir', titre: "Bakuchiol", detail: "Alternative douce au rétinol, le soir" }
+      : { k: 'ret', moment: 'soir', titre: "Rétinol 0,2–0,3 %", detail: "2 soirs par semaine au début, puis selon tolérance" });
+  if (is('eclat') && !actifs.some(x => x.k === 'nia'))
+    actifs.push({ k: 'vitc', moment: 'matin', titre: "Vitamine C",
+      detail: gentle ? "Dérivé stable (ascorbyl glucoside), le matin" : "10–15 %, le matin, sous le SPF" });
+
+  let p1, p2;
+  if (depig || gentle) { p1 = []; p2 = actifs.slice(0, 1); }
+  else { p1 = actifs.slice(0, 1); p2 = actifs.slice(1, 3); }
+  const later = actifs.filter(x => !p1.includes(x) && !p2.includes(x));
+
+  const nettoyant = oily && !gentle
+    ? "Gel nettoyant doux sans sulfates, pH 5–5,5"
+    : "Lait ou crème lavante surgras, sans parfum, pH 5–5,5";
+  const cremeMatin = oily ? "Fluide ou gel-crème non comédogène"
+    : (dry || deshydrate) ? "Crème riche en céramides" + (dry ? " (+ beurre de karité)" : "")
+    : "Crème légère aux céramides";
+  const cremeSoir = dry ? "Crème réparatrice riche : céramides, acides gras essentiels" : "Crème réparatrice aux céramides";
+  const spfDetail = "SPF 50+ minéral teinté, application généreuse" +
+    (['importante', 'pro'].includes(A.soleil) ? " ; renouveler toutes les 2 h dehors" : "");
+
+  function routine(list, nouveaux) {
+    const step = (titre, detail, x) => ({ titre, detail, nouveau: !!x && nouveaux.includes(x) });
+    const soirActifs = list.filter(x => x.moment === 'soir');
+    const alterne = soirActifs.length > 1;
+    const matin = [step("Nettoyage", nettoyant)];
+    list.filter(x => x.moment === 'matin').forEach(x => matin.push(step(x.titre, x.detail, x)));
+    if (deshydrate || is('hydra')) matin.push(step("Sérum acide hyaluronique", "Sur peau légèrement humide"));
+    matin.push(step("Crème hydratante", cremeMatin));
+    matin.push(step("Protection solaire", spfDetail));
+    const soir = [step("Double nettoyage", "Huile ou lait démaquillant, puis le nettoyant du matin")];
+    soirActifs.forEach(x => soir.push(step(x.titre, alterne ? x.detail + " — un soir sur deux, en alternance" : x.detail, x)));
+    soir.push(step("Crème de nuit", cremeSoir));
+    return { matin, soir };
+  }
+
+  const phases = [];
+  if (!p1.length && !p2.length) {
+    phases.push({ titre: "Routine — 8 semaines",
+      sous: depig ? "Sevrage des éclaircissants et réparation de la barrière" : "Entretien et prévention",
+      ...routine([], []) });
   } else {
-    type = 'Peau normale';
-    desc = "Votre peau présente un équilibre satisfaisant. L'objectif est de la maintenir en bonne santé et de prévenir les déséquilibres futurs.";
+    phases.push({ titre: "Phase 1 — Semaines 1 à 4",
+      sous: depig ? "Arrêt des produits éclaircissants et réparation de la barrière — aucun actif"
+        : p1.length ? "Réparer la barrière et introduire un seul actif" : "Réparer la barrière — aucun actif pour l'instant",
+      ...routine(p1, p1) });
+    if (p2.length) phases.push({ titre: "Phase 2 — Semaines 5 à 8",
+      sous: "Seulement si la phase 1 est bien tolérée", ...routine([...p1, ...p2], p2) });
   }
 
-  // Modulation sensible
-  if (a.sensibilite === 'tres_reactive') {
-    type += ' à tendance sensible';
-    desc += " Votre peau présente également une réactivité marquée : il sera essentiel de privilégier des formules apaisantes, sans parfum ni alcool.";
-  }
+  // ── Conseils mode de vie ──
+  const conseils = [];
+  if (['moins_1', '1_1.5'].includes(A.eau)) conseils.push("Boire 1,5 à 2 L d'eau par jour pour soutenir l'hydratation de la peau.");
+  if (A.sommeil === 'moins_6') conseils.push("Viser au moins 7 h de sommeil : la peau se répare la nuit.");
+  if (['eleve', 'tres_eleve'].includes(A.stress)) conseils.push("Le stress chronique augmente le sébum et fragilise la barrière : prévoir des temps de repos.");
+  if (A.alimentation === 'sucres' && is('acne')) conseils.push("Limiter les sucres rapides et boissons sucrées, qui entretiennent l'acné.");
+  if (['importante', 'pro'].includes(A.soleil)) conseils.push("Exposition importante : chapeau, ombre aux heures chaudes et SPF renouvelé toutes les 2 h.");
+  if (['3_5', 'quotidienne'].includes(A.sport)) conseils.push("Nettoyer le visage après le sport : la sueur laissée sur la peau favorise les imperfections.");
+  if (has(P, 'savon')) conseils.push("Arrêter le savon sur le visage : il décape la barrière cutanée.");
+  if (has(P, 'gommage')) conseils.push(gentle ? "Suspendre les gommages tant que la peau est sensible." : "Gommage doux 1 fois par semaine maximum, jamais de grains agressifs.");
+  if (has(P, 'huile') && is('acne')) conseils.push("Éviter les huiles comédogènes sur le visage (coco notamment).");
+  if (is('acne')) conseils.push("Ne pas percer ni manipuler les boutons : c'est la première cause de taches post-inflammatoires.");
+  if (is('taches')) conseils.push("Les taches répondent lentement : compter 8 à 12 semaines de routine régulière, avec SPF tous les jours.");
+  conseils.push("Introduire un seul nouveau produit à la fois et attendre 2 semaines avant le suivant.");
+  if (mesures) conseils.push("Nouvelle mesure O1-PRO à 8 semaines, dans les mêmes conditions, pour comparer.");
 
-  // Préoccupations dominantes
-  const preocc = a.preoccupation || [];
+  const typeTxt = type + (deshydrate ? ', déshydratée' : '');
+  const diagAuto = `${typeTxt} — ${ISAC_LEVELS[sens].toLowerCase()}.` +
+    (prio.length ? ` Priorités : ${prio.map(p => p.label.toLowerCase()).join(', ')}.` : '');
 
-  // ROUTINE MATIN
-  let matin = [
-    { titre: "Nettoyant doux", detail: "Gel ou mousse sans savon, pH physiologique (5.5)" },
-  ];
-  if (preocc.includes('hpi') || preocc.includes('eclat')) {
-    matin.push({ titre: "Sérum vitamine C", detail: "Antioxydant — uniformise le teint et prévient l'HPI" });
-  }
-  if (preocc.includes('deshydratation') || a.hydratation === 'moins_1' || type.includes('sèche')) {
-    matin.push({ titre: "Sérum acide hyaluronique", detail: "Hydratation intense des couches superficielles" });
-  }
-  matin.push({
-    titre: "Crème hydratante adaptée",
-    detail: type.includes('grasse') ? "Texture fluide ou gel-crème non comédogène" :
-            type.includes('sèche')  ? "Texture riche, à base de céramides et beurre de karité" :
-                                       "Texture légère et équilibrée"
-  });
-  matin.push({
-    titre: "Protection solaire SPF 50+",
-    detail: "Indispensable — surtout pour prévenir et traiter l'hyperpigmentation"
-  });
+  return { type, typeTxt, typeSource, dev, hydra, sens, sensWhy, gentle, prio, alertes, phases, later, conseils, diagAuto, preg };
+}
 
-  // ROUTINE SOIR
-  let soir = [
-    { titre: "Démaquillage / double nettoyage", detail: "Huile ou baume démaquillant puis nettoyant doux" },
-  ];
-  if (preocc.includes('acne')) {
-    soir.push({ titre: "Sérum niacinamide 5-10%", detail: "Régule le sébum et apaise l'inflammation" });
-  }
-  if (preocc.includes('hpi')) {
-    soir.push({ titre: "Actif dépigmentant doux", detail: "Acide tranéxamique, alpha-arbutine ou niacinamide" });
-  }
-  if (preocc.includes('rides')) {
-    soir.push({ titre: "Rétinol ou bakuchiol", detail: "Stimule le renouvellement cellulaire (introduire progressivement)" });
-  }
-  if (a.sensibilite === 'tres_reactive') {
-    soir.push({ titre: "Sérum apaisant", detail: "Centella asiatica, panthénol, allantoïne" });
-  }
-  soir.push({
-    titre: "Crème de nuit",
-    detail: type.includes('sèche') ? "Riche en céramides et acides gras essentiels" : "Hydratante et réparatrice"
-  });
+// ═══════════════════════════════════════════════════════════
+// SYNTHÈSE
+// ═══════════════════════════════════════════════════════════
+function mesureRows() {
+  const rows = [];
+  if (A.sebum_t) rows.push(["Sébum zone T", optLabel('sebum_t', A.sebum_t), null]);
+  if (A.sebum_u) rows.push(["Sébum zone U", optLabel('sebum_u', A.sebum_u), null]);
+  const h = hydraMean();
+  if (h != null) rows.push(["Hydratation (moyenne)", h + ' %', { cls: h < 30 ? 'prio' : h < 40 ? 'watch' : 'ok', txt: hydraText(h) }]);
+  SCORES.forEach(([k, l]) => { const v = score(k); if (v != null) rows.push([l, v + ' / 100', band(v)]); });
+  if (A.fluo) rows.push(["Agent fluorescent", optLabel('fluo', A.fluo), null]);
+  return rows;
+}
 
-  // CONSEILS
-  let conseils = [];
-  if (a.spf === 'rarement' || a.spf === 'jamais') {
-    conseils.push("Adoptez la protection solaire SPF 50+ chaque matin — c'est le facteur n°1 contre l'hyperpigmentation sur peau foncée.");
-  }
-  if (a.hydratation === 'moins_1') {
-    conseils.push("Augmentez votre apport hydrique à 1,5–2 L d'eau par jour pour soutenir l'hydratation cutanée de l'intérieur.");
-  }
-  if (a.stress === 'eleve') {
-    conseils.push("Le stress chronique dérègle la production de sébum et fragilise la barrière cutanée. Prévoyez des moments de repos et un sommeil réparateur.");
-  }
-  if (preocc.includes('acne')) {
-    conseils.push("Évitez de manipuler ou percer les boutons — c'est la première cause d'hyperpigmentation post-inflammatoire (HPI).");
-  }
-  if (preocc.includes('hpi')) {
-    conseils.push("L'HPI répond lentement : comptez 8 à 12 semaines minimum de routine régulière pour observer un éclaircissement.");
-  }
-  conseils.push("Évitez les savons décapants, parfumés ou « éclaircissants » : ils fragilisent la barrière cutanée et aggravent les taches.");
-  conseils.push("Réintroduisez les actifs un par un pour identifier facilement ce que votre peau tolère.");
-
-  return { type, desc, matin, soir, conseils };
+function routineHTML(list) {
+  return list.map((s, i) => `
+    <div class="routine-step">
+      <div class="step-num">${i + 1}</div>
+      <div class="step-content">
+        <div class="step-title">${esc(s.titre)}${s.nouveau ? '<span class="tag-new">Nouveau</span>' : ''}</div>
+        <div class="step-detail">${esc(s.detail)}</div>
+      </div>
+    </div>`).join('');
 }
 
 function showResults() {
-  document.getElementById('questionContainer').innerHTML = '';
+  const r = analyse();
+  window._analyse = r;
+  if (!A.diag_principal || A.diag_principal === A._diagAuto) A.diag_principal = r.diagAuto;
+  A._diagAuto = r.diagAuto;
+  if (!A.duree_suivi) A.duree_suivi = '8 semaines';
+
+  document.getElementById('stepContainer').innerHTML = '';
   document.getElementById('progressBar').style.display = 'none';
-  document.getElementById('resultsScreen').classList.add('active');
 
-  const r = diagnose();
-  window._diagnostic = r; // pour le PDF
+  const rows = mesureRows();
+  const date = new Date().toLocaleDateString('fr-FR');
+  document.getElementById('resultsScreen').innerHTML = `
+    <div class="step">
+      <div class="results-header">
+        <div class="results-badge">Synthèse dermoconseil</div>
+        <h2>${esc(A.nom)}</h2>
+        <p>${[A.age ? esc(A.age) + ' ans' : '', A.phototype ? 'phototype ' + esc(A.phototype) : '', date].filter(Boolean).join(' · ')}</p>
+      </div>
 
-  document.getElementById('diagType').textContent = r.type;
-  document.getElementById('diagDesc').textContent = r.desc;
+      ${r.alertes.map(a => `<div class="alert ${a.niv}"><strong>${esc(a.titre)}</strong>${esc(a.texte)}</div>`).join('')}
 
-  document.getElementById('routineMatin').innerHTML =
-    '<div class="routine-time">☀ Matin</div>' +
-    r.matin.map((s,i) => `
-      <div class="routine-step">
-        <div class="step-num">${i+1}</div>
-        <div class="step-content">
-          <div class="step-title">${s.titre}</div>
-          <div class="step-detail">${s.detail}</div>
+      <div class="diagnostic-card">
+        <div class="diag-label">Type de peau</div>
+        <div class="diag-type">${esc(r.typeTxt)}</div>
+        <div class="diag-meta">
+          ${r.typeSource ? 'Retenu selon : ' + esc(r.typeSource) + (r.dev && r.typeSource === 'examen clinique' ? ' · O1-PRO : ' + esc(r.dev.toLowerCase()) : '') + '<br>' : ''}
+          Sensibilité : ${esc(ISAC_LEVELS[r.sens])}${r.sensWhy.length ? ' (' + esc(r.sensWhy.join(' ; ')) + ')' : ''}
         </div>
-      </div>`).join('');
+      </div>
 
-  document.getElementById('routineSoir').innerHTML =
-    '<div class="routine-time">🌙 Soir</div>' +
-    r.soir.map((s,i) => `
-      <div class="routine-step">
-        <div class="step-num">${i+1}</div>
-        <div class="step-content">
-          <div class="step-title">${s.titre}</div>
-          <div class="step-detail">${s.detail}</div>
+      ${r.prio.length ? `<div class="section-block"><h3>Priorités</h3><ul class="prio-list">
+        ${r.prio.map(p => `<li><div class="p-title">${esc(p.label)}</div><div class="p-src">${esc(p.src.join(' · '))}</div></li>`).join('')}
+      </ul></div>` : ''}
+
+      ${rows.length ? `<div class="section-block"><h3>Mesures O1-PRO</h3><table class="mesure-table">
+        ${rows.map(([l, v, b]) => `<tr><td>${esc(l)}</td><td>${esc(v)}</td><td>${b ? `<span class="band ${b.cls}">${b.txt}</span>` : ''}</td></tr>`).join('')}
+      </table></div>` : ''}
+
+      <div class="section-block"><h3>Protocole de soins</h3>
+        ${r.phases.map(ph => `<div class="phase">
+          <div class="phase-title">${esc(ph.titre)}</div>
+          <div class="phase-sub">${esc(ph.sous)}</div>
+          <div class="routine-cols">
+            <div class="routine-block"><div class="routine-time">☀ Matin</div>${routineHTML(ph.matin)}</div>
+            <div class="routine-block"><div class="routine-time">🌙 Soir</div>${routineHTML(ph.soir)}</div>
+          </div></div>`).join('')}
+        ${r.later.length ? `<p class="later">À discuter à la réévaluation : ${esc(r.later.map(x => x.titre).join(', '))}.</p>` : ''}
+        ${r.preg && r.prio.some(p => p.key === 'rides') ? `<p class="later">Rides : rétinoïdes reportés après la grossesse / l'allaitement.</p>` : ''}
+      </div>
+
+      <div class="section-block"><h3>Conseils mode de vie</h3>
+        <ul class="advice-list">${r.conseils.map(c => `<li>${esc(c)}</li>`).join('')}</ul>
+      </div>
+
+      <div class="section-block"><h3>Diagnostic & recommandations</h3>
+        <div class="field"><div class="field-label">Diagnostic principal</div>
+          <textarea class="input" data-field="diag_principal">${esc(A.diag_principal)}</textarea></div>
+        <div class="field"><div class="field-label">Produits conseillés (nom, actif clé, fréquence)</div>
+          <textarea class="input" data-field="produits_conseilles" placeholder="Références de la parapharmacie">${esc(A.produits_conseilles)}</textarea></div>
+        <div class="field"><div class="field-label">Remarques de la pharmacienne</div>
+          <textarea class="input" data-field="remarques">${esc(A.remarques)}</textarea></div>
+        <div class="grid2">
+          <div class="field"><div class="field-label">Rendez-vous de suivi</div>
+            <input class="input" type="date" data-field="rdv" value="${esc(A.rdv)}"></div>
+          <div class="field"><div class="field-label">Durée recommandée</div>
+            <input class="input" type="text" data-field="duree_suivi" value="${esc(A.duree_suivi)}"></div>
         </div>
-      </div>`).join('');
+      </div>
 
-  document.getElementById('adviceList').innerHTML =
-    r.conseils.map(c => `<li>${c}</li>`).join('');
+      <div class="action-buttons">
+        <button class="btn-primary" onclick="downloadPDF()">📄 Télécharger la fiche PDF</button>
+        <button class="btn-secondary" onclick="editAnswers()">✎ Modifier les réponses</button>
+        <button class="btn-secondary" onclick="restart()">↻ Nouvelle fiche</button>
+      </div>
 
+      <p class="disclaimer">⚠ Diagnostic dermocosmétique d'orientation, établi et validé par la pharmacienne. Il ne remplace pas une consultation médicale.</p>
+    </div>`;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function editAnswers() {
+  document.getElementById('resultsScreen').innerHTML = '';
+  document.getElementById('progressBar').style.display = 'block';
+  currentStep = STEPS.length - 1;
+  renderStep();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function restart() {
-  currentQ = 0;
-  for (let k in answers) delete answers[k];
-  document.getElementById('resultsScreen').classList.remove('active');
+  if (!confirm("Effacer cette fiche et en commencer une nouvelle ? Pensez à télécharger le PDF avant.")) return;
+  A = {};
+  currentStep = 0;
+  document.getElementById('resultsScreen').innerHTML = '';
+  document.getElementById('stepContainer').innerHTML = '';
+  document.getElementById('progressBar').style.display = 'none';
   document.getElementById('introScreen').style.display = 'block';
-  document.getElementById('questionContainer').innerHTML = '';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ═══════════════════════════════════════════════════════════
 // PDF
 // ═══════════════════════════════════════════════════════════
+// Helvetica (jsPDF) ne connaît ni les emojis ni certains symboles
+const S = t => String(t == null ? '' : t)
+  .replace(/≥/g, '>=').replace(/≤/g, '<=').replace(/→/g, '->').replace(/×/g, 'x')
+  .replace(/[\u{1F300}-\u{1FAFF}☀-➿]/gu, '').trim();
+
 function downloadPDF() {
   if (!window.jspdf) {
     alert("Le module PDF n'a pas pu se charger. Vérifiez votre connexion internet puis réessayez.");
     return;
   }
+  const r = window._analyse;
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
-  const r = window._diagnostic;
-  const prenom = answers.prenom || '';
+  const M = 18, W = 174;
   const date = new Date().toLocaleDateString('fr-FR');
+  let y = 0;
 
-  // Header
-  doc.setFillColor(20, 20, 43);
-  doc.rect(0, 0, 210, 35, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(18);
-  doc.text('PARAPHARMACIE JIREH', 105, 14, { align: 'center' });
-  doc.setFont('helvetica', 'italic');
-  doc.setFontSize(11);
-  doc.setTextColor(46, 182, 44);
-  doc.text('Skin Analyzer — Fiche de diagnostic', 105, 22, { align: 'center' });
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`Édité le ${date}`, 105, 29, { align: 'center' });
+  const ensure = h => { if (y + h > 278) { doc.addPage(); y = 20; } };
+  const color = c => doc.setTextColor(...c);
+  const DARK = [20, 20, 43], GREY = [90, 90, 110], PINK = [233, 30, 140];
 
-  let y = 50;
-  doc.setTextColor(20, 20, 43);
-
-  if (prenom) {
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Bonjour ${prenom},`, 20, y);
-    y += 10;
+  function title(t) {
+    ensure(16);
+    y += 5;
+    doc.setFillColor(...PINK);
+    doc.rect(M, y - 4.5, 3, 6, 'F');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(12); color(DARK);
+    doc.text(S(t).toUpperCase(), M + 6, y);
+    y += 7;
+  }
+  function kv(k, v) {
+    v = S(v);
+    if (!v) return;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold'); color(DARK);
+    const key = S(k) + ' : ';
+    const kw = doc.getTextWidth(key);
+    doc.setFont('helvetica', 'normal'); color(GREY);
+    const lines = doc.splitTextToSize(v, W - kw);
+    ensure(lines.length * 5 + 1);
+    doc.setFont('helvetica', 'bold'); color(DARK);
+    doc.text(key, M, y);
+    doc.setFont('helvetica', 'normal'); color(GREY);
+    doc.text(lines, M + kw, y);
+    y += lines.length * 5 + 1;
+  }
+  function para(t, opts = {}) {
+    t = S(t);
+    if (!t) return;
+    doc.setFontSize(opts.size || 10);
+    doc.setFont('helvetica', opts.bold ? 'bold' : opts.italic ? 'italic' : 'normal');
+    color(opts.color || GREY);
+    const lines = doc.splitTextToSize(t, W - (opts.indent || 0));
+    ensure(lines.length * 5 + 1);
+    doc.text(lines, M + (opts.indent || 0), y);
+    y += lines.length * 5 + (opts.after == null ? 1 : opts.after);
   }
 
-  // Diagnostic
-  doc.setFillColor(233, 30, 140);
-  doc.rect(20, y, 4, 6, 'F');
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(20, 20, 43);
-  doc.text('DIAGNOSTIC', 28, y + 5);
-  y += 12;
+  // En-tête
+  doc.setFillColor(...DARK);
+  doc.rect(0, 0, 210, 32, 'F');
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(17); doc.setTextColor(255, 255, 255);
+  doc.text('PARAPHARMACIE JIREH', M, 14);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+  doc.text('Soa - Yaoundé, Cameroun  ·  Dr Mireille MBONDA, Docteure en Pharmacie', M, 21);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(46, 182, 44);
+  doc.text("FICHE D'ANAMNÈSE - DERMOCONSEIL", 192, 14, { align: 'right' });
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(255, 255, 255);
+  doc.text(`Date : ${date}`, 192, 21, { align: 'right' });
+  y = 40;
 
-  doc.setFontSize(16);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(233, 30, 140);
-  doc.text(r.type, 20, y);
-  y += 8;
+  title('1. Identification');
+  kv('Nom & prénom', A.nom);
+  kv('Sexe', optLabels('sexe'));
+  kv('Âge', A.age ? A.age + ' ans' : '');
+  kv('Phototype', A.phototype);
+  kv('Profession', A.profession);
+  kv('Ville / quartier', A.ville);
+  kv('Contact', [A.contact, A.email].filter(Boolean).join(' · '));
+  kv('Grossesse / allaitement', A.sexe === 'F' ? optLabels('grossesse') : '');
 
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(60, 60, 80);
-  const descLines = doc.splitTextToSize(r.desc, 170);
-  doc.text(descLines, 20, y);
-  y += descLines.length * 5 + 8;
+  title('2. Motif de consultation');
+  kv('Préoccupations', optLabels('motif_cat'));
+  kv('Préoccupation principale', A.motif);
+  kv('Durée du problème', optLabels('duree'));
 
-  // Routine Matin
-  doc.setFillColor(233, 30, 140);
-  doc.rect(20, y, 4, 6, 'F');
-  doc.setFontSize(13);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(20, 20, 43);
-  doc.text('ROUTINE MATIN', 28, y + 5);
-  y += 10;
+  title('3. Antécédents personnels & familiaux');
+  kv('Antécédents cutanés', [optLabels('atcd'), A.atcd_autre].filter(Boolean).join(' - '));
+  kv('Antécédents familiaux', A.familial === 'oui' ? 'Oui' + (A.familial_detail ? ' - ' + A.familial_detail : '') : optLabels('familial'));
+  kv('Maladies / traitement', [optLabels('maladies'), A.maladies_autre].filter(Boolean).join(' - '));
+  kv('Médicaments actuels', A.medicaments);
+  kv('Contraceptifs', A.contraceptifs);
 
-  doc.setFontSize(10);
-  r.matin.forEach((s, i) => {
-    if (y > 270) { doc.addPage(); y = 20; }
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(20, 20, 43);
-    doc.text(`${i + 1}. ${s.titre}`, 22, y);
-    y += 5;
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(80, 80, 100);
-    const dl = doc.splitTextToSize(`   ${s.detail}`, 165);
-    doc.text(dl, 22, y);
-    y += dl.length * 4.5 + 2;
+  title('4. Mode de vie');
+  ['alimentation', 'eau', 'sommeil', 'stress', 'soleil', 'sport'].forEach(k => kv(FIELD_INDEX[k].label, optLabels(k)));
+
+  title('5. Routine cosmétique actuelle');
+  kv('Produits utilisés', optLabels('produits'));
+  kv('Dépigmentants / éclaircissants', A.depig === 'oui' ? 'Oui' + (A.depig_detail ? ' - ' + A.depig_detail : '') : optLabels('depig'));
+  kv('Récemment introduits / retirés', A.recents);
+  kv('Réactions observées', optLabels('reactions'));
+
+  title('6. Examen clinique');
+  kv('Type de peau', optLabels('type_peau'));
+  kv('Teint global', optLabels('teint'));
+  kv('Épaisseur cutanée', optLabels('epaisseur'));
+  kv("Zones d'attention", [optLabels('zones'), A.zones_autre].filter(Boolean).join(' - '));
+  kv('Lésions observées', optLabels('lesions'));
+  if (ISAC.some(([k]) => A[k] != null)) {
+    const t = isacTotal();
+    kv('Score ISAC', `${t}/12 - ${ISAC_LEVELS[isacLevel(t)]} (` + ISAC.map(([k, l]) => `${l.toLowerCase()} ${A[k] || 0}`).join(', ') + ')');
+  }
+
+  const rows = mesureRows();
+  if (rows.length) {
+    title('Mesures Skin Analyzer O1-PRO');
+    rows.forEach(([l, v, b]) => kv(l, v + (b ? '  (' + b.txt + ')' : '')));
+    const cond = optLabels('conditions');
+    para(cond ? 'Conditions respectées : ' + cond : 'Conditions de mesure non confirmées.', { italic: true, size: 9 });
+  }
+
+  if (r.alertes.length) {
+    title('Points de vigilance');
+    r.alertes.forEach(a => para('• ' + a.titre + ' : ' + a.texte, { color: a.niv === 'red' ? [198, 40, 40] : GREY }));
+  }
+
+  title('7. Diagnostic & recommandations');
+  kv('Diagnostic principal', A.diag_principal);
+  kv('Type de peau retenu', r.typeTxt + (r.typeSource ? ' (selon ' + r.typeSource + ')' : ''));
+  kv('Sensibilité', ISAC_LEVELS[r.sens] + (r.sensWhy.length ? ' (' + r.sensWhy.join(' ; ') + ')' : ''));
+  if (r.prio.length) {
+    para('Priorités :', { bold: true, color: DARK, after: 0 });
+    r.prio.forEach((p, i) => para(`${i + 1}. ${p.label} - ${p.src.join(' · ')}`, { indent: 4 }));
+  }
+
+  y += 2;
+  para('Protocole de soins recommandé', { bold: true, color: DARK, size: 11 });
+  r.phases.forEach(ph => {
+    ensure(20);
+    para(ph.titre, { bold: true, color: PINK });
+    para(ph.sous, { italic: true, size: 9 });
+    [['Matin', ph.matin], ['Soir', ph.soir]].forEach(([moment, steps]) => {
+      para(moment, { bold: true, color: DARK, indent: 2, after: 0 });
+      steps.forEach((s, i) => para(`${i + 1}. ${s.titre}${s.nouveau ? ' [nouveau]' : ''} - ${s.detail}`, { indent: 6, after: 0 }));
+      y += 2;
+    });
   });
-  y += 4;
+  if (r.later.length) para('À discuter à la réévaluation : ' + r.later.map(x => x.titre).join(', ') + '.', { italic: true });
 
-  // Routine Soir
-  if (y > 230) { doc.addPage(); y = 20; }
-  doc.setFillColor(233, 30, 140);
-  doc.rect(20, y, 4, 6, 'F');
-  doc.setFontSize(13);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(20, 20, 43);
-  doc.text('ROUTINE SOIR', 28, y + 5);
-  y += 10;
+  kv('Produits conseillés', A.produits_conseilles);
+  if (r.conseils.length) {
+    para('Conseils mode de vie :', { bold: true, color: DARK, after: 0 });
+    r.conseils.forEach(c => para('• ' + c, { indent: 4, after: 0 }));
+    y += 2;
+  }
+  kv('Remarques', A.remarques);
+  kv('Rendez-vous de suivi', A.rdv ? new Date(A.rdv + 'T12:00').toLocaleDateString('fr-FR') : '');
+  kv('Durée recommandée', A.duree_suivi);
 
-  doc.setFontSize(10);
-  r.soir.forEach((s, i) => {
-    if (y > 270) { doc.addPage(); y = 20; }
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(20, 20, 43);
-    doc.text(`${i + 1}. ${s.titre}`, 22, y);
-    y += 5;
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(80, 80, 100);
-    const dl = doc.splitTextToSize(`   ${s.detail}`, 165);
-    doc.text(dl, 22, y);
-    y += dl.length * 4.5 + 2;
-  });
-  y += 4;
+  // Signatures
+  ensure(34);
+  y += 6;
+  doc.setDrawColor(200, 200, 215);
+  doc.rect(M, y, 80, 26);
+  doc.rect(M + 94, y, 80, 26);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(9); color(DARK);
+  doc.text('Signature du client', M + 3, y + 5);
+  doc.text('Cachet & signature - Dr Mireille MBONDA', M + 97, y + 5);
+  doc.setFont('helvetica', 'normal'); color(GREY);
+  doc.text(`Date : ${date}`, M + 3, y + 23);
+  doc.text('Docteure en Pharmacie - Dermoconseillère', M + 97, y + 23);
 
-  // Conseils
-  if (y > 230) { doc.addPage(); y = 20; }
-  doc.setFillColor(233, 30, 140);
-  doc.rect(20, y, 4, 6, 'F');
-  doc.setFontSize(13);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(20, 20, 43);
-  doc.text('CONSEILS MODE DE VIE', 28, y + 5);
-  y += 10;
+  // Pied de page
+  const n = doc.getNumberOfPages();
+  for (let i = 1; i <= n; i++) {
+    doc.setPage(i);
+    doc.setFont('helvetica', 'italic'); doc.setFontSize(8); doc.setTextColor(130, 130, 150);
+    doc.text('Parapharmacie Jireh · Soa, Yaoundé · +237 696 12 33 74 · Informations strictement confidentielles', 105, 287, { align: 'center' });
+    doc.text(`${i} / ${n}`, 192, 287, { align: 'right' });
+  }
 
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(60, 60, 80);
-  r.conseils.forEach(c => {
-    if (y > 275) { doc.addPage(); y = 20; }
-    const lines = doc.splitTextToSize('• ' + c, 170);
-    doc.text(lines, 20, y);
-    y += lines.length * 5 + 2;
-  });
-
-  // Footer / consultation
-  if (y > 240) { doc.addPage(); y = 20; }
-  y += 8;
-  doc.setFillColor(233, 30, 140);
-  doc.rect(20, y, 170, 35, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Prendre rendez-vous', 105, y + 10, { align: 'center' });
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Pour un accompagnement personnalisé, contactez :', 105, y + 17, { align: 'center' });
-  doc.setFont('helvetica', 'bold');
-  doc.text('Dr Mireille Mbonda — Pharmacienne Dermocosmétologue', 105, y + 24, { align: 'center' });
-  doc.text('+237 696 12 33 74  ·  Parapharmacie Jireh, Soa', 105, y + 30, { align: 'center' });
-
-  // Disclaimer
-  doc.setTextColor(120, 120, 140);
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'italic');
-  doc.text(
-    "Ce diagnostic est un outil d'orientation et ne remplace pas une consultation médicale.",
-    105, 285, { align: 'center' }
-  );
-
-  doc.save(`Fiche_Skin_Analyzer_Jireh${prenom ? '_' + prenom : ''}.pdf`);
+  const nom = (A.nom || '').trim().replace(/[^\p{L}\p{N}]+/gu, '_').replace(/^_+|_+$/g, '');
+  doc.save(`Fiche_Anamnese_Jireh${nom ? '_' + nom : ''}.pdf`);
 }
 </script>
 </body>
