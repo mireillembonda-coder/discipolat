@@ -4,9 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Jireh Skin Analyzer — Dermoconseil</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<meta name="theme-color" content="#14142B">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Jireh Skin">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<!-- Polices et jsPDF hébergés ici : l'application fonctionne sans internet -->
+<script src="vendor/jspdf.umd.min.js"></script>
 <style>
+@font-face { font-family: 'DM Sans'; font-weight: 400; font-display: swap; src: url(vendor/fonts/dm-sans-latin-400-normal.woff2) format('woff2'); }
+@font-face { font-family: 'DM Sans'; font-weight: 500; font-display: swap; src: url(vendor/fonts/dm-sans-latin-500-normal.woff2) format('woff2'); }
+@font-face { font-family: 'DM Sans'; font-weight: 600; font-display: swap; src: url(vendor/fonts/dm-sans-latin-600-normal.woff2) format('woff2'); }
+@font-face { font-family: 'DM Sans'; font-weight: 700; font-display: swap; src: url(vendor/fonts/dm-sans-latin-700-normal.woff2) format('woff2'); }
+@font-face { font-family: 'Cormorant Garamond'; font-weight: 600; font-display: swap; src: url(vendor/fonts/cormorant-garamond-latin-600-normal.woff2) format('woff2'); }
+@font-face { font-family: 'Cormorant Garamond'; font-weight: 600; font-style: italic; font-display: swap; src: url(vendor/fonts/cormorant-garamond-latin-600-italic.woff2) format('woff2'); }
+@font-face { font-family: 'Cormorant Garamond'; font-weight: 700; font-style: italic; font-display: swap; src: url(vendor/fonts/cormorant-garamond-latin-700-italic.woff2) format('woff2'); }
 :root {
   --green: #2EB62C;
   --green-dark: #1d8c1b;
@@ -51,13 +65,10 @@ body {
 }
 .logo { display: flex; align-items: center; gap: 12px; }
 .logo-mark {
-  width: 40px; height: 40px;
-  background: linear-gradient(135deg, var(--green), var(--pink));
+  width: 42px; height: 42px;
   border-radius: 12px;
-  display: flex; align-items: center; justify-content: center;
-  color: white;
-  font-family: 'Cormorant Garamond', serif;
-  font-weight: 700; font-size: 22px; font-style: italic;
+  background: white;
+  display: block;
 }
 .logo-text { line-height: 1.2; }
 .logo-text .name {
@@ -139,6 +150,30 @@ main { max-width: 760px; margin: 0 auto; padding: 36px 20px 80px; }
 .feature h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
 .feature p { font-size: 13px; color: var(--grey); line-height: 1.4; }
 .intro-note { margin-top: 20px; font-size: 13px; color: var(--grey); }
+.formules {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  text-align: left;
+}
+.formule {
+  background: white;
+  border: 1.5px solid var(--border);
+  border-radius: 18px;
+  padding: 24px;
+  display: flex; flex-direction: column;
+}
+.formule.expert { border-color: var(--pink); box-shadow: var(--shadow-md); }
+.formule-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px; font-weight: 600; line-height: 1.1;
+}
+.formule-price { font-size: 22px; font-weight: 700; color: var(--pink-dark); margin: 6px 0 12px; }
+.formule ul { list-style: none; font-size: 14px; color: var(--grey); margin-bottom: 20px; flex: 1; }
+.formule li { padding: 4px 0 4px 22px; position: relative; }
+.formule li::before { content: '✓'; position: absolute; left: 0; color: var(--green-dark); font-weight: 700; }
+.formule .btn-primary { width: 100%; padding: 14px 20px; }
+.install-btn { margin-top: 16px; display: none; }
 
 /* ── BUTTONS ── */
 .btn-primary {
@@ -272,6 +307,22 @@ textarea.input { min-height: 80px; resize: vertical; }
   border-radius: 10px; padding: 12px 14px; margin-bottom: 16px;
   line-height: 1.5;
 }
+
+.photo-slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.photo-slot {
+  border: 1.5px dashed var(--border);
+  border-radius: 14px;
+  padding: 12px;
+  text-align: center;
+  background: var(--grey-light);
+}
+.photo-slot .lbl { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+.photo-slot img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: 10px; display: block; margin-bottom: 8px; }
+.photo-slot .chip { width: 100%; margin-top: 6px; font-size: 13px; padding: 8px 10px; }
+.photo-slot input[type=file] { display: none; }
+.photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.photo-grid img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: 10px; }
+.photo-grid figcaption { font-size: 12px; color: var(--grey); text-align: center; margin-top: 4px; }
 
 .nav-buttons { display: flex; justify-content: space-between; gap: 12px; }
 
@@ -434,7 +485,8 @@ footer { text-align: center; padding: 32px 16px; color: var(--grey); font-size: 
   .step-title { font-size: 28px; }
   .results-header h2 { font-size: 30px; }
   .diag-type { font-size: 28px; }
-  .grid2, .routine-cols { grid-template-columns: 1fr; }
+  .grid2, .routine-cols, .formules { grid-template-columns: 1fr; }
+  .photo-slots { grid-template-columns: 1fr 1fr; }
   .score-row { grid-template-columns: 1fr 80px; }
   .score-row .band { grid-column: 1 / -1; justify-self: start; }
   .diagnostic-card, .section-block, .form-card { padding: 20px; }
@@ -445,7 +497,7 @@ footer { text-align: center; padding: 32px 16px; color: var(--grey); font-size: 
 
 <header class="app-header">
   <div class="logo">
-    <div class="logo-mark">J</div>
+    <img class="logo-mark" src="icons/icon-192.png" alt="">
     <div class="logo-text">
       <div class="name">Parapharmacie Jireh</div>
       <div class="tag">Skin Analyzer</div>
@@ -468,28 +520,35 @@ footer { text-align: center; padding: 32px 16px; color: var(--grey); font-size: 
   <section class="intro" id="introScreen">
     <div class="intro-badge">Fiche d'anamnèse dermoconseil</div>
     <h1>Votre peau,<br><em>votre histoire</em>.</h1>
-    <p class="lead">L'anamnèse de la Parapharmacie Jireh, l'examen clinique et les mesures du Skin Analyzer O1-PRO, réunis pour établir un diagnostic dermocosmétique et une routine progressive — pensés pour les peaux africaines.</p>
+    <p class="lead">L'anamnèse de la Parapharmacie Jireh et l'examen clinique, pour établir un diagnostic dermocosmétique et une routine progressive — pensés pour les peaux africaines.</p>
 
-    <div class="intro-features">
-      <div class="feature">
-        <div class="feature-icon">📝</div>
-        <h3>Anamnèse complète</h3>
-        <p>Identification, motif, antécédents, mode de vie et routine actuelle.</p>
+    <div class="formules">
+      <div class="formule">
+        <div class="formule-name">Consultation Essentielle</div>
+        <div class="formule-price">5 000 FCFA</div>
+        <ul>
+          <li>Anamnèse complète</li>
+          <li>Examen clinique et score ISAC</li>
+          <li>Photos du visage prises à la tablette</li>
+          <li>Routine progressive et fiche PDF</li>
+        </ul>
+        <button class="btn-primary" onclick="startForm('essentielle')">Commencer</button>
       </div>
-      <div class="feature">
-        <div class="feature-icon">🔬</div>
-        <h3>Examen + O1-PRO</h3>
-        <p>Examen clinique, score ISAC et mesures de l'appareil croisés entre eux.</p>
-      </div>
-      <div class="feature">
-        <div class="feature-icon">📄</div>
-        <h3>Fiche PDF</h3>
-        <p>Diagnostic, alertes, routine en 2 phases et suivi, à imprimer ou envoyer.</p>
+      <div class="formule expert">
+        <div class="formule-name">Consultation Expert</div>
+        <div class="formule-price">10 000 FCFA</div>
+        <ul>
+          <li>Tout le contenu de l'Essentielle</li>
+          <li>Analyse Skin Analyzer O1-PRO</li>
+          <li>Sébum, hydratation, 10 indicateurs mesurés</li>
+          <li>Suivi chiffré de visite en visite</li>
+        </ul>
+        <button class="btn-primary" onclick="startForm('expert')">Commencer</button>
       </div>
     </div>
 
-    <button class="btn-primary" onclick="startForm()">Nouvelle fiche</button>
-    <p class="intro-note">⏱ Environ 10 minutes · Les données restent sur cette tablette, rien n'est envoyé.</p>
+    <button class="btn-secondary install-btn" id="installBtn">📲 Installer l'application sur la tablette</button>
+    <p class="intro-note">⏱ Environ 10 minutes · Fonctionne sans internet · Les données restent sur cette tablette, rien n'est envoyé.</p>
   </section>
 
   <section id="stepContainer"></section>
@@ -611,6 +670,10 @@ const STEPS = [
     ]
   },
   {
+    titre: "Photos", qui: 'pharmacienne',
+    fields: [{ type: 'photos' }]
+  },
+  {
     titre: "Examen clinique (visuel & manuel)", qui: 'pharmacienne',
     fields: [
       { id: 'type_peau', type: 'single', label: "Type de peau", options: [
@@ -631,8 +694,8 @@ const STEPS = [
     ]
   },
   {
-    titre: "Mesures Skin Analyzer O1-PRO", qui: 'pharmacienne',
-    intro: "Facultatif. Recopiez les valeurs du rapport ; laissez vide ce qui n'a pas été mesuré.",
+    titre: "Mesures Skin Analyzer O1-PRO", qui: 'pharmacienne', formules: ['expert'],
+    intro: "Recopiez les valeurs du rapport ; laissez vide ce qui n'a pas été mesuré.",
     fields: [
       { type: 'note', html: "Les scores vont de 0 à 100 : <strong>plus le score est haut, mieux c'est</strong>. L'indicateur « teint » de l'appareil n'est volontairement pas utilisé : son échelle classe les peaux foncées comme un problème." },
       { id: 'conditions', type: 'multi', label: "Conditions de mesure respectées", options: [
@@ -647,11 +710,24 @@ const STEPS = [
   },
 ];
 
+const FORMULES = {
+  essentielle: { nom: "Consultation Essentielle", prix: "5 000 FCFA" },
+  expert:      { nom: "Consultation Expert",      prix: "10 000 FCFA" },
+};
+const MESURE_KEYS = ['conditions', 'sebum_t', 'sebum_u', 'hydra1', 'hydra2', 'hydra3', 'fluo', 'photo_rapport', ...SCORES.map(s => s[0])];
+
+function photoSlots() {
+  const slots = [['face', "Face"], ['gauche', "Profil gauche"], ['droit', "Profil droit"]];
+  if (A.formule === 'expert') slots.push(['rapport', "Rapport O1-PRO"]);
+  return slots;
+}
+
 // ═══════════════════════════════════════════════════════════
 // ÉTAT & OUTILS
 // ═══════════════════════════════════════════════════════════
 let currentStep = 0;
 let A = {};
+const activeSteps = () => STEPS.filter(s => !s.formules || s.formules.includes(A.formule));
 
 const has = (arr, v) => Array.isArray(arr) && arr.includes(v);
 const esc = s => String(s == null ? '' : s)
@@ -694,7 +770,10 @@ const isacLevel = t => t <= 3 ? 0 : t <= 6 ? 1 : t <= 9 ? 2 : 3;
 // ═══════════════════════════════════════════════════════════
 // AFFICHAGE DES ÉTAPES
 // ═══════════════════════════════════════════════════════════
-function startForm() {
+function startForm(formule) {
+  A.formule = formule;
+  if (formule !== 'expert') MESURE_KEYS.forEach(k => delete A[k]);
+  currentStep = 0;
   document.getElementById('introScreen').style.display = 'none';
   document.getElementById('resultsScreen').innerHTML = '';
   document.getElementById('progressBar').style.display = 'block';
@@ -751,18 +830,34 @@ function fieldHTML(f) {
       return `<div class="field"><div class="field-label">Scores O1-PRO (0–100)</div>
         <div class="field-hint">Satisfaisant ≥ 61 · À surveiller 41–60 · Priorité ≤ 40 (à confirmer par l'examen)</div>${rows}</div>`;
     }
+    case 'photos': {
+      const slots = photoSlots().map(([k, l]) => {
+        const p = A['photo_' + k];
+        return `<div class="photo-slot"><div class="lbl">${l}</div>
+          ${p ? `<img src="${p.data}" alt="${l}">` : ''}
+          <label class="chip">📷 ${p ? 'Reprendre' : 'Prendre la photo'}<input type="file" accept="image/*" capture="environment" data-photo="${k}"></label>
+          <label class="chip">🖼 Choisir une image<input type="file" accept="image/*" data-photo="${k}"></label>
+          ${p ? `<button type="button" class="chip photo-remove" data-photo="${k}">✕ Retirer</button>` : ''}
+        </div>`;
+      }).join('');
+      const hint = A.formule === 'expert'
+        ? "Facultatif : photos du visage pour le dossier, et photo du rapport de l'appareil."
+        : "Visage nettoyé, sans maquillage, à la lumière du jour ou face à une fenêtre, sans flash. Mêmes conditions à chaque visite pour comparer.";
+      return `<div class="note">${hint}</div><div class="photo-slots">${slots}</div>`;
+    }
   }
   return '';
 }
 
 function renderStep() {
-  const s = STEPS[currentStep];
-  const pct = Math.round(((currentStep + 1) / STEPS.length) * 100);
-  document.getElementById('progressStep').textContent = `Étape ${currentStep + 1} sur ${STEPS.length} — ${s.titre}`;
+  const steps = activeSteps();
+  const s = steps[currentStep];
+  const pct = Math.round(((currentStep + 1) / steps.length) * 100);
+  document.getElementById('progressStep').textContent = `${FORMULES[A.formule].nom} · Étape ${currentStep + 1} sur ${steps.length} — ${s.titre}`;
   document.getElementById('progressPercent').textContent = pct + '%';
   document.getElementById('progressFill').style.width = pct + '%';
 
-  const last = currentStep === STEPS.length - 1;
+  const last = currentStep === steps.length - 1;
   document.getElementById('stepContainer').innerHTML = `
     <div class="step">
       <div class="step-head">
@@ -782,6 +877,14 @@ function renderStep() {
 document.getElementById('main').addEventListener('click', e => {
   const c = e.target.closest('.chip');
   if (!c) return;
+  if (c.classList.contains('photo-remove')) {
+    delete A['photo_' + c.dataset.photo];
+    const y = window.scrollY;
+    renderStep();
+    window.scrollTo(0, y);
+    return;
+  }
+  if (!c.dataset.field) return;
   const { field, value, kind } = c.dataset;
   if (kind === 'multi') {
     const f = FIELD_INDEX[field];
@@ -816,12 +919,40 @@ document.getElementById('main').addEventListener('input', e => {
   });
 });
 
+// Photos : réduites à 1200 px pour garder un PDF léger
+document.getElementById('main').addEventListener('change', async e => {
+  const input = e.target;
+  if (!input.dataset || !input.dataset.photo || !input.files || !input.files[0]) return;
+  try {
+    const url = URL.createObjectURL(input.files[0]);
+    const img = new Image();
+    await new Promise((ok, ko) => { img.onload = ok; img.onerror = ko; img.src = url; });
+    const k = Math.min(1, 1200 / Math.max(img.naturalWidth, img.naturalHeight));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(img.naturalWidth * k);
+    canvas.height = Math.round(img.naturalHeight * k);
+    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+    URL.revokeObjectURL(url);
+    A['photo_' + input.dataset.photo] = { data: canvas.toDataURL('image/jpeg', 0.82), w: canvas.width, h: canvas.height };
+  } catch (err) {
+    alert("Cette image n'a pas pu être lue. Réessayez avec une autre photo.");
+    return;
+  }
+  const y = window.scrollY;
+  renderStep();
+  window.scrollTo(0, y);
+});
+
 function nextStep() {
+  const steps = activeSteps();
   if (currentStep === 0 && !(A.nom || '').trim()) {
     alert("Merci d'indiquer le nom et le prénom.");
     return;
   }
-  if (currentStep < STEPS.length - 1) {
+  if (steps[currentStep].fields.some(f => f.type === 'photos') && A.formule === 'essentielle' &&
+      !photoSlots().some(([k]) => A['photo_' + k]) &&
+      !confirm("Aucune photo n'a été prise. Continuer sans photo ?")) return;
+  if (currentStep < steps.length - 1) {
     currentStep++;
     renderStep();
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1027,6 +1158,7 @@ function analyse() {
   if (is('taches')) conseils.push("Les taches répondent lentement : compter 8 à 12 semaines de routine régulière, avec SPF tous les jours.");
   conseils.push("Introduire un seul nouveau produit à la fois et attendre 2 semaines avant le suivant.");
   if (mesures) conseils.push("Nouvelle mesure O1-PRO à 8 semaines, dans les mêmes conditions, pour comparer.");
+  else if (photoSlots().some(([k]) => A['photo_' + k])) conseils.push("Nouvelles photos à 8 semaines, même lumière et même cadrage, pour comparer.");
 
   const typeTxt = type + (deshydrate ? ', déshydratée' : '');
   const diagAuto = `${typeTxt} — ${ISAC_LEVELS[sens].toLowerCase()}.` +
@@ -1048,6 +1180,9 @@ function mesureRows() {
   if (A.fluo) rows.push(["Agent fluorescent", optLabel('fluo', A.fluo), null]);
   return rows;
 }
+
+const takenPhotos = () => photoSlots().filter(([k]) => A['photo_' + k]).map(([k, l]) => ({ label: l, ...A['photo_' + k] }));
+const UPSELL = "Diagnostic établi sans mesures instrumentales. Pour mesurer le sébum, l'hydratation et 10 indicateurs de la peau, et suivre leur évolution en chiffres : Consultation Expert avec le Skin Analyzer (10 000 FCFA).";
 
 function routineHTML(list) {
   return list.map((s, i) => `
@@ -1075,7 +1210,7 @@ function showResults() {
   document.getElementById('resultsScreen').innerHTML = `
     <div class="step">
       <div class="results-header">
-        <div class="results-badge">Synthèse dermoconseil</div>
+        <div class="results-badge">${FORMULES[A.formule].nom} · ${FORMULES[A.formule].prix}</div>
         <h2>${esc(A.nom)}</h2>
         <p>${[A.age ? esc(A.age) + ' ans' : '', A.phototype ? 'phototype ' + esc(A.phototype) : '', date].filter(Boolean).join(' · ')}</p>
       </div>
@@ -1098,6 +1233,12 @@ function showResults() {
       ${rows.length ? `<div class="section-block"><h3>Mesures O1-PRO</h3><table class="mesure-table">
         ${rows.map(([l, v, b]) => `<tr><td>${esc(l)}</td><td>${esc(v)}</td><td>${b ? `<span class="band ${b.cls}">${b.txt}</span>` : ''}</td></tr>`).join('')}
       </table></div>` : ''}
+
+      ${takenPhotos().length ? `<div class="section-block"><h3>Photos</h3><div class="photo-grid">
+        ${takenPhotos().map(p => `<figure><img src="${p.data}" alt="${esc(p.label)}"><figcaption>${esc(p.label)}</figcaption></figure>`).join('')}
+      </div></div>` : ''}
+
+      ${A.formule === 'essentielle' ? `<div class="alert info"><strong>Consultation Essentielle</strong>${esc(UPSELL)}</div>` : ''}
 
       <div class="section-block"><h3>Protocole de soins</h3>
         ${r.phases.map(ph => `<div class="phase">
@@ -1144,7 +1285,7 @@ function showResults() {
 function editAnswers() {
   document.getElementById('resultsScreen').innerHTML = '';
   document.getElementById('progressBar').style.display = 'block';
-  currentStep = STEPS.length - 1;
+  currentStep = activeSteps().length - 1;
   renderStep();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -1232,6 +1373,7 @@ function downloadPDF() {
   doc.text("FICHE D'ANAMNÈSE - DERMOCONSEIL", 192, 14, { align: 'right' });
   doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(255, 255, 255);
   doc.text(`Date : ${date}`, 192, 21, { align: 'right' });
+  doc.text(`${FORMULES[A.formule].nom} - ${FORMULES[A.formule].prix}`, 192, 27, { align: 'right' });
   y = 40;
 
   title('1. Identification');
@@ -1283,6 +1425,24 @@ function downloadPDF() {
     const cond = optLabels('conditions');
     para(cond ? 'Conditions respectées : ' + cond : 'Conditions de mesure non confirmées.', { italic: true, size: 9 });
   }
+
+  const photos = takenPhotos();
+  if (photos.length) {
+    title('Photos');
+    const gap = 6, w = (W - gap * (photos.length - 1)) / photos.length;
+    const h = Math.min(75, Math.max(...photos.map(p => w * p.h / p.w)));
+    ensure(h + 8);
+    photos.forEach((p, i) => {
+      const ph = Math.min(h, w * p.h / p.w), pw = ph * p.w / p.h;
+      const x = M + i * (w + gap) + (w - pw) / 2;
+      doc.addImage(p.data, 'JPEG', x, y, pw, ph);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(8); color(GREY);
+      doc.text(S(p.label), M + i * (w + gap) + w / 2, y + h + 4, { align: 'center' });
+    });
+    y += h + 9;
+  }
+
+  if (A.formule === 'essentielle') para(UPSELL, { italic: true, size: 9 });
 
   if (r.alertes.length) {
     title('Points de vigilance');
@@ -1347,6 +1507,26 @@ function downloadPDF() {
   const nom = (A.nom || '').trim().replace(/[^\p{L}\p{N}]+/gu, '_').replace(/^_+|_+$/g, '');
   doc.save(`Fiche_Anamnese_Jireh${nom ? '_' + nom : ''}.pdf`);
 }
+
+// ═══════════════════════════════════════════════════════════
+// APPLICATION INSTALLABLE & HORS LIGNE
+// ═══════════════════════════════════════════════════════════
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
+}
+let installPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  installPrompt = e;
+  document.getElementById('installBtn').style.display = 'inline-block';
+});
+document.getElementById('installBtn').addEventListener('click', async () => {
+  if (!installPrompt) return;
+  installPrompt.prompt();
+  await installPrompt.userChoice;
+  installPrompt = null;
+  document.getElementById('installBtn').style.display = 'none';
+});
 </script>
 </body>
 </html>
