@@ -13,6 +13,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <!-- Polices et jsPDF hébergés ici : l'application fonctionne sans internet -->
 <script src="vendor/jspdf.umd.min.js"></script>
+<script src="produits.js"></script>
 <style>
 @font-face { font-family: 'DM Sans'; font-weight: 400; font-display: swap; src: url(vendor/fonts/dm-sans-latin-400-normal.woff2) format('woff2'); }
 @font-face { font-family: 'DM Sans'; font-weight: 500; font-display: swap; src: url(vendor/fonts/dm-sans-latin-500-normal.woff2) format('woff2'); }
@@ -324,6 +325,61 @@ textarea.input { min-height: 80px; resize: vertical; }
 .photo-grid img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: 10px; }
 .photo-grid figcaption { font-size: 12px; color: var(--grey); text-align: center; margin-top: 4px; }
 
+/* ── PRODUITS ── */
+.prods { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; align-items: center; }
+.prod-chip {
+  border: 1.5px solid var(--border);
+  background: white;
+  border-radius: 10px;
+  padding: 5px 9px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  color: var(--dark);
+  cursor: pointer;
+  text-align: left;
+  line-height: 1.3;
+}
+.prod-chip.on { border-color: var(--pink); background: var(--pink-soft); font-weight: 600; }
+.prod-chip .st { display: block; font-size: 10px; font-weight: 600; }
+.st-stock { color: var(--green-dark); }
+.st-rupture { color: var(--red); }
+.st-absent { color: var(--amber); }
+.prod-select {
+  font-family: 'DM Sans', sans-serif; font-size: 12px;
+  border: 1.5px dashed var(--border); border-radius: 10px;
+  padding: 5px 6px; background: white; color: var(--grey); max-width: 150px;
+}
+
+/* ── STOCK ── */
+.stock-counts { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.stock-counts .band { font-size: 13px; padding: 6px 12px; }
+.stock-tools { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.stock-tools .input { flex: 1; min-width: 180px; }
+.stock-tools select.input { flex: 0 1 220px; }
+.stock-brand { font-weight: 700; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; color: var(--grey); margin: 18px 0 4px; }
+.stock-row {
+  display: grid; grid-template-columns: 30px 1fr auto;
+  gap: 10px; align-items: center;
+  padding: 9px 0; border-bottom: 1px solid var(--border);
+}
+.stock-row .nom { font-size: 14px; font-weight: 500; }
+.stock-row .cats { font-size: 12px; color: var(--grey); }
+.fav { background: none; border: none; font-size: 20px; cursor: pointer; color: #c9c9d6; line-height: 1; }
+.fav.on { color: #e0a000; }
+.seg { display: flex; border: 1.5px solid var(--border); border-radius: 10px; overflow: hidden; }
+.seg button {
+  border: none; background: white; padding: 6px 9px;
+  font-family: 'DM Sans', sans-serif; font-size: 12px; cursor: pointer; color: var(--grey);
+}
+.seg button + button { border-left: 1.5px solid var(--border); }
+.seg button.on.stock { background: var(--green-soft); color: var(--green-dark); font-weight: 700; }
+.seg button.on.rupture { background: var(--red-soft); color: var(--red); font-weight: 700; }
+.seg button.on.absent { background: var(--amber-soft); color: var(--amber); font-weight: 700; }
+.besoin-row { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+.besoin-row:last-child { border-bottom: none; }
+.besoin-row strong { color: var(--pink-dark); white-space: nowrap; }
+.link-btn { background: none; border: none; color: var(--red); font-size: 12px; cursor: pointer; text-decoration: underline; font-family: inherit; }
+
 .nav-buttons { display: flex; justify-content: space-between; gap: 12px; }
 
 /* ── RESULTS ── */
@@ -489,6 +545,8 @@ footer { text-align: center; padding: 32px 16px; color: var(--grey); font-size: 
   .photo-slots { grid-template-columns: 1fr 1fr; }
   .score-row { grid-template-columns: 1fr 80px; }
   .score-row .band { grid-column: 1 / -1; justify-self: start; }
+  .stock-row { grid-template-columns: 30px 1fr; }
+  .stock-row .seg { grid-column: 2; justify-self: start; }
   .diagnostic-card, .section-block, .form-card { padding: 20px; }
 }
 </style>
@@ -547,12 +605,16 @@ footer { text-align: center; padding: 32px 16px; color: var(--grey); font-size: 
       </div>
     </div>
 
-    <button class="btn-secondary install-btn" id="installBtn">📲 Installer l'application sur la tablette</button>
+    <div style="margin-top:20px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap">
+      <button class="btn-secondary" onclick="showStock()">📦 Stock produits</button>
+      <button class="btn-secondary install-btn" id="installBtn">📲 Installer l'application sur la tablette</button>
+    </div>
     <p class="intro-note">⏱ Environ 10 minutes · Fonctionne sans internet · Les données restent sur cette tablette, rien n'est envoyé.</p>
   </section>
 
   <section id="stepContainer"></section>
   <section id="resultsScreen"></section>
+  <section id="stockScreen"></section>
 
 </main>
 
@@ -775,6 +837,7 @@ function startForm(formule) {
   if (formule !== 'expert') MESURE_KEYS.forEach(k => delete A[k]);
   currentStep = 0;
   document.getElementById('introScreen').style.display = 'none';
+  document.getElementById('stockScreen').innerHTML = '';
   document.getElementById('resultsScreen').innerHTML = '';
   document.getElementById('progressBar').style.display = 'block';
   renderStep();
@@ -1111,21 +1174,29 @@ function analyse() {
     : (dry || deshydrate) ? "Crème riche en céramides" + (dry ? " (+ beurre de karité)" : "")
     : "Crème légère aux céramides";
   const cremeSoir = dry ? "Crème réparatrice riche : céramides, acides gras essentiels" : "Crème réparatrice aux céramides";
-  const spfDetail = "SPF 50+ minéral teinté, application généreuse" +
+  const spfDetail = "SPF 50+, application généreuse" +
     (['importante', 'pro'].includes(A.soleil) ? " ; renouveler toutes les 2 h dehors" : "");
 
+  // Étapes de routine → catégories de produits proposés (voir produits.js)
+  const repare = gentle || depig;
+  const ACTIF_CATS = {
+    nia: gentle ? ['niacinamide_doux', 'niacinamide'] : ['niacinamide'],
+    aza: ['azelaique', ...(is('acne') ? ['acne_soin'] : []), ...(is('taches') ? ['taches'] : [])],
+    ret: ['retinol'], bak: ['antiage_doux'], vitc: ['vitc', 'eclat'],
+  };
   function routine(list, nouveaux) {
-    const step = (titre, detail, x) => ({ titre, detail, nouveau: !!x && nouveaux.includes(x) });
+    const step = (titre, detail, x, slot, cats) => ({ titre, detail, nouveau: !!x && nouveaux.includes(x), slot, cats });
     const soirActifs = list.filter(x => x.moment === 'soir');
     const alterne = soirActifs.length > 1;
-    const matin = [step("Nettoyage", nettoyant)];
-    list.filter(x => x.moment === 'matin').forEach(x => matin.push(step(x.titre, x.detail, x)));
-    if (deshydrate || is('hydra')) matin.push(step("Sérum acide hyaluronique", "Sur peau légèrement humide"));
-    matin.push(step("Crème hydratante", cremeMatin));
-    matin.push(step("Protection solaire", spfDetail));
-    const soir = [step("Double nettoyage", "Huile ou lait démaquillant, puis le nettoyant du matin")];
-    soirActifs.forEach(x => soir.push(step(x.titre, alterne ? x.detail + " — un soir sur deux, en alternance" : x.detail, x)));
-    soir.push(step("Crème de nuit", cremeSoir));
+    const matin = [step("Nettoyage", nettoyant, null, 'nettoyage', [oily && !gentle ? 'nettoyant_gras' : 'nettoyant_doux'])];
+    list.filter(x => x.moment === 'matin').forEach(x => matin.push(step(x.titre, x.detail, x, x.k, ACTIF_CATS[x.k])));
+    if (deshydrate || is('hydra')) matin.push(step("Sérum acide hyaluronique", "Sur peau légèrement humide", null, 'hyalu', ['hyaluronique']));
+    matin.push(step("Crème hydratante", cremeMatin, null, 'creme_jour', [oily ? 'creme_legere' : 'creme_riche', ...(repare ? ['reparation'] : [])]));
+    matin.push(step("Protection solaire", spfDetail, null, 'spf', ['spf']));
+    const soir = [step("Double nettoyage", "Huile ou lait démaquillant, puis le nettoyant du matin", null, 'demaquillage', ['demaquillant'])];
+    soirActifs.forEach(x => soir.push(step(x.titre, alterne ? x.detail + " — un soir sur deux, en alternance" : x.detail, x, x.k, ACTIF_CATS[x.k])));
+    const nuit = dry ? 'creme_riche' : 'creme_legere';
+    soir.push(step("Crème de nuit", cremeSoir, null, 'creme_nuit', repare ? ['reparation', nuit] : [nuit, 'reparation']));
     return { matin, soir };
   }
 
@@ -1184,6 +1255,45 @@ function mesureRows() {
 const takenPhotos = () => photoSlots().filter(([k]) => A['photo_' + k]).map(([k, l]) => ({ label: l, ...A['photo_' + k] }));
 const UPSELL = "Diagnostic établi sans mesures instrumentales. Pour mesurer le sébum, l'hydratation et 10 indicateurs de la peau, et suivre leur évolution en chiffres : Consultation Expert avec le Skin Analyzer (10 000 FCFA).";
 
+// ═══════════════════════════════════════════════════════════
+// PRODUITS & STOCK (enregistré sur cette tablette)
+// ═══════════════════════════════════════════════════════════
+const STOCK_KEY = 'jireh-stock-v1';
+let ST = {};
+try { ST = JSON.parse(localStorage.getItem(STOCK_KEY)) || {}; } catch (e) { ST = {}; }
+ST.statut = ST.statut || {}; ST.fav = ST.fav || {}; ST.ajouts = ST.ajouts || []; ST.demande = ST.demande || {};
+function saveStock() { try { localStorage.setItem(STOCK_KEY, JSON.stringify(ST)); } catch (e) {} }
+
+const STATUTS = { stock: "En stock", rupture: "Rupture", absent: "Pas en stock" };
+function produits() {
+  const base = CATALOGUE.map(([id, marque, nom, cats, statut]) => ({ id, marque, nom, cats: cats.split(' '), statut }));
+  return [...base, ...ST.ajouts.map(p => ({ ...p, ajout: true }))]
+    .map((p, ordre) => ({ ...p, ordre, statut: ST.statut[p.id] || p.statut, fav: !!ST.fav[p.id] }));
+}
+const produit = id => produits().find(p => p.id === id);
+
+// 1 à 2 références par étape : favoris et produits en stock d'abord
+function suggestions(cats) {
+  const rang = p => (p.statut === 'stock' ? 0 : 2) + (p.fav ? 0 : 1);
+  const all = produits().filter(p => p.cats.some(c => cats.includes(c)))
+    .sort((a, b) => rang(a) - rang(b) || cats.indexOf(a.cats.find(c => cats.includes(c))) - cats.indexOf(b.cats.find(c => cats.includes(c))) || a.ordre - b.ordre);
+  const enStock = all.filter(p => p.statut === 'stock');
+  return enStock.length >= 2 ? enStock.slice(0, 2) : all.slice(0, 2);
+}
+
+function prodHTML(s) {
+  if (!s.slot) return '';
+  A.choix = A.choix || {};
+  const choisi = A.choix[s.slot];
+  const list = suggestions(s.cats);
+  if (choisi && !list.some(p => p.id === choisi) && produit(choisi)) list.push(produit(choisi));
+  const chips = list.map(p => `<button type="button" class="prod-chip ${p.id === choisi ? 'on' : ''}" data-slot="${s.slot}" data-prod="${p.id}">
+      ${p.fav ? '★ ' : ''}${esc(p.marque)} — ${esc(p.nom)}<span class="st st-${p.statut}">${STATUTS[p.statut]}</span></button>`).join('');
+  const options = produits().sort((a, b) => a.marque.localeCompare(b.marque) || a.nom.localeCompare(b.nom))
+    .map(p => `<option value="${p.id}">${esc(p.marque)} — ${esc(p.nom)}${p.statut !== 'stock' ? ' (' + STATUTS[p.statut].toLowerCase() + ')' : ''}</option>`).join('');
+  return `<div class="prods">${chips}<select class="prod-select" data-slot="${s.slot}"><option value="">Autre produit…</option>${options}</select></div>`;
+}
+
 function routineHTML(list) {
   return list.map((s, i) => `
     <div class="routine-step">
@@ -1191,9 +1301,186 @@ function routineHTML(list) {
       <div class="step-content">
         <div class="step-title">${esc(s.titre)}${s.nouveau ? '<span class="tag-new">Nouveau</span>' : ''}</div>
         <div class="step-detail">${esc(s.detail)}</div>
+        ${prodHTML(s)}
       </div>
     </div>`).join('');
 }
+
+function choixProduits() {
+  const ids = Object.values(A.choix || {}).filter(Boolean);
+  return [...new Set(ids)].map(produit).filter(Boolean);
+}
+
+// ── Écran Stock ──
+let stockFiltre = { q: '', statut: '', cat: '' };
+function showStock() {
+  ['introScreen'].forEach(id => document.getElementById(id).style.display = 'none');
+  document.getElementById('stepContainer').innerHTML = '';
+  document.getElementById('resultsScreen').innerHTML = '';
+  document.getElementById('progressBar').style.display = 'none';
+  renderStock();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function closeStock() {
+  document.getElementById('stockScreen').innerHTML = '';
+  document.getElementById('introScreen').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function besoins() {
+  return produits().filter(p => ST.demande[p.id] && p.statut !== 'stock')
+    .sort((a, b) => ST.demande[b.id] - ST.demande[a.id]);
+}
+
+function renderStock() {
+  const ps = produits();
+  const n = s => ps.filter(p => p.statut === s).length;
+  const bs = besoins();
+  const catOpts = Object.entries(CATEGORIES).map(([k, l]) => `<option value="${k}" ${stockFiltre.cat === k ? 'selected' : ''}>${l}</option>`).join('');
+  document.getElementById('stockScreen').innerHTML = `
+    <div class="step">
+      <div class="step-head">
+        <span class="step-who pharmacienne">Pharmacienne</span>
+        <h2 class="step-title">Stock produits</h2>
+        <p class="step-intro">Le statut et les favoris (★, proposés en premier) sont enregistrés sur cette tablette.</p>
+      </div>
+      <div class="stock-counts">
+        <span class="band ok">${n('stock')} en stock</span>
+        <span class="band prio">${n('rupture')} en rupture</span>
+        <span class="band watch">${n('absent')} pas en stock</span>
+      </div>
+
+      <div class="section-block"><h3>Besoins</h3>
+        <p class="step-intro" style="margin:-8px 0 10px">Produits conseillés dans les fiches alors qu'ils n'étaient pas en stock.</p>
+        ${bs.length ? bs.map(p => `<div class="besoin-row"><span>${esc(p.marque)} — ${esc(p.nom)} <span class="st-${p.statut}">· ${STATUTS[p.statut]}</span></span><strong>${ST.demande[p.id]} fois</strong></div>`).join('')
+          : '<p class="step-intro">Aucun besoin enregistré pour l\'instant.</p>'}
+        <div class="stock-tools" style="margin-top:14px">
+          <button class="btn-secondary" data-action="export-besoins">⬇ Liste de commande (Excel)</button>
+          ${bs.length ? '<button class="btn-secondary" data-action="reset-besoins">Remettre les compteurs à zéro</button>' : ''}
+        </div>
+      </div>
+
+      <div class="section-block"><h3>Catalogue</h3>
+        <div class="stock-tools">
+          <input class="input" type="search" id="stockSearch" placeholder="Rechercher un produit ou une marque" value="${esc(stockFiltre.q)}">
+          <select class="input" id="stockCat"><option value="">Toutes les étapes</option>${catOpts}</select>
+        </div>
+        <div class="chips" style="margin-bottom:6px">
+          ${[['', 'Tous'], ['stock', 'En stock'], ['rupture', 'Rupture'], ['absent', 'Pas en stock']].map(([v, l]) =>
+            `<button type="button" class="chip ${stockFiltre.statut === v ? 'on' : ''}" data-action="filtre-statut" data-value="${v}">${l}</button>`).join('')}
+        </div>
+        <div id="stockList"></div>
+      </div>
+
+      <div class="section-block"><h3>Ajouter un produit</h3>
+        <div class="grid2">
+          <div class="field"><div class="field-label">Marque</div><input class="input" id="addMarque"></div>
+          <div class="field"><div class="field-label">Produit</div><input class="input" id="addNom"></div>
+        </div>
+        <div class="field"><div class="field-label">Étapes de routine où le proposer</div>
+          <div class="chips" id="addCats">${Object.entries(CATEGORIES).map(([k, l]) => `<button type="button" class="chip" data-action="add-cat" data-value="${k}">${l}</button>`).join('')}</div></div>
+        <div class="field"><div class="field-label">Statut</div>
+          <div class="chips" id="addStatut">${Object.entries(STATUTS).map(([k, l]) => `<button type="button" class="chip ${k === 'stock' ? 'on' : ''}" data-action="add-statut" data-value="${k}">${l}</button>`).join('')}</div></div>
+        <button class="btn-primary" data-action="add-produit">Ajouter au catalogue</button>
+      </div>
+
+      <div class="action-buttons">
+        <button class="btn-secondary" data-action="export-stock">⬇ Exporter tout le stock (Excel)</button>
+        <button class="btn-primary" onclick="closeStock()">← Retour à l'accueil</button>
+      </div>
+    </div>`;
+  renderStockList();
+}
+
+function renderStockList() {
+  const q = stockFiltre.q.trim().toLowerCase();
+  const ps = produits().filter(p =>
+    (!stockFiltre.statut || p.statut === stockFiltre.statut) &&
+    (!stockFiltre.cat || p.cats.includes(stockFiltre.cat)) &&
+    (!q || (p.marque + ' ' + p.nom).toLowerCase().includes(q)))
+    .sort((a, b) => a.marque.localeCompare(b.marque) || a.nom.localeCompare(b.nom));
+  let marque = '';
+  document.getElementById('stockList').innerHTML = ps.length ? ps.map(p => {
+    const head = p.marque !== marque ? `<div class="stock-brand">${esc(marque = p.marque)}</div>` : '';
+    return head + `<div class="stock-row">
+      <button type="button" class="fav ${p.fav ? 'on' : ''}" data-action="fav" data-id="${p.id}" title="Proposer en premier">★</button>
+      <div><div class="nom">${esc(p.nom)}</div><div class="cats">${p.cats.map(c => CATEGORIES[c] || c).join(' · ')}
+        ${p.ajout ? ` · <button type="button" class="link-btn" data-action="del" data-id="${p.id}">supprimer</button>` : ''}</div></div>
+      <div class="seg">${Object.entries(STATUTS).map(([k, l]) =>
+        `<button type="button" class="${k} ${p.statut === k ? 'on' : ''}" data-action="statut" data-id="${p.id}" data-value="${k}">${l}</button>`).join('')}</div>
+    </div>`;
+  }).join('') : '<p class="step-intro">Aucun produit ne correspond.</p>';
+}
+
+function downloadCSV(nom, lignes) {
+  const csv = '﻿' + lignes.map(l => l.map(v => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`).join(';')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = nom;
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
+let ajout = { cats: [], statut: 'stock' };
+document.getElementById('main').addEventListener('click', e => {
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  const { action, id, value } = el.dataset;
+  const y = window.scrollY;
+  if (action === 'statut') { ST.statut[id] = value; saveStock(); renderStock(); }
+  else if (action === 'fav') { if (ST.fav[id]) delete ST.fav[id]; else ST.fav[id] = true; saveStock(); renderStock(); }
+  else if (action === 'del') {
+    if (!confirm("Supprimer ce produit du catalogue ?")) return;
+    ST.ajouts = ST.ajouts.filter(p => p.id !== id); saveStock(); renderStock();
+  }
+  else if (action === 'filtre-statut') { stockFiltre.statut = value; renderStock(); }
+  else if (action === 'add-cat') { ajout.cats = ajout.cats.includes(value) ? ajout.cats.filter(c => c !== value) : [...ajout.cats, value]; el.classList.toggle('on'); return; }
+  else if (action === 'add-statut') { ajout.statut = value; document.querySelectorAll('#addStatut .chip').forEach(c => c.classList.toggle('on', c === el)); return; }
+  else if (action === 'add-produit') {
+    const marque = document.getElementById('addMarque').value.trim();
+    const nom = document.getElementById('addNom').value.trim();
+    if (!marque || !nom) { alert("Indiquez la marque et le produit."); return; }
+    ST.ajouts.push({ id: 'ajout-' + Date.now(), marque, nom, cats: ajout.cats.length ? ajout.cats : ['autre'], statut: ajout.statut });
+    ajout = { cats: [], statut: 'stock' };
+    saveStock(); renderStock();
+  }
+  else if (action === 'reset-besoins') {
+    if (!confirm("Remettre tous les compteurs de besoins à zéro ?")) return;
+    ST.demande = {}; saveStock(); renderStock();
+  }
+  else if (action === 'export-besoins') {
+    downloadCSV('Besoins_Jireh.csv', [['Marque', 'Produit', 'Statut', 'Nombre de fois conseillé'],
+      ...besoins().map(p => [p.marque, p.nom, STATUTS[p.statut], ST.demande[p.id]])]);
+    return;
+  }
+  else if (action === 'export-stock') {
+    downloadCSV('Stock_Jireh.csv', [['Marque', 'Produit', 'Étapes', 'Statut', 'Favori', 'Besoins'],
+      ...produits().map(p => [p.marque, p.nom, p.cats.map(c => CATEGORIES[c] || c).join(', '), STATUTS[p.statut], p.fav ? 'oui' : '', ST.demande[p.id] || ''])]);
+    return;
+  }
+  else return;
+  window.scrollTo(0, y);
+});
+document.getElementById('main').addEventListener('input', e => {
+  if (e.target.id === 'stockSearch') { stockFiltre.q = e.target.value; renderStockList(); }
+});
+document.getElementById('main').addEventListener('change', e => {
+  if (e.target.id === 'stockCat') { stockFiltre.cat = e.target.value; renderStockList(); }
+});
+
+// ── Choix d'un produit dans la synthèse ──
+document.getElementById('main').addEventListener('click', e => {
+  const c = e.target.closest('.prod-chip');
+  if (!c) return;
+  A.choix = A.choix || {};
+  A.choix[c.dataset.slot] = A.choix[c.dataset.slot] === c.dataset.prod ? undefined : c.dataset.prod;
+  const y = window.scrollY; showResults(); window.scrollTo(0, y);
+});
+document.getElementById('main').addEventListener('change', e => {
+  if (!e.target.classList.contains('prod-select') || !e.target.value) return;
+  A.choix = A.choix || {};
+  A.choix[e.target.dataset.slot] = e.target.value;
+  const y = window.scrollY; showResults(); window.scrollTo(0, y);
+});
 
 function showResults() {
   const r = analyse();
@@ -1466,13 +1753,31 @@ function downloadPDF() {
     para(ph.sous, { italic: true, size: 9 });
     [['Matin', ph.matin], ['Soir', ph.soir]].forEach(([moment, steps]) => {
       para(moment, { bold: true, color: DARK, indent: 2, after: 0 });
-      steps.forEach((s, i) => para(`${i + 1}. ${s.titre}${s.nouveau ? ' [nouveau]' : ''} - ${s.detail}`, { indent: 6, after: 0 }));
+      steps.forEach((s, i) => {
+        para(`${i + 1}. ${s.titre}${s.nouveau ? ' [nouveau]' : ''} - ${s.detail}`, { indent: 6, after: 0 });
+        const p = s.slot && A.choix && produit(A.choix[s.slot]);
+        if (p) para(`-> ${p.marque} - ${p.nom}`, { indent: 10, after: 0, color: PINK });
+      });
       y += 2;
     });
   });
   if (r.later.length) para('À discuter à la réévaluation : ' + r.later.map(x => x.titre).join(', ') + '.', { italic: true });
 
-  kv('Produits conseillés', A.produits_conseilles);
+  const choisis = choixProduits();
+  if (choisis.length) {
+    para('Produits conseillés :', { bold: true, color: DARK, after: 0 });
+    choisis.forEach(p => para(`• ${p.marque} - ${p.nom}`, { indent: 4, after: 0 }));
+    y += 2;
+  }
+  kv(choisis.length ? 'Autres produits / remarques' : 'Produits conseillés', A.produits_conseilles);
+
+  // Besoins : produits conseillés mais pas en stock (comptés une fois par fiche)
+  A._comptes = A._comptes || [];
+  choisis.filter(p => p.statut !== 'stock' && !A._comptes.includes(p.id)).forEach(p => {
+    ST.demande[p.id] = (ST.demande[p.id] || 0) + 1;
+    A._comptes.push(p.id);
+  });
+  saveStock();
   if (r.conseils.length) {
     para('Conseils mode de vie :', { bold: true, color: DARK, after: 0 });
     r.conseils.forEach(c => para('• ' + c, { indent: 4, after: 0 }));
