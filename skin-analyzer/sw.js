@@ -1,10 +1,11 @@
 // Garde le Skin Analyzer en mémoire pour qu'il fonctionne sans internet,
 // PDF compris. Changer CACHE à chaque mise à jour des fichiers ci-dessous.
-var CACHE = 'jireh-skin-v1';
+var CACHE = 'jireh-skin-v2';
 var FILES = [
   './',
   'index.html',
   'manifest.webmanifest',
+  'produits.js',
   'vendor/jspdf.umd.min.js',
   'vendor/fonts/dm-sans-latin-400-normal.woff2',
   'vendor/fonts/dm-sans-latin-500-normal.woff2',
