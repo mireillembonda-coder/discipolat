@@ -48,6 +48,26 @@ var ABSENCE = { ATTENTE: 'En attente', ACCEPTEE: 'Acceptée', REFUSEE: 'Refusée
 var MOTIFS_ABSENCE = ['Maladie', 'Travail', 'Voyage', 'Autre'];
 
 var JOURS = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+var JOURS_LONGS = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+
+/*
+ * Églises. Chaque église a sa propre liste de programmes (onglet Programmes, colonne Eglise),
+ * remplie par le premier disciple de l'église qui s'inscrit, puis corrigeable par le superviseur.
+ * Les programmes de départ (sans église) sont ceux d'EGLISE_DEFAUT.
+ */
+var EGLISE_DEFAUT = 'ICC Centre-Ville';
+var EGLISES = ['ICC Yaoundé - Eglise Principale', 'ICC Odza Borne 10', 'ICC Biyem-Assi', 'ICC Soa', 'ICC Oyom-Abang', 'ICC Bafoussam',
+  'ICC Sangmelima', 'ICC Nsam', 'ICC Mbalngong', 'ICC Centre-Ville', 'ICC Nkoabang', 'ICC Dschang', 'ICC Bandjoun', 'ICC Ebolowa',
+  'ICC Mbalmayo', 'ICC Garoua', 'ICC Obala', 'ICC Mbankomo', 'ICC Foulassi', 'ICC Obobogo', 'ICC Okola'];
+
+/** Église d'un disciple (EGLISE_DEFAUT pour les inscrits d'avant la fiche). */
+function egliseDe_(d) { return String(d && d.Eglise || '').trim() || EGLISE_DEFAUT; }
+
+/** Église d'un programme ('' = toutes les églises, pour un programme optionnel). */
+function egliseProgramme_(p) {
+  var e = String(p.Eglise || '').trim();
+  return e || (String(p.Type) === 'fixe' ? EGLISE_DEFAUT : '');
+}
 
 var ENTETES = {};
 ENTETES[ONGLETS.DISCIPLES] = ['Id','Prenom','Nom','Telephone','Statut','DateInscription','DateValidation','FinEssai',
@@ -57,7 +77,8 @@ ENTETES[ONGLETS.DISCIPLES] = ['Id','Prenom','Nom','Telephone','Statut','DateInsc
 ENTETES[ONGLETS.SUIVI] = ['Cle','Semaine','DiscipleId','Prenom','Score','DetailScore','Validation','DateValidation',
   'CommentaireSuperviseur','DerniereMaj'];
 ENTETES[ONGLETS.PRESENCES] = ['Cle','Semaine','DiscipleId','Prenom','ProgrammeId','Present','AlHeure','DerniereMaj'];
-ENTETES[ONGLETS.PROGRAMMES] = ['Id','Nom','Type','Horaire','Date','Semaine','Actif','Ordre'];
+// Eglise : église du programme. Programme fixe sans église = EGLISE_DEFAUT ; optionnel sans église = toutes.
+ENTETES[ONGLETS.PROGRAMMES] = ['Id','Nom','Type','Horaire','Date','Semaine','Actif','Ordre','Eglise'];
 ENTETES[ONGLETS.PARAMETRES] = ['Id','Libelle','Type','Elements','JoursPrevus','Poids','Actif','Ordre'];
 ENTETES[ONGLETS.REGLAGES] = ['Cle','Valeur'];
 ENTETES[ONGLETS.ABSENCES] = ['Id','DateDemande','DiscipleId','Prenom','Semaine','Critere','Element','Libelle',

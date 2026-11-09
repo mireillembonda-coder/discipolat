@@ -4,54 +4,2272 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Discipolat</title>
-<meta name="description" content="Suivi hebdomadaire des disciples — ICC Centre-Ville">
+<meta name="description" content="Suivi hebdomadaire des disciples · ICC">
 <meta name="theme-color" content="#6A2BD9">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&amp;family=Nunito:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet">
 <style>
-  :root{ --bg:#F6F1FF; --violet:#6A2BD9; --ink:#22113D; --muted:#8676A6; }
-  @media (prefers-color-scheme: dark){
-    :root{ --bg:#120923; --violet:#A47BFF; --ink:#F5EFFF; --muted:#9A89BE; }
+  :root{
+    --bg:#F6F1FF; --surface:#FFFFFF; --surface-2:#EEE5FF;
+    --ink:#22113D; --ink-2:#55457A; --muted:#8676A6;
+    --violet:#6A2BD9; --violet-2:#8E5BF0; --violet-deep:#3B1580; --violet-soft:#E6DAFF;
+    --flame:#FF6B2C; --flame-soft:#FFE4D6;
+    --gold:#F2A900; --gold-soft:#FFF0C7;
+    --mint:#12B886; --mint-soft:#D3F7EA;
+    --pink:#F0407F; --pink-soft:#FFDCE8;
+    --sky:#2F8FEA; --sky-soft:#DCEBFF;
+    --border:#E3D7FA;
+    --good:#12B886; --warn:#D98C00; --bad:#E0475B;
+    --shadow:rgba(74,30,160,.14);
+    --hero-a:#5B1FD1; --hero-b:#8A3FF2;
   }
-  html,body{margin:0;height:100%;background:var(--bg);}
-  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);}
-  #app{position:fixed;inset:0;width:100%;height:100%;border:0;display:block;}
-  #splash{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:var(--bg);transition:opacity .3s;}
-  #splash img{width:96px;height:96px;border-radius:24px;}
-  #splash p{margin:0;color:var(--muted);font-size:.95rem;}
-  #splash.hidden{opacity:0;pointer-events:none;}
-  #offline{display:none;padding:0 24px;text-align:center;}
-  #offline button{margin-top:12px;padding:10px 20px;border:0;border-radius:999px;background:var(--violet);color:#fff;font-size:1rem;font-weight:700;}
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme:dark;
+      --bg:#120923; --surface:#1E1236; --surface-2:#2A1B49;
+      --ink:#F5EFFF; --ink-2:#CBBBEA; --muted:#9A89BE;
+      --violet:#A47BFF; --violet-2:#BB9BFF; --violet-deep:#5A33B0; --violet-soft:#33215C;
+      --flame:#FF8A52; --flame-soft:#4A2618;
+      --gold:#FFC53D; --gold-soft:#45360F;
+      --mint:#34D6A2; --mint-soft:#0F3D2F;
+      --pink:#FF6B9C; --pink-soft:#4A1A2D;
+      --sky:#5AAAF5; --sky-soft:#16304D;
+      --border:#3A2863;
+      --good:#34D6A2; --warn:#F2B13D; --bad:#FF6F7F;
+      --shadow:rgba(0,0,0,.45);
+      --hero-a:#3D1399; --hero-b:#6A2BD9;
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme:dark;
+    --bg:#120923; --surface:#1E1236; --surface-2:#2A1B49;
+    --ink:#F5EFFF; --ink-2:#CBBBEA; --muted:#9A89BE;
+    --violet:#A47BFF; --violet-2:#BB9BFF; --violet-deep:#5A33B0; --violet-soft:#33215C;
+    --flame:#FF8A52; --flame-soft:#4A2618;
+    --gold:#FFC53D; --gold-soft:#45360F;
+    --mint:#34D6A2; --mint-soft:#0F3D2F;
+    --pink:#FF6B9C; --pink-soft:#4A1A2D;
+    --sky:#5AAAF5; --sky-soft:#16304D;
+    --border:#3A2863;
+    --good:#34D6A2; --warn:#F2B13D; --bad:#FF6F7F;
+    --shadow:rgba(0,0,0,.45);
+    --hero-a:#3D1399; --hero-b:#6A2BD9;
+  }
+  *{box-sizing:border-box;}
+  [hidden]{display:none!important;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);}
+  body{
+    font-family:'Nunito',system-ui,-apple-system,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;
+    padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  h1,h2,h3,h4{font-family:'Fredoka','Nunito',system-ui,sans-serif;margin:0;text-wrap:balance;font-weight:600;}
+  button{font-family:inherit;}
+  button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--violet-2);outline-offset:2px;}
+  #app{max-width:560px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;padding-inline:16px;}
+  main{flex:1;display:flex;flex-direction:column;padding-block:8px 32px;}
+  .stack{display:flex;flex-direction:column;gap:12px;}
+  .view{display:flex;flex-direction:column;gap:16px;}
+
+  /* Barre du haut */
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:14px 6px;}
+  .who{display:flex;align-items:center;gap:10px;min-width:0;}
+  .who .txt{display:flex;flex-direction:column;min-width:0;}
+  .who .hello{font-size:.72rem;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.06em;}
+  .who .nm{font-family:'Fredoka',sans-serif;font-weight:600;font-size:1.12rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .avatar{width:42px;height:42px;border-radius:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+    font-family:'Fredoka',sans-serif;font-weight:700;color:#fff;font-size:1rem;background:var(--violet);}
+  .pill-btn{border:2px solid var(--border);background:var(--surface);color:var(--ink-2);border-radius:999px;padding:8px 14px;font-size:.82rem;font-weight:800;cursor:pointer;}
+
+  /* Accueil */
+  .welcome{padding-block:24px 0;display:flex;flex-direction:column;gap:6px;}
+  .kicker{font-size:.76rem;font-weight:900;color:var(--flame);text-transform:uppercase;letter-spacing:.08em;}
+  .welcome h1{font-size:2.1rem;line-height:1.05;}
+  .welcome h1 span{color:var(--violet);}
+  .welcome p{margin:4px 0 0;color:var(--ink-2);font-size:.95rem;max-width:36ch;}
+  .roster-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
+  @media (max-width:380px){.roster-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+  .roster-card{background:var(--surface);border:2px solid var(--border);border-radius:18px;padding:14px 6px 12px;display:flex;flex-direction:column;
+    align-items:center;gap:8px;cursor:pointer;color:var(--ink);font-weight:800;font-size:.86rem;box-shadow:0 3px 0 var(--border);}
+  .roster-card:active{transform:translateY(2px);box-shadow:0 1px 0 var(--border);}
+  .roster-card .avatar{width:46px;height:46px;border-radius:16px;}
+  .roster-card .rn{text-align:center;line-height:1.2;overflow-wrap:anywhere;}
+  .empty-box{background:var(--surface);border:2px dashed var(--border);border-radius:18px;padding:18px;text-align:center;color:var(--muted);font-weight:700;font-size:.9rem;}
+  .link-row{display:flex;justify-content:center;}
+  .link-btn{background:none;border:none;color:var(--muted);font-size:.88rem;font-weight:800;text-decoration:underline;cursor:pointer;padding:8px;}
+
+  /* Boutons */
+  .big-btn{width:100%;border:none;border-radius:16px;padding:15px;font-weight:900;font-size:.98rem;cursor:pointer;}
+  .big-btn.violet{background:var(--violet);color:#fff;box-shadow:0 4px 0 var(--violet-deep);}
+  .big-btn.gold{background:var(--gold);color:#2B1A00;box-shadow:0 4px 0 #B07B00;}
+  .big-btn.mint{background:var(--mint);color:#fff;box-shadow:0 4px 0 #0B8A63;}
+  .big-btn.soft{background:var(--surface-2);color:var(--ink-2);}
+  .big-btn:active{transform:translateY(2px);}
+  .big-btn:disabled{opacity:.55;cursor:default;}
+  .row-btns{display:flex;gap:10px;}
+  .row-btns > *{flex:1;}
+  .danger-btn{width:100%;background:none;color:var(--bad);border:2px solid var(--bad);border-radius:14px;padding:12px;font-weight:800;font-size:.9rem;cursor:pointer;}
+  .danger-btn.solid{background:var(--bad);color:#fff;}
+
+  /* Formulaire */
+  .field{display:flex;flex-direction:column;gap:6px;}
+  .field label{font-size:.8rem;font-weight:900;color:var(--ink-2);}
+  .field input,.field select,textarea{
+    width:100%;border:2px solid var(--border);border-radius:14px;padding:12px 14px;font-family:inherit;font-size:1rem;
+    background:var(--surface);color:var(--ink);font-weight:700;
+  }
+  textarea{min-height:76px;resize:vertical;font-size:.92rem;}
+  .field input:focus,.field select:focus,textarea:focus{outline:none;border-color:var(--violet);}
+  .hint{font-size:.78rem;color:var(--muted);font-weight:700;margin:0;}
+
+  /* Code PIN */
+  .pin-wrap{padding-block:28px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;}
+  .pin-wrap .avatar{width:72px;height:72px;border-radius:24px;font-size:1.6rem;}
+  .pin-wrap h2{font-size:1.5rem;}
+  .pin-sub{color:var(--ink-2);font-size:.92rem;max-width:32ch;margin:0;font-weight:600;}
+  .pin-dots{display:flex;gap:12px;}
+  .pin-dots span{width:18px;height:18px;border-radius:50%;border:3px solid var(--violet);transition:background .15s,transform .15s;}
+  .pin-dots span.on{background:var(--violet);transform:scale(1.1);}
+  .pin-dots.shake{animation:shake .4s;}
+  @keyframes shake{20%,60%{transform:translateX(-8px);}40%,80%{transform:translateX(8px);}}
+  .keypad{display:grid;grid-template-columns:repeat(3,72px);gap:12px;justify-content:center;}
+  .key{height:62px;border-radius:20px;border:2px solid var(--border);background:var(--surface);color:var(--ink);
+    font-family:'Fredoka',sans-serif;font-size:1.5rem;font-weight:600;cursor:pointer;box-shadow:0 3px 0 var(--border);}
+  .key:active{transform:translateY(2px);box-shadow:0 1px 0 var(--border);}
+  .key.ghost{background:none;border-color:transparent;box-shadow:none;font-size:1.1rem;color:var(--muted);}
+  .error-text{color:var(--bad);font-size:.88rem;font-weight:800;min-height:1.2em;margin:0;}
+
+  /* Écran d'attente */
+  .wait-card{background:var(--surface);border:2px solid var(--border);border-radius:24px;padding:28px 20px;text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center;margin-top:24px;}
+  .wait-card .big-emoji{font-size:3rem;line-height:1;}
+  .wait-card h2{font-size:1.4rem;}
+  .wait-card p{margin:0;color:var(--ink-2);font-weight:600;line-height:1.5;max-width:34ch;}
+
+  /* Semaine */
+  .week-nav{display:flex;align-items:center;gap:8px;}
+  .week-nav .label{flex:1;text-align:center;font-weight:800;font-size:.9rem;color:var(--ink-2);}
+  .nav-arrow{width:38px;height:38px;border-radius:12px;border:2px solid var(--border);background:var(--surface);color:var(--violet);
+    font-size:1.1rem;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .nav-arrow:disabled{opacity:.3;cursor:default;}
+
+  .hero{background:linear-gradient(140deg,var(--hero-a),var(--hero-b));color:#fff;border-radius:26px;padding:18px;display:flex;flex-direction:column;gap:14px;
+    position:relative;overflow:hidden;box-shadow:0 10px 24px var(--shadow);}
+  .hero::after{content:"";position:absolute;right:-40px;top:-40px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.08);pointer-events:none;}
+  .hero-top{display:flex;align-items:center;gap:16px;position:relative;z-index:1;}
+  .ring{--ring:#FFD15C;width:108px;height:108px;border-radius:50%;flex-shrink:0;position:relative;
+    background:conic-gradient(var(--ring) calc(var(--pct)*1%), rgba(255,255,255,.18) 0);display:flex;align-items:center;justify-content:center;}
+  .ring .tick{position:absolute;inset:0;border-radius:50%;pointer-events:none;
+    background:conic-gradient(transparent calc(var(--s)*1% - .7%), #fff calc(var(--s)*1% - .7%) calc(var(--s)*1% + .7%), transparent 0);
+    -webkit-mask:radial-gradient(circle,transparent 41px,#000 42px);mask:radial-gradient(circle,transparent 41px,#000 42px);}
+  .ring-inner{width:84px;height:84px;border-radius:50%;background:var(--hero-a);display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  .ring-inner .pct{font-family:'Fredoka',sans-serif;font-size:1.7rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1;}
+  .ring-inner .of{font-size:.66rem;opacity:.85;font-weight:800;margin-top:3px;}
+  .level{display:flex;flex-direction:column;gap:6px;min-width:0;flex:1;}
+  .lv-k{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;opacity:.8;font-weight:900;}
+  .lv-n{font-family:'Fredoka',sans-serif;font-size:1.35rem;font-weight:700;line-height:1.1;}
+  .lv-msg{font-size:.84rem;opacity:.94;font-weight:700;line-height:1.35;}
+  .lv-track{height:8px;border-radius:999px;background:rgba(255,255,255,.2);overflow:hidden;}
+  .lv-fill{height:100%;background:#FFD15C;border-radius:999px;transition:width .4s;}
+  .hero-chips{display:flex;gap:8px;flex-wrap:wrap;position:relative;z-index:1;}
+  .hchip{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.16);border-radius:999px;padding:6px 12px;font-size:.8rem;font-weight:800;}
+  .hchip b{font-variant-numeric:tabular-nums;}
+  .hchip.yellow{background:#FFD15C;color:#3B1580;}
+
+  .banner{border-radius:18px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;font-size:.88rem;font-weight:700;line-height:1.45;}
+  .banner .bi{font-size:1.25rem;line-height:1.1;}
+  .banner b{display:block;font-size:.95rem;}
+  .banner.warn{background:var(--flame-soft);}
+  .banner.info{background:var(--violet-soft);}
+  .banner.ok{background:var(--mint-soft);}
+  .banner.gold{background:var(--gold-soft);}
+
+  .sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;}
+  .sec-head h2{font-size:1.15rem;}
+  .sec-head .aside{font-size:.8rem;color:var(--muted);font-weight:800;font-variant-numeric:tabular-nums;}
+
+  .badges{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;}
+  .badge{background:var(--surface);border:2px dashed var(--border);border-radius:18px;padding:10px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;}
+  .badge .bi{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.35rem;background:var(--surface-2);filter:grayscale(1);opacity:.45;}
+  .badge .bn{font-size:.68rem;font-weight:800;color:var(--muted);line-height:1.15;}
+  .badge.on{border-style:solid;border-color:var(--gold);background:var(--gold-soft);}
+  .badge.on .bi{filter:none;opacity:1;background:var(--surface);box-shadow:0 0 0 3px var(--gold);}
+  .badge.on .bn{color:var(--ink);}
+  .badge.pop .bi{animation:pop .6s ease;}
+  @keyframes pop{0%{transform:scale(.6);}60%{transform:scale(1.25);}100%{transform:scale(1);}}
+
+  .mission{background:var(--surface);border:2px solid var(--border);border-radius:22px;padding:14px;display:flex;flex-direction:column;gap:12px;}
+  .m-head{display:flex;align-items:center;gap:12px;}
+  .m-icon{width:42px;height:42px;border-radius:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.25rem;background:var(--violet-soft);}
+  .m-title{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;}
+  .m-title h3{font-size:1rem;line-height:1.2;}
+  .m-title .sub{font-size:.76rem;color:var(--muted);font-weight:700;}
+  .m-pill{font-size:.78rem;font-weight:900;padding:5px 10px;border-radius:999px;font-variant-numeric:tabular-nums;background:var(--surface-2);color:var(--ink-2);white-space:nowrap;}
+  .m-pill.done{background:var(--mint);color:#fff;}
+  .tone-sun .m-icon{background:var(--gold-soft);}
+  .tone-sky .m-icon{background:var(--sky-soft);}
+
+  .check-list{display:flex;flex-direction:column;gap:8px;}
+  .check-row{display:flex;align-items:center;gap:12px;padding:12px;border-radius:14px;border:2px solid var(--border);background:var(--surface);
+    cursor:pointer;width:100%;text-align:left;color:var(--ink);font-size:.93rem;font-weight:800;}
+  .check-row[disabled]{cursor:default;}
+  .check-row .row-text{flex:1;min-width:0;}
+  .check-row.on{background:var(--mint-soft);border-color:var(--mint);}
+  .checkbox{width:28px;height:28px;border-radius:9px;border:2.5px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff;background:var(--surface);}
+  .check-row.on .checkbox{background:var(--mint);border-color:var(--mint);animation:pop .35s ease;}
+
+  .day-row{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;}
+  .day-btn{aspect-ratio:1/1.15;border-radius:14px;border:2.5px solid var(--border);background:var(--surface);color:var(--ink-2);
+    font-family:'Fredoka',sans-serif;font-weight:600;font-size:1rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:0;
+    box-shadow:0 3px 0 var(--border);}
+  .day-btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--border);}
+  .day-btn[disabled]{cursor:default;}
+  .day-btn.future{opacity:.35;}
+  .day-btn small{font-family:'Nunito',sans-serif;font-size:.62rem;font-weight:900;min-height:.8em;}
+  .day-btn.on{background:var(--gold);border-color:var(--gold);color:#2B1A00;box-shadow:0 3px 0 #B07B00;}
+  .day-btn.today{outline:3px solid var(--violet);outline-offset:2px;}
+  .day-btn.off{visibility:hidden;}
+  .day-btn.excused{background:var(--surface-2);border-style:dashed;color:var(--muted);box-shadow:none;}
+  .day-btn.pending{border-color:var(--sky);border-style:dashed;}
+  .day-btn.refused{border-color:var(--bad);}
+
+  /* Zones */
+  .zone-pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 12px;font-size:.8rem;font-weight:900;}
+  .zone-pill.vert{background:#3DDC97;color:#06301F;}
+  .zone-pill.orange{background:#FFA94D;color:#3D1E00;}
+  .zone-pill.rouge{background:#FF6B6B;color:#3A0008;}
+  .ring.vert{--ring:#3DDC97;} .ring.orange{--ring:#FFA94D;} .ring.rouge{--ring:#FF6B6B;}
+
+  /* Programmes */
+  .prog-row{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:14px;border:2px solid var(--border);}
+  .prog-row.on{background:var(--mint-soft);border-color:var(--mint);}
+  .prog-row.excused{background:var(--surface-2);border-style:dashed;}
+  .prog-top{display:flex;align-items:center;gap:10px;}
+  .prog-name{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;font-weight:800;font-size:.93rem;}
+  .prog-name span{font-size:.74rem;color:var(--muted);font-weight:700;}
+  .tog{display:inline-flex;align-items:center;gap:6px;border:2px solid var(--border);background:var(--surface);color:var(--ink-2);
+    border-radius:999px;padding:6px 12px;font-size:.8rem;font-weight:900;cursor:pointer;white-space:nowrap;}
+  .tog.on{background:var(--mint);border-color:var(--mint);color:#fff;}
+  .tog.late.on{background:var(--gold);border-color:var(--gold);color:#2B1A00;}
+  .tog[disabled]{opacity:.45;cursor:default;}
+  .prog-actions{display:flex;gap:8px;flex-wrap:wrap;}
+  .abs-link{background:none;border:none;color:var(--sky);font-size:.8rem;font-weight:900;cursor:pointer;padding:4px 0;text-align:left;text-decoration:underline;}
+  .abs-note{font-size:.76rem;font-weight:800;border-radius:10px;padding:4px 8px;display:inline-block;}
+  .abs-note.En{background:var(--sky-soft);color:var(--sky);}
+  .abs-note.Acceptée{background:var(--surface-2);color:var(--ink-2);}
+  .abs-note.Refusée{background:var(--pink-soft);color:var(--bad);}
+  .legend{display:flex;gap:12px;flex-wrap:wrap;font-size:.72rem;color:var(--muted);font-weight:700;}
+  .legend span{display:inline-flex;align-items:center;gap:5px;}
+  .legend i{width:12px;height:12px;border-radius:4px;display:inline-block;border:2px solid var(--border);}
+  .legend i.f{background:var(--gold);border-color:var(--gold);}
+  .legend i.e{background:var(--surface-2);border-style:dashed;}
+  .legend i.p{border-color:var(--sky);border-style:dashed;}
+  .choice-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;}
+  .choice{border:2.5px solid var(--border);background:var(--surface);border-radius:14px;padding:11px 4px;font-weight:800;font-size:.84rem;color:var(--ink);cursor:pointer;}
+  .choice-grid.oui-non{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .choice.on{background:var(--violet);border-color:var(--violet);color:#fff;}
+  .choice[disabled]{opacity:.35;cursor:default;}
+  .detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+  .detail-tile{background:var(--surface);border:2px solid var(--border);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;}
+  .detail-tile .dl{font-size:.74rem;font-weight:800;color:var(--muted);line-height:1.2;}
+  .detail-tile .dv{font-family:'Fredoka',sans-serif;font-size:1.1rem;font-weight:600;font-variant-numeric:tabular-nums;}
+  .detail-tile .mini-bar{height:5px;border-radius:999px;background:var(--surface-2);overflow:hidden;}
+  .detail-tile .mini-bar i{display:block;height:100%;border-radius:999px;}
+  .mini-bar i.vert{background:var(--good);} .mini-bar i.orange{background:var(--flame);} .mini-bar i.rouge{background:var(--bad);}
+
+  .comment{background:var(--violet-soft);border-radius:16px;padding:12px 14px;font-size:.9rem;font-weight:700;line-height:1.45;}
+  .comment b{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--violet);margin-bottom:2px;}
+
+  /* Graphique */
+  .trend-card{background:var(--surface);border:2px solid var(--border);border-radius:18px;padding:12px 12px 6px;position:relative;}
+  .trend-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:4px;}
+  .trend-title{font-size:.8rem;color:var(--ink-2);font-weight:800;}
+  .trend-value{font-family:'Fredoka',sans-serif;font-size:1.05rem;font-weight:600;font-variant-numeric:tabular-nums;}
+  .trend-svg{display:block;width:100%;overflow:visible;touch-action:pan-y;}
+  .trend-svg:focus{outline:none;}
+  .tc-grid{stroke:var(--border);stroke-width:1;}
+  .tc-seuil{stroke:var(--good);stroke-width:1.5;stroke-dasharray:5 4;}
+  .tc-seuil-lab{fill:var(--good);font-size:10px;font-weight:800;font-family:'Nunito',sans-serif;}
+  .tc-seuil.bas{stroke:var(--bad);} .tc-seuil-lab.bas{fill:var(--bad);}
+  .tc-axis{fill:var(--muted);font-size:10px;font-family:'Nunito',sans-serif;font-weight:700;}
+  .tc-line{fill:none;stroke:var(--violet);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
+  .tc-area{fill:var(--violet);opacity:.12;}
+  .tc-current{stroke-dasharray:4 4;}
+  .tc-dot{fill:var(--violet);stroke:var(--surface);stroke-width:2;}
+  .tc-cross{stroke:var(--muted);stroke-width:1;}
+  .trend-tip{position:absolute;top:6px;pointer-events:none;background:var(--ink);color:var(--surface);border-radius:10px;padding:5px 9px;font-size:.74rem;line-height:1.3;white-space:nowrap;z-index:2;font-weight:700;}
+  .trend-tip strong{display:block;font-size:.88rem;}
+  .trend-empty{font-size:.8rem;color:var(--muted);padding:16px 4px;text-align:center;font-weight:700;}
+
+  /* Superviseur */
+  .tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));background:var(--surface-2);border-radius:16px;padding:4px;gap:4px;}
+  .tabs button{border:none;background:none;border-radius:12px;padding:10px 4px;font-size:.84rem;font-weight:900;color:var(--ink-2);cursor:pointer;position:relative;}
+  .tabs button.on{background:var(--surface);color:var(--violet);box-shadow:0 1px 3px var(--shadow);}
+  .tabs .count{display:inline-block;min-width:20px;padding:1px 6px;border-radius:999px;background:var(--flame);color:#fff;font-size:.7rem;margin-left:4px;}
+  .stat-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;}
+  .stat-tile{background:var(--surface);border:2px solid var(--border);border-radius:18px;padding:12px 4px;text-align:center;}
+  .stat-tile .val{font-family:'Fredoka',sans-serif;font-size:1.5rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1;}
+  .stat-tile .lab{font-size:.64rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:3px;font-weight:900;}
+  .stat-tile.t1 .val{color:var(--violet);} .stat-tile.t2 .val{color:var(--good);} .stat-tile.t3 .val{color:var(--bad);} .stat-tile.t4 .val{color:var(--warn);}
+  .alert-list{display:flex;flex-direction:column;gap:8px;}
+  .alert{display:flex;gap:10px;align-items:flex-start;border-radius:16px;padding:12px;font-size:.86rem;font-weight:700;line-height:1.4;border:none;text-align:left;color:var(--ink);width:100%;}
+  .alert.observation{background:var(--flame-soft);}
+  .alert.remonte{background:var(--mint-soft);cursor:pointer;}
+  .alert.critique{background:var(--pink-soft);cursor:pointer;}
+  .alert.observation{cursor:pointer;}
+  .alert .ai{font-size:1.15rem;line-height:1.1;}
+  .podium{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:end;gap:8px;background:linear-gradient(160deg,var(--hero-a),var(--hero-b));border-radius:26px;padding:18px 12px 0;color:#fff;overflow:hidden;}
+  .pod{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;background:none;border:none;color:inherit;padding:0;}
+  .pod .avatar{width:50px;height:50px;border-radius:50%;border:3px solid #fff;}
+  .pod.p1 .avatar{width:62px;height:62px;border-color:#FFD15C;font-size:1.25rem;}
+  .pod .pn{font-weight:800;font-size:.8rem;text-align:center;line-height:1.15;overflow-wrap:anywhere;}
+  .pod .pp{font-family:'Fredoka',sans-serif;font-weight:700;font-size:1.05rem;font-variant-numeric:tabular-nums;}
+  .pod .step{width:100%;border-radius:14px 14px 0 0;background:rgba(255,255,255,.16);display:flex;justify-content:center;font-size:1.6rem;padding-top:8px;}
+  .pod.p1 .step{height:92px;background:rgba(255,209,92,.32);} .pod.p2 .step{height:66px;} .pod.p3 .step{height:48px;}
+  .rank-list{display:flex;flex-direction:column;gap:8px;}
+  .leader-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:16px;border:2px solid var(--border);background:var(--surface);width:100%;cursor:pointer;color:var(--ink);text-align:left;}
+  .leader-rank{width:22px;font-family:'Fredoka',sans-serif;font-weight:600;color:var(--muted);flex-shrink:0;text-align:center;font-variant-numeric:tabular-nums;}
+  .leader-row .avatar{width:36px;height:36px;border-radius:12px;font-size:.85rem;}
+  .leader-name{flex:1;min-width:0;font-weight:800;font-size:.9rem;display:flex;flex-direction:column;gap:4px;}
+  .chips{display:flex;gap:4px;flex-wrap:wrap;}
+  .chip{font-size:.66rem;font-weight:900;padding:2px 8px;border-radius:999px;white-space:nowrap;}
+  .chip.actif{background:var(--mint-soft);color:var(--good);}
+  .chip.obs{background:var(--flame-soft);color:var(--flame);}
+  .chip.crit{background:var(--pink-soft);color:var(--bad);}
+  .chip.essai{background:var(--gold-soft);color:var(--warn);}
+  .chip.cand{background:var(--sky-soft);color:var(--sky);}
+  .chip.out{background:var(--surface-2);color:var(--muted);}
+  .chip.val{background:var(--violet-soft);color:var(--violet);}
+  .chip.todo{background:var(--gold-soft);color:var(--warn);}
+  .chip.none{background:var(--pink-soft);color:var(--bad);}
+  .bar-track{height:6px;background:var(--surface-2);border-radius:999px;overflow:hidden;position:relative;}
+  .bar-fill{display:block;height:100%;border-radius:999px;}
+  .bar-fill.good{background:var(--good);} .bar-fill.orange{background:var(--flame);} .bar-fill.encours{background:var(--violet-2);} .bar-fill.bad{background:var(--bad);}
+  .bar-seuil{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink);opacity:.5;}
+  .leader-pct{width:46px;text-align:right;font-family:'Fredoka',sans-serif;font-weight:600;font-size:1rem;font-variant-numeric:tabular-nums;}
+  .req-card{background:var(--surface);border:2px solid var(--border);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:10px;}
+  .req-top{display:flex;gap:10px;align-items:center;}
+  .req-top .info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+  .req-top .info b{font-size:.98rem;}
+  .req-top .info span{font-size:.78rem;color:var(--muted);font-weight:700;}
+  .set-card{background:var(--surface);border:2px solid var(--border);border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:12px;}
+  .seuil-row{display:flex;align-items:center;gap:12px;}
+  .seuil-row input[type=range]{flex:1;accent-color:var(--violet);}
+  .seuil-val{font-family:'Fredoka',sans-serif;font-size:1.5rem;font-weight:700;width:64px;text-align:right;font-variant-numeric:tabular-nums;color:var(--violet);}
+  .crit-row{display:flex;align-items:center;gap:8px;padding:10px;border-radius:14px;border:2px solid var(--border);}
+  .crit-row.off{opacity:.55;}
+  .crit-row .cl{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;font-weight:800;font-size:.9rem;overflow-wrap:anywhere;}
+  .crit-row .cl span{font-size:.72rem;color:var(--muted);font-weight:700;}
+  .mini-btn{border:2px solid var(--border);background:var(--surface);color:var(--ink-2);border-radius:10px;padding:6px 10px;font-size:.78rem;font-weight:800;cursor:pointer;flex-shrink:0;}
+  .two-col{display:grid;grid-template-columns:2fr 1fr;gap:8px;}
+
+  /* Fenêtres */
+  .overlay{position:fixed;inset:0;background:rgba(18,8,38,.6);display:flex;align-items:flex-end;justify-content:center;z-index:20;}
+  .sheet{background:var(--bg);width:100%;max-width:560px;max-height:90vh;overflow-y:auto;border-radius:26px 26px 0 0;
+    padding:20px 16px calc(28px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px;}
+  .sheet-head{display:flex;justify-content:space-between;align-items:center;gap:10px;}
+  .sheet-head h3{font-size:1.2rem;}
+  .close-x{background:var(--surface-2);border:none;width:36px;height:36px;border-radius:12px;font-size:1.1rem;color:var(--ink-2);cursor:pointer;font-weight:900;flex-shrink:0;}
+  .detail-sec{display:flex;flex-direction:column;gap:8px;}
+  .detail-sec h4{font-size:.92rem;color:var(--ink-2);}
+  .hist-item{font-size:.8rem;font-weight:700;padding:8px 10px;border-radius:12px;background:var(--surface);border:1px solid var(--border);line-height:1.4;}
+  .hist-item span{color:var(--muted);}
+  .status-btns{display:flex;gap:8px;flex-wrap:wrap;}
+  .status-btns button{flex:1;min-width:120px;}
+  #recapText{min-height:260px;font-size:.85rem;white-space:pre-wrap;}
+
+  .toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--surface);
+    padding:11px 18px;border-radius:999px;font-size:.88rem;font-weight:800;z-index:50;box-shadow:0 6px 18px var(--shadow);max-width:calc(100% - 32px);text-align:center;}
+  .toast.err{background:var(--bad);color:#fff;}
+  #confetti{position:fixed;inset:0;pointer-events:none;z-index:60;width:100%;height:100%;}
+
+  /* Chargement */
+  #busyBar{position:fixed;top:env(safe-area-inset-top,0px);left:0;right:0;height:3px;z-index:70;overflow:hidden;background:var(--violet-soft);pointer-events:none;}
+  #busyBar::after{content:"";position:absolute;top:0;bottom:0;left:0;width:40%;background:var(--violet);animation:busy 1s ease-in-out infinite;}
+  @keyframes busy{0%{left:-40%;}100%{left:100%;}}
+  .spinner{width:40px;height:40px;border-radius:50%;border:4px solid var(--violet-soft);border-top-color:var(--violet);animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important;}}
 </style>
 </head>
 <body>
-  <iframe id="app" title="Discipolat" allow="clipboard-write"></iframe>
-  <div id="splash">
-    <img src="icons/icon-192.png" alt="">
-    <p id="loading">Chargement…</p>
-    <div id="offline">
-      <p>Pas de connexion internet.<br>Discipolat a besoin d'internet pour lire et enregistrer vos données.</p>
-      <button type="button" onclick="location.reload()">Réessayer</button>
+<canvas id="confetti" hidden></canvas>
+<div id="busyBar" role="progressbar" aria-label="Chargement en cours" hidden></div>
+<div id="app">
+  <header class="topbar" id="topbar" hidden>
+    <div class="who">
+      <div class="avatar" id="topAvatar">?</div>
+      <div class="txt"><span class="hello" id="topHello">Bon retour</span><span class="nm" id="topName"></span></div>
     </div>
+    <button class="pill-btn" id="logoutBtn">Déconnexion</button>
+  </header>
+
+  <main>
+
+    <!-- CHARGEMENT (visible au démarrage, avant de savoir qui est connecté) -->
+    <section id="view-loading" class="view">
+      <div class="wait-card">
+        <span class="spinner" aria-hidden="true"></span>
+        <p id="loadingText" role="status">Chargement…</p>
+        <button class="big-btn soft" id="loadingRetry" hidden style="max-width:260px;">Réessayer</button>
+      </div>
+    </section>
+
+    <!-- ACCUEIL -->
+    <section id="view-select" class="view" hidden>
+      <div class="welcome">
+        <span class="kicker">ICC · Disciples</span>
+        <h1>Disci<span>polat</span></h1>
+        <p>Petits pas, grands résultats. Connectez-vous pour remplir votre semaine.</p>
+      </div>
+      <form id="loginForm" class="stack" novalidate>
+        <div class="field"><label for="loginTel">Votre numéro de téléphone</label>
+          <input id="loginTel" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" placeholder="Ex : 6 71 23 45 67"></div>
+        <p class="error-text" id="loginError"></p>
+        <button class="big-btn violet" type="submit">Continuer</button>
+      </form>
+      <div class="link-row"><span class="hint">Pas encore inscrit(e) ?</span></div>
+      <button class="big-btn soft" id="goRegister">Je m'inscris</button>
+      <div class="link-row" id="adminLinkRow" hidden><button class="link-btn" id="adminLinkBtn">Espace Superviseur</button></div>
+    </section>
+
+    <!-- INSCRIPTION -->
+    <section id="view-register" class="view" hidden>
+      <div class="welcome">
+        <span class="kicker">Inscription</span>
+        <h1>Rejoindre le <span>suivi</span></h1>
+        <p>Votre demande sera examinée par le superviseur. Vous pourrez remplir votre suivi dès qu'elle sera validée.</p>
+      </div>
+      <form id="regForm" class="stack" novalidate>
+        <div class="field"><label for="regPrenom">Prénom</label><input id="regPrenom" autocomplete="given-name" maxlength="40" required></div>
+        <div class="field"><label for="regNom">Nom</label><input id="regNom" autocomplete="family-name" maxlength="40" required></div>
+        <div class="field"><label for="regTel">Téléphone</label><input id="regTel" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" placeholder="Ex : 6 71 23 45 67" required>
+          <p class="hint">9 chiffres commençant par 6 (le +237 est facultatif). Il sert à éviter les doublons et n'est visible que par le superviseur.</p></div>
+
+        <!-- Fiche de renseignement (déplacée dans l'écran « Ma fiche » quand le disciple la complète ou la modifie) -->
+        <div id="ficheBlock" class="stack">
+        <div class="sec-head" style="margin-top:8px;" id="ficheTitre"><h2>Fiche de renseignement</h2></div>
+        <div class="field"><label for="regEglise">Votre église</label>
+          <select id="regEglise" required><option value="">Choisissez votre église…</option></select></div>
+        <div class="field" id="regEgliseAutreWrap" hidden><label for="regEgliseAutre">Nom de votre église</label>
+          <input id="regEgliseAutre" maxlength="60"></div>
+        <div class="field" id="progEgliseWrap" hidden>
+          <label>Programmes de votre église</label>
+          <p class="hint" id="progEgliseHint"></p>
+          <div class="stack" id="progEgliseList" style="gap:8px;"></div>
+          <button type="button" class="big-btn soft" id="progEgliseAdd" hidden>+ Ajouter un programme</button>
+        </div>
+        <div class="field"><label>Êtes-vous baptisé(e) ?</label>
+          <div class="choice-grid oui-non" data-champ="baptise"></div></div>
+        <div class="field"><label>Formations déjà suivies</label>
+          <div class="check-list" id="regFormations"></div>
+          <p class="hint">Cochez toutes celles que vous avez terminées. Aucune ? Ne cochez rien.</p></div>
+        <div class="field"><label>Faites-vous partie d'une famille d'impact ?</label>
+          <div class="choice-grid oui-non" data-champ="impact"></div></div>
+        <div class="field" id="regImpactWrap" hidden><label for="regImpact">Nom de votre famille d'impact</label>
+          <input id="regImpact" maxlength="60"></div>
+        <div class="field"><label>Faites-vous partie d'une famille de disciples ?</label>
+          <div class="choice-grid oui-non" data-champ="disciples"></div></div>
+        <div class="field" id="regDisciplesWrap" hidden><label for="regDisciples">Nom de votre famille de disciples</label>
+          <input id="regDisciples" maxlength="60"></div>
+        </div>
+
+        <p class="error-text" id="regError"></p>
+        <button class="big-btn violet" type="submit">Choisir mon code</button>
+      </form>
+      <div class="link-row"><button class="link-btn" id="regBack">← Retour</button></div>
+    </section>
+
+    <!-- MA FICHE (obligatoire pour les anciens disciples, modifiable ensuite) -->
+    <section id="view-fiche" class="view" hidden>
+      <div class="welcome">
+        <span class="kicker">Fiche de renseignement</span>
+        <h1>Ma <span>fiche</span></h1>
+        <p id="ficheIntro"></p>
+      </div>
+      <form id="ficheForm" class="stack" novalidate>
+        <div id="ficheSlot"></div>
+        <p class="error-text" id="ficheError"></p>
+        <button class="big-btn violet" type="submit" id="ficheSave">Enregistrer ma fiche</button>
+      </form>
+      <div class="link-row" id="ficheBackRow"><button class="link-btn" id="ficheBack">← Retour</button></div>
+    </section>
+
+    <!-- CODE PIN -->
+    <section id="view-pin" hidden>
+      <div class="pin-wrap">
+        <div class="avatar" id="pinAvatar">?</div>
+        <h2 id="pinTitle">Bonjour</h2>
+        <p class="pin-sub" id="pinSub"></p>
+        <div class="pin-dots" id="pinDots"><span></span><span></span><span></span><span></span></div>
+        <p class="error-text" id="pinError"></p>
+        <div class="keypad" id="keypad"></div>
+        <button class="link-btn" id="pinBack">← Retour</button>
+      </div>
+    </section>
+
+    <!-- EN ATTENTE / NON ACTIF -->
+    <section id="view-wait" class="view" hidden>
+      <div class="wait-card">
+        <span class="big-emoji" id="waitEmoji">⏳</span>
+        <h2 id="waitTitle">Demande envoyée</h2>
+        <p id="waitText"></p>
+        <button class="big-btn soft" id="waitRefresh" style="max-width:260px;">Vérifier à nouveau</button>
+      </div>
+    </section>
+
+    <!-- DISCIPLE -->
+    <section id="view-disciple" class="view" hidden>
+      <div class="week-nav">
+        <button class="nav-arrow" id="dPrev" aria-label="Semaine précédente">‹</button>
+        <span class="label" id="dWeekLabel"></span>
+        <button class="nav-arrow" id="dNext" aria-label="Semaine suivante">›</button>
+      </div>
+
+      <div class="hero">
+        <div class="hero-top">
+          <div class="ring" id="dRing" style="--pct:0">
+            <div class="tick" id="tickActif" style="--s:75"></div><div class="tick" id="tickCrit" style="--s:50"></div>
+            <div class="ring-inner"><span class="pct" id="dPct">0%</span><span class="of" id="dRingSub">cette semaine</span></div>
+          </div>
+          <div class="level">
+            <span class="lv-k">Niveau de la semaine</span>
+            <span class="lv-n" id="lvName"></span>
+            <div class="lv-track"><div class="lv-fill" id="lvFill" style="width:0%"></div></div>
+            <span class="lv-msg" id="lvMsg"></span>
+          </div>
+        </div>
+        <div class="hero-chips">
+          <span class="zone-pill" id="zonePill"></span>
+          <span class="hchip" id="serieChip" title="Jours consécutifs de Commande au matin">🔥 <b id="serieVal">0</b> <span id="serieLab">jours d'affilée</span></span>
+          <span class="hchip">🏅 <b id="badgeCount">0</b></span>
+          <span class="hchip" id="valChip"></span>
+          <span class="hchip yellow" id="roChip" hidden>Consultation seule</span>
+        </div>
+      </div>
+
+      <div class="banner gold" id="essaiBanner" hidden><span class="bi">🌱</span><span><b id="essaiTitle"></b><span id="essaiText"></span></span></div>
+      <div class="banner warn" id="zoneBanner" hidden><span class="bi" id="zoneBannerIcon">🟠</span><span><b id="zoneBannerTitle"></b><span id="zoneBannerText"></span></span></div>
+      <div class="comment" id="dComment" hidden><b>Mot du superviseur</b><span id="dCommentText"></span></div>
+      <div class="mission" id="groupCard" hidden>
+        <div class="m-head">
+          <div class="m-icon" style="background:var(--mint-soft)">👥</div>
+          <div class="m-title"><h3>Le groupe</h3><span class="sub" id="groupSub"></span></div>
+        </div>
+        <div class="detail-grid">
+          <div class="detail-tile"><span class="dl">Moyenne du groupe</span><span class="dv" id="groupAvg">–</span></div>
+          <div class="detail-tile"><span class="dl">🟢 En zone verte</span><span class="dv" id="groupVert">–</span></div>
+        </div>
+        <p class="hint" id="groupNote">Statistiques anonymes : aucun nom n'est affiché.</p>
+      </div>
+      <div class="banner info"><span class="bi">📖</span><span><span id="verseText"></span> <b id="verseRef" style="display:inline;font-size:.8rem;"></b></span></div>
+
+      <div class="stack">
+        <div class="sec-head"><h2>Badges de la semaine</h2><span class="aside" id="badgeAside"></span></div>
+        <div class="badges" id="badgeGrid"></div>
+      </div>
+
+      <div class="sec-head"><h2>Chaque jour</h2></div>
+      <div class="stack" id="dailyList"></div>
+      <div class="legend"><span><i class="f"></i>Fait</span><span><i class="p"></i>Motif en attente</span><span><i class="e"></i>Absence acceptée</span></div>
+
+      <div class="sec-head"><h2>Cette semaine</h2></div>
+      <div class="stack" id="weeklyList"></div>
+
+      <div class="mission" id="progCard">
+        <div class="m-head">
+          <div class="m-icon">⛪</div>
+          <div class="m-title"><h3 id="progTitle">Programmes de l'église</h3><span class="sub">Présent, puis « À l'heure » si vous étiez à l'heure</span></div>
+          <span class="m-pill" id="progPill">0/0</span>
+        </div>
+        <div class="stack" id="progList" style="gap:8px;"></div>
+        <div class="m-head" id="ponctRow" style="padding-top:4px;border-top:2px dashed var(--border);">
+          <div class="m-icon" style="background:var(--gold-soft)">⏰</div>
+          <div class="m-title"><h3>Ponctualité</h3><span class="sub">À l'heure ÷ programmes suivis</span></div>
+          <span class="m-pill" id="ponctPill">–</span>
+        </div>
+      </div>
+
+      <div class="mission" id="autresCard">
+        <div class="m-head">
+          <div class="m-icon" style="background:var(--violet-soft)">✍️</div>
+          <div class="m-title"><h3>Autres activités</h3><span class="sub">Facultatif · ne compte pas dans le score</span></div>
+        </div>
+        <div class="field"><label for="autresEns">Autre enseignement suivi</label>
+          <textarea id="autresEns" maxlength="300" placeholder="Ex : enseignement sur la prière, pasteur…"></textarea></div>
+        <div class="field"><label for="autresProg">Autre programme auquel j'ai participé</label>
+          <textarea id="autresProg" maxlength="300" placeholder="Ex : veillée de prière à ICC Biyem-Assi"></textarea></div>
+        <button class="big-btn soft" id="autresSave">Enregistrer</button>
+      </div>
+
+      <div class="stack">
+        <div class="sec-head"><h2>Détail du score</h2></div>
+        <div class="detail-grid" id="detailGrid"></div>
+      </div>
+
+      <div class="stack" id="dProgress" hidden>
+        <div class="sec-head"><h2>Ma progression</h2><span class="aside">8 dernières semaines</span></div>
+        <div class="trend-card" id="dChart"></div>
+      </div>
+      <button class="big-btn soft" id="dFicheBtn">📋 Ma fiche de renseignement</button>
+    </section>
+
+    <!-- SUPERVISEUR -->
+    <section id="view-admin" class="view" hidden>
+      <div class="tabs" role="tablist">
+        <button class="on" data-tab="semaine" role="tab" aria-selected="true">Semaine</button>
+        <button data-tab="demandes" role="tab">Demandes<span class="count" id="reqCount" hidden></span></button>
+        <button data-tab="reglages" role="tab">Réglages</button>
+      </div>
+
+      <div id="tab-semaine" class="view">
+        <div class="week-nav">
+          <button class="nav-arrow" id="aPrev" aria-label="Semaine précédente">‹</button>
+          <span class="label" id="aWeekLabel"></span>
+          <button class="nav-arrow" id="aNext" aria-label="Semaine suivante">›</button>
+        </div>
+        <div class="stat-row">
+          <div class="stat-tile t1"><div class="val" id="sAvg">–</div><div class="lab">Moyenne</div></div>
+          <div class="stat-tile"><div class="val" id="sVert" style="color:var(--good)">–</div><div class="lab">🟢 ≥ <span id="lbA">75</span> %</div></div>
+          <div class="stat-tile"><div class="val" id="sOrange" style="color:var(--flame)">–</div><div class="lab">🟠 Orange</div></div>
+          <div class="stat-tile"><div class="val" id="sRouge" style="color:var(--bad)">–</div><div class="lab">🔴 &lt; <span id="lbC">50</span> %</div></div>
+        </div>
+        <div class="stack" id="alertWrap" hidden>
+          <div class="sec-head"><h2>Alertes et propositions</h2><span class="aside" id="alertAside"></span></div>
+          <div class="alert-list" id="alertList"></div>
+        </div>
+        <div class="podium" id="podium" hidden></div>
+        <div class="stack">
+          <div class="sec-head"><h2>Disciples suivis</h2><span class="aside" id="rankAside"></span></div>
+          <div class="rank-list" id="rankList"></div>
+          <div class="empty-box" id="rankEmpty" hidden>Aucun disciple suivi. Validez des inscriptions dans l'onglet Demandes.</div>
+        </div>
+        <div class="stack">
+          <div class="sec-head"><h2>Évolution du groupe</h2><span class="aside">score moyen</span></div>
+          <div class="trend-card" id="teamChart"></div>
+        </div>
+        <div class="stack" id="othersWrap" hidden>
+          <div class="sec-head"><h2>Retirés et non retenus</h2></div>
+          <div class="rank-list" id="othersList"></div>
+        </div>
+        <div class="stack" style="gap:10px;">
+          <button class="big-btn gold" id="recapBtn">Récap détaillé (noms et scores, pour vous)</button>
+          <button class="big-btn soft" id="recapGroupBtn">Récap à partager au groupe (sans aucun nom)</button>
+        </div>
+      </div>
+
+      <div id="tab-demandes" class="view" hidden>
+        <div class="sec-head"><h2>Inscriptions</h2><span class="aside" id="reqAside"></span></div>
+        <div class="stack" id="reqList"></div>
+        <div class="empty-box" id="reqEmpty" hidden>Aucune inscription en attente.</div>
+        <div class="sec-head"><h2>Motifs d'absence</h2><span class="aside" id="absAside"></span></div>
+        <p class="hint">Accepté : la case ne compte pas dans le score. Refusé : elle compte comme non faite.</p>
+        <div class="stack" id="absList"></div>
+        <div class="empty-box" id="absEmpty" hidden>Aucun motif à examiner.</div>
+      </div>
+
+      <div id="tab-reglages" class="view" hidden>
+        <div class="set-card">
+          <div class="sec-head"><h2>Zones et seuils</h2></div>
+          <div class="field"><label for="rgActif">🟢 Disciple actif à partir de</label>
+            <div class="seuil-row"><input type="range" id="rgActif" min="5" max="100" step="5"><span class="seuil-val" id="rgActifVal"></span></div></div>
+          <div class="field"><label for="rgCrit">🔴 Zone critique sous</label>
+            <div class="seuil-row"><input type="range" id="rgCrit" min="0" max="95" step="5"><span class="seuil-val" id="rgCritVal" style="color:var(--bad)"></span></div></div>
+          <div class="two-col" style="grid-template-columns:1fr 1fr;">
+            <div class="field"><label for="rgZone">Changement de zone après</label>
+              <select id="rgZone"><option value="1">1 semaine</option><option value="2">2 semaines</option><option value="3">3 semaines</option><option value="4">4 semaines</option></select></div>
+            <div class="field"><label for="rgEssai">Période d'essai</label>
+              <select id="rgEssai"><option value="2">2 semaines</option><option value="3">3 semaines</option><option value="4">4 semaines</option><option value="6">6 semaines</option><option value="8">8 semaines</option></select></div>
+          </div>
+          <p class="error-text" id="rgError"></p>
+          <button class="big-btn violet" id="rgSave">Enregistrer les réglages</button>
+        </div>
+
+        <div class="set-card">
+          <div class="sec-head"><h2>Programmes</h2><span class="aside">par église</span></div>
+          <p class="hint">Chaque église a ses programmes réguliers. Ils sont indiqués par le premier disciple de l'église qui s'inscrit ; vous pouvez les corriger ici.</p>
+          <div class="stack" id="progAdminList" style="gap:8px;"></div>
+          <h4 style="font-size:.95rem;">Ajouter un programme régulier à une église</h4>
+          <div class="field"><label for="newFixeEglise">Église</label><select id="newFixeEglise"></select></div>
+          <div class="field"><label for="newFixeNom">Nom</label><input id="newFixeNom" maxlength="40" placeholder="Ex : Culte 3"></div>
+          <div class="two-col" style="grid-template-columns:1fr 1fr;">
+            <div class="field"><label for="newFixeJour">Jour</label><select id="newFixeJour"></select></div>
+            <div class="field"><label for="newFixeHeure">Heure</label><input id="newFixeHeure" type="time"></div>
+          </div>
+          <button class="big-btn soft" id="addFixe">Ajouter le programme régulier</button>
+          <h4 style="font-size:.95rem;">Ajouter un programme optionnel (une seule fois)</h4>
+          <div class="field"><label for="newProgEglise">Pour</label><select id="newProgEglise"></select></div>
+          <div class="two-col" style="grid-template-columns:3fr 2fr;">
+            <div class="field"><label for="newProgNom">Nom</label><input id="newProgNom" maxlength="60" placeholder="Ex : Veillée de prière"></div>
+            <div class="field"><label for="newProgDate">Date</label><input id="newProgDate" type="date"></div>
+          </div>
+          <button class="big-btn soft" id="addProg">Ajouter le programme</button>
+        </div>
+
+        <div class="set-card">
+          <div class="sec-head"><h2>Critères</h2><span class="aside">jours · poids</span></div>
+          <div class="stack" id="critList" style="gap:8px;"></div>
+          <h4 style="font-size:.95rem;">Ajouter un critère</h4>
+          <div class="field"><label for="newCritLabel">Nom</label><input id="newCritLabel" maxlength="60" placeholder="Ex : Lecture d'un psaume"></div>
+          <div class="field"><label for="newCritType">Fréquence</label>
+            <select id="newCritType"><option value="jour">Chaque jour</option><option value="semaine">Chaque semaine</option></select></div>
+          <div class="field" id="newCritDaysWrap"><label>Jours prévus</label><div class="choice-grid" id="newCritDays" style="grid-template-columns:repeat(7,minmax(0,1fr));"></div></div>
+          <div class="field" id="newCritCasesWrap" hidden><label for="newCritCases">Cases (séparées par « ; »)</label><input id="newCritCases" maxlength="200" placeholder="Ex : Lecture du matin ; Lecture du soir"></div>
+          <div class="field"><label for="newCritPoids">Poids</label><input id="newCritPoids" type="number" min="1" max="10" value="1" inputmode="numeric"></div>
+          <button class="big-btn soft" id="addCrit">Ajouter le critère</button>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Fiche disciple -->
+<div class="overlay" id="detailOverlay" hidden>
+  <div class="sheet">
+    <div class="sheet-head"><h3 id="detName"></h3><button class="close-x" id="detClose" aria-label="Fermer">✕</button></div>
+    <div id="detBody" class="stack" style="gap:16px;"></div>
   </div>
+</div>
+
+<!-- Confirmation de statut -->
+<div class="overlay" id="statusOverlay" hidden>
+  <div class="sheet">
+    <div class="sheet-head"><h3 id="stTitle"></h3><button class="close-x" id="stClose" aria-label="Fermer">✕</button></div>
+    <p class="pin-sub" id="stText" style="max-width:none;text-align:left;"></p>
+    <div class="field"><label for="stMotif" id="stMotifLab">Motif</label><textarea id="stMotif" maxlength="300"></textarea></div>
+    <p class="error-text" id="stError"></p>
+    <div class="row-btns"><button class="big-btn soft" id="stCancel">Annuler</button><button class="big-btn violet" id="stOk">Confirmer</button></div>
+  </div>
+</div>
+
+<!-- Récap -->
+<div class="overlay" id="recapOverlay" hidden>
+  <div class="sheet">
+    <div class="sheet-head"><h3 id="recapTitle">Récap de la semaine</h3><button class="close-x" id="recapClose" aria-label="Fermer">✕</button></div>
+    <textarea id="recapText" readonly></textarea>
+    <button class="big-btn gold" id="recapCopy">Copier le texte</button>
+  </div>
+</div>
+
+<!-- Motif d'absence -->
+<div class="overlay" id="absOverlay" hidden>
+  <div class="sheet">
+    <div class="sheet-head"><h3 id="absTitle">Motif d'absence</h3><button class="close-x" id="absClose" aria-label="Fermer">✕</button></div>
+    <div class="stack" id="absDayWrap">
+      <span class="hint" style="font-weight:900;color:var(--ink-2);">Quel jour ?</span>
+      <div class="choice-grid" id="absDays" style="grid-template-columns:repeat(7,minmax(0,1fr));"></div>
+    </div>
+    <span class="hint" style="font-weight:900;color:var(--ink-2);">Motif</span>
+    <div class="choice-grid" id="absMotifs"></div>
+    <div class="field" id="absPrecWrap"><label for="absPrec">Précision <span id="absPrecReq">(facultatif)</span></label><input id="absPrec" maxlength="200" placeholder="Ex : rendez-vous médical"></div>
+    <p class="hint">Le superviseur examinera ce motif. S'il l'accepte, ce jour ne comptera pas dans votre score.</p>
+    <p class="error-text" id="absError"></p>
+    <div class="row-btns"><button class="big-btn soft" id="absRemove" hidden>Retirer le motif</button><button class="big-btn violet" id="absSave">Envoyer</button></div>
+  </div>
+</div>
+
+<div id="toastHost"></div>
+
 <script>
-  // Adresse de l'application Apps Script (le lien partagé)
+  var JOURS = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+  var JOUR_LETTRE = ['L','M','M','J','V','S','D'];
+  var JOUR_NOM = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+  var ST = { CANDIDAT:'Candidat', ESSAI:"Période d'essai", ACTIF:'Disciple actif', OBS:'En observation', CRIT:'Zone critique', RETIRE:'Retiré', NON:'Non retenu' };
+  var SUIVIS = [ST.ESSAI, ST.ACTIF, ST.OBS, ST.CRIT];
+  function estSuivi(s){ return SUIVIS.indexOf(s) !== -1; }
+  var LEVELS = [
+    { min:0,   name:'Semence',        icon:'🌱' },
+    { min:25,  name:'Jeune pousse',   icon:'🌿' },
+    { min:50,  name:'Olivier',        icon:'🫒' },
+    { min:75,  name:'Cèdre',          icon:'🌲' },
+    { min:100, name:'Cèdre du Liban', icon:'👑' }
+  ];
+  var VERSES = [
+    { t:"Ne nous lassons pas de faire le bien ; car nous moissonnerons au temps convenable, si nous ne nous relâchons pas.", r:'Galates 6:9' },
+    { t:'Priez sans cesse.', r:'1 Thessaloniciens 5:17' },
+    { t:'Ta parole est une lampe à mes pieds, et une lumière sur mon sentier.', r:'Psaume 119:105' },
+    { t:'Cherchez premièrement le royaume et la justice de Dieu ; et toutes ces choses vous seront données par-dessus.', r:'Matthieu 6:33' },
+    { t:"Que ce livre de la loi ne s'éloigne point de ta bouche ; médite-le jour et nuit.", r:'Josué 1:8' },
+    { t:"Soyez fermes, inébranlables, travaillant de mieux en mieux à l'œuvre du Seigneur.", r:'1 Corinthiens 15:58' },
+    { t:'Je puis tout par celui qui me fortifie.', r:'Philippiens 4:13' }
+  ];
+  var AVATAR_COLORS = ['#6A2BD9','#FF6B2C','#12B886','#2F8FEA','#F0407F','#C98A00','#8E5BF0','#0FA3A3'];
+  var SESSION_KEY = 'icc_disciples_session';
+  var MSG_TEL = 'Indiquez un numéro camerounais : 9 chiffres commençant par 6 (le +237 est facultatif).';
+  /** Numéro camerounais : 9 chiffres commençant par 6, précédés ou non de +237 / 00237. */
+  function telValide(t){
+    var c = String(t || '').replace(/\D/g, '');
+    if (c.length === 14 && c.indexOf('00237') === 0) c = c.slice(5);
+    else if (c.length === 12 && c.indexOf('237') === 0) c = c.slice(3);
+    return /^6[0-9]{8}$/.test(c);
+  }
+  // Le lien « Espace Superviseur » n'apparaît qu'avec l'adresse réservée au superviseur (…/exec?espace=…)
+  var espaceSuperviseur = '';
+
+  /* ---------- Outils ---------- */
+  function el(id){ return document.getElementById(id); }
+  function show(id){ el(id).hidden = false; }
+  function hide(id){ el(id).hidden = true; }
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function initials(n){ var p = String(n || '?').trim().split(/\s+/); return ((p[0] || '?').charAt(0) + (p.length > 1 ? p[1].charAt(0) : '')).toUpperCase(); }
+  function colorFor(n){ var h = 0; String(n || '').split('').forEach(function(c){ h = (h * 31 + c.charCodeAt(0)) >>> 0; }); return AVATAR_COLORS[h % AVATAR_COLORS.length]; }
+  function avatarHtml(n){ return '<div class="avatar" style="background:' + colorFor(n) + '">' + esc(initials(n)) + '</div>'; }
+  function setAvatar(node, n){ node.textContent = initials(n); node.style.background = colorFor(n); }
+  function levelFor(p){ var l = LEVELS[0]; LEVELS.forEach(function(x){ if (p >= x.min) l = x; }); return l; }
+  function statutChip(s){
+    var cls = s === ST.ACTIF ? 'actif' : s === ST.OBS ? 'obs' : s === ST.CRIT ? 'crit' : s === ST.ESSAI ? 'essai' : s === ST.CANDIDAT ? 'cand' : 'out';
+    return '<span class="chip ' + cls + '">' + esc(s) + '</span>';
+  }
+  function validationChip(v){
+    var cls = v === 'Validé' || v === 'Corrigé' ? 'val' : v === 'À valider' ? 'todo' : 'none';
+    return '<span class="chip ' + cls + '">' + esc(v) + '</span>';
+  }
+
+  // Barre violette en haut de l'écran tant qu'un appel au serveur est en cours
+  var appelsEnCours = 0;
+  function occupe(delta){ appelsEnCours += delta; el('busyBar').hidden = appelsEnCours <= 0; }
+  /*
+   * La page fonctionne à deux endroits :
+   *  - dans Apps Script (ancienne adresse …/exec) : appels par google.script.run ;
+   *  - sur GitHub (sans bandeau Google) : appels en POST vers le script (doPost).
+   */
   var APP_URL = 'https://script.google.com/macros/s/AKfycbyNXdW6FmBmK3yr0oQWpCBfAk-rrKkz0bv8WBuYwyqLxZ48hFlXCiCqFenPh23TQhwQ/exec';
+  var EN_APPS_SCRIPT = !!(window.google && google.script && google.script.run);
+  function appelServeur(name, args){
+    if (EN_APPS_SCRIPT) return new Promise(function(resolve, reject){
+      var r = google.script.run.withSuccessHandler(resolve).withFailureHandler(reject);
+      r[name].apply(r, args);
+    });
+    return fetch(APP_URL, { method: 'POST', body: JSON.stringify({ fn: name, args: args }) })
+      .catch(function(){ throw new Error('Connexion impossible. Vérifiez votre connexion internet et réessayez.'); })
+      .then(function(rep){
+        if (!rep.ok) throw new Error('Le serveur ne répond pas (' + rep.status + '). Réessayez dans un instant.');
+        return rep.json();
+      })
+      .then(function(j){ if (!j.ok) throw new Error(j.error); return j.result; });
+  }
+  function call(name){
+    var args = Array.prototype.slice.call(arguments, 1);
+    occupe(1);
+    return appelServeur(name, args).then(function(v){ occupe(-1); return v; }, function(e){ occupe(-1); throw e; });
+  }
+  function toast(msg, err){
+    var host = el('toastHost'); host.innerHTML = '';
+    var t = document.createElement('div'); t.className = 'toast' + (err ? ' err' : ''); t.textContent = msg;
+    host.appendChild(t); setTimeout(function(){ t.remove(); }, 3400);
+  }
+  function showErr(e){
+    var msg = (e && e.message) || String(e);
+    toast(msg, true);
+    if (/Session expirée|Reconnectez-vous/.test(msg)) logout();
+    else if (/fiche de renseignement/.test(msg) && session && session.role === 'disciple') openFiche(true);
+  }
 
-  var splash = document.getElementById('splash');
-  if (!navigator.onLine) {
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('offline').style.display = 'block';
+  var VIEWS = ['view-loading','view-select','view-register','view-fiche','view-pin','view-wait','view-disciple','view-admin'];
+  function goto(v){ VIEWS.forEach(function(x){ el(x).hidden = x !== v; }); window.scrollTo(0, 0); }
+
+  /* ---------- Écran de chargement ---------- */
+  var reessayer = null;
+  function chargement(){
+    el('loadingText').textContent = 'Chargement…'; hide('loadingRetry'); reessayer = null;
+    goto('view-loading');
+  }
+  /** Si le premier chargement échoue (réseau…), propose de réessayer au lieu de rester bloqué. */
+  function chargementEchoue(retry){
+    if (el('view-loading').hidden) return; // déjà ailleurs (ex. déconnecté après « Session expirée »)
+    el('loadingText').textContent = 'Le chargement n\'a pas abouti. Vérifiez votre connexion internet.';
+    reessayer = retry; show('loadingRetry');
+  }
+  el('loadingRetry').addEventListener('click', function(){ var r = reessayer; chargement(); if (r) r(); });
+
+  var session = null;
+  try { session = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch(e) {}
+  function saveSession(s){ session = s; try { localStorage.setItem(SESSION_KEY, JSON.stringify(s)); } catch(e) {} }
+
+  /* ---------- Confettis ---------- */
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function confetti(){
+    if (reduceMotion) return;
+    var c = el('confetti'); c.hidden = false;
+    var ctx = c.getContext('2d'), W = c.width = window.innerWidth, H = c.height = window.innerHeight;
+    var colors = ['#FFD15C','#FF6B2C','#12B886','#8E5BF0','#F0407F','#2F8FEA'], parts = [];
+    for (var i = 0; i < 140; i++) parts.push({ x: W / 2, y: H * .35, vx: (Math.random() - .5) * 14, vy: -Math.random() * 13 - 4,
+      s: Math.random() * 7 + 4, r: Math.random() * 6, vr: (Math.random() - .5) * .3, c: colors[i % colors.length] });
+    var start = null;
+    function frame(ts){
+      if (!start) start = ts;
+      ctx.clearRect(0, 0, W, H);
+      parts.forEach(function(p){ p.vy += .35; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c; ctx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); ctx.restore(); });
+      if (ts - start < 2600) requestAnimationFrame(frame); else { ctx.clearRect(0, 0, W, H); c.hidden = true; }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  /* ---------- Démarrage ---------- */
+  function topbar(name, hello){ show('topbar'); el('topName').textContent = name; el('topHello').textContent = hello; setAvatar(el('topAvatar'), name); }
+
+  function boot(){
+    if (session && session.role === 'admin') { topbar('Superviseur', 'Espace'); loadAdmin(0); return; }
+    if (session) { chargement(); routeDisciple(); return; }
+    hide('topbar'); goto('view-select');
+  }
+  var loginTel = '';
+  el('loginForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var t = el('loginTel').value.trim();
+    if (!telValide(t)) { el('loginError').textContent = MSG_TEL; return; }
+    el('loginError').textContent = '';
+    loginTel = t;
+    openPin('login', 'tel', t);
+  });
+  function routeDisciple(){
+    call('getMonStatut', session.token).then(function(s){
+      session.statut = s.statut; saveSession(session);
+      topbar(s.name, 'Bon retour');
+      suiteDisciple(s);
+    }).catch(function(e){ showErr(e); chargementEchoue(routeDisciple); });
+  }
+  /** Après connexion : fiche obligatoire d'abord, puis le suivi (ou l'écran d'attente). */
+  function suiteDisciple(s){
+    if (s.ficheComplete === false) { openFiche(true); return; }
+    if (estSuivi(s.statut)) loadWeek(0);
+    else showWait(s.statut);
+  }
+  function logout(){
+    try { localStorage.removeItem(SESSION_KEY); } catch(e) {}
+    session = null; dHistory = null; badgesBefore = null; dWeek = null; autresModifies = false;
+    ['detailOverlay','statusOverlay','recapOverlay'].forEach(hide);
+    el('loginTel').value = ''; loginTel = '';
+    hide('topbar'); goto('view-select');
+  }
+  el('logoutBtn').addEventListener('click', logout);
+  el('adminLinkBtn').addEventListener('click', function(){ openPin('login', 'admin', 'Superviseur'); });
+
+  /* ---------- Inscription ---------- */
+  var regData = null;
+
+  /* Fiche de renseignement : église, programmes de l'église, baptême, formations, familles */
+  var EGLISES = ['ICC Yaoundé - Eglise Principale', 'ICC Odza Borne 10', 'ICC Biyem-Assi', 'ICC Soa', 'ICC Oyom-Abang', 'ICC Bafoussam',
+    'ICC Sangmelima', 'ICC Nsam', 'ICC Mbalngong', 'ICC Centre-Ville', 'ICC Nkoabang', 'ICC Dschang', 'ICC Bandjoun', 'ICC Ebolowa',
+    'ICC Mbalmayo', 'ICC Garoua', 'ICC Obala', 'ICC Mbankomo', 'ICC Foulassi', 'ICC Obobogo', 'ICC Okola'];
+  var AUTRE_EGLISE = 'Autre église';
+  var FORMATIONS = ['Formation 001', 'Formation 101', 'Formation 201'];
+  var fiche = { baptise: '', impact: '', disciples: '', formations: [] };
+  // Programmes de l'église : 'aucune' (église pas choisie), 'chargement', 'existants' (déjà connus) ou 'nouveaux' (à saisir)
+  var progEtat = 'aucune', progDemande = 0;
+
+  function choisirOuiNon(champ, v){
+    fiche[champ] = v;
+    var g = document.querySelector('.oui-non[data-champ="' + champ + '"]');
+    Array.prototype.forEach.call(g.children, function(x){ x.classList.toggle('on', x.textContent === v); x.setAttribute('aria-pressed', x.textContent === v ? 'true' : 'false'); });
+    if (champ === 'impact') el('regImpactWrap').hidden = v !== 'Oui';
+    if (champ === 'disciples') el('regDisciplesWrap').hidden = v !== 'Oui';
+  }
+  function cocherFormation(f, on){
+    fiche.formations = fiche.formations.filter(function(x){ return x !== f; });
+    if (on) fiche.formations.push(f);
+    Array.prototype.forEach.call(el('regFormations').children, function(r){
+      if (r.dataset.f !== f) return;
+      r.classList.toggle('on', on); r.querySelector('.checkbox').textContent = on ? '✓' : ''; r.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+  function nomEglise(){
+    var v = el('regEglise').value;
+    return v === AUTRE_EGLISE ? el('regEgliseAutre').value.trim() : v;
+  }
+  (function construireFiche(){
+    var sel = el('regEglise');
+    EGLISES.concat([AUTRE_EGLISE]).forEach(function(e){ var o = document.createElement('option'); o.value = e; o.textContent = e; sel.appendChild(o); });
+    sel.addEventListener('change', function(){ el('regEgliseAutreWrap').hidden = sel.value !== AUTRE_EGLISE; chargerProgrammesEglise(); });
+    el('regEgliseAutre').addEventListener('change', chargerProgrammesEglise);
+    Array.prototype.forEach.call(document.querySelectorAll('.oui-non'), function(g){
+      ['Oui', 'Non'].forEach(function(v){
+        var b = document.createElement('button'); b.type = 'button'; b.className = 'choice'; b.textContent = v;
+        b.setAttribute('aria-pressed', 'false');
+        b.addEventListener('click', function(){ choisirOuiNon(g.dataset.champ, v); });
+        g.appendChild(b);
+      });
+    });
+    FORMATIONS.forEach(function(f){
+      var r = document.createElement('button'); r.type = 'button'; r.className = 'check-row'; r.dataset.f = f; r.setAttribute('aria-pressed', 'false');
+      r.innerHTML = '<span class="checkbox"></span><span class="row-text">' + esc(f) + '</span>';
+      r.addEventListener('click', function(){ cocherFormation(f, !r.classList.contains('on')); });
+      el('regFormations').appendChild(r);
+    });
+    el('progEgliseAdd').addEventListener('click', function(){ ajouterLigneProgramme(); });
+  })();
+
+  /* Programmes de l'église : lus sur le serveur ; si l'église n'en a pas encore, le disciple les saisit */
+  function chargerProgrammesEglise(){
+    var eglise = nomEglise(), n = ++progDemande;
+    el('progEgliseList').innerHTML = ''; hide('progEgliseAdd');
+    if (eglise.length < 2) { progEtat = 'aucune'; hide('progEgliseWrap'); return; }
+    progEtat = 'chargement'; show('progEgliseWrap');
+    el('progEgliseHint').textContent = 'Chargement des programmes de ' + eglise + '…';
+    call('getProgrammesEglise', eglise).then(function(liste){
+      if (n !== progDemande) return;
+      if (liste.length) {
+        progEtat = 'existants';
+        el('progEgliseHint').textContent = 'Programmes enregistrés pour ' + eglise + '. Une erreur ? Signalez-la au superviseur.';
+        el('progEgliseList').innerHTML = liste.map(function(p){
+          return '<div class="crit-row"><span class="cl">' + esc(p.nom) + '<span>' + esc(p.horaire) + '</span></span></div>';
+        }).join('');
+      } else {
+        progEtat = 'nouveaux';
+        el('progEgliseHint').textContent = 'Vous êtes le premier de ' + eglise + ' : indiquez ses programmes réguliers (cultes, étude biblique…). Ils serviront à tous les disciples de votre église.';
+        ajouterLigneProgramme(); show('progEgliseAdd');
+      }
+    }).catch(function(e){
+      if (n !== progDemande) return;
+      progEtat = 'aucune'; el('progEgliseHint').textContent = (e && e.message) || String(e);
+    });
+  }
+  function ajouterLigneProgramme(){
+    var r = document.createElement('div'); r.className = 'crit-row prog-saisie'; r.style.flexWrap = 'wrap';
+    r.innerHTML = '<input class="pNom" maxlength="40" placeholder="Nom (ex : Culte 1)" aria-label="Nom du programme" style="flex:1 1 100%;">' +
+      '<select class="pJour" aria-label="Jour" style="flex:1;"><option value="">Jour…</option>' + JOUR_NOM.map(function(j){ return '<option>' + j + '</option>'; }).join('') + '</select>' +
+      '<input class="pHeure" type="time" aria-label="Heure" style="flex:1;">' +
+      '<button type="button" class="mini-btn" aria-label="Retirer ce programme">✕</button>';
+    Array.prototype.forEach.call(r.querySelectorAll('input,select'), function(x){
+      x.style.cssText += ';border:2px solid var(--border);border-radius:12px;padding:10px;font:inherit;font-weight:700;background:var(--surface);color:var(--ink);min-width:0;';
+    });
+    r.querySelector('button').addEventListener('click', function(){ r.remove(); });
+    el('progEgliseList').appendChild(r);
+  }
+  function lireProgrammesSaisis(){
+    var out = [], err = '';
+    Array.prototype.forEach.call(el('progEgliseList').querySelectorAll('.prog-saisie'), function(r){
+      var nom = r.querySelector('.pNom').value.trim(), jour = r.querySelector('.pJour').value, heure = r.querySelector('.pHeure').value;
+      if (!nom && !jour && !heure) return;
+      if (nom.length < 2) err = err || 'Donnez un nom à chaque programme.';
+      else if (!jour) err = err || 'Choisissez le jour de « ' + nom + ' ».';
+      else if (!heure) err = err || 'Indiquez l\'heure de « ' + nom + ' ».';
+      out.push({ nom: nom, jour: jour, heure: heure });
+    });
+    if (err) return err;
+    if (!out.length) return 'Indiquez au moins un programme de votre église.';
+    return out;
+  }
+
+  function viderFiche(){
+    fiche = { baptise: '', impact: '', disciples: '', formations: [] };
+    el('regEglise').value = ''; el('regEgliseAutre').value = ''; el('regImpact').value = ''; el('regDisciples').value = '';
+    Array.prototype.forEach.call(document.querySelectorAll('#ficheBlock .choice, #regFormations .check-row'), function(x){
+      x.classList.remove('on'); x.setAttribute('aria-pressed', 'false'); var c = x.querySelector('.checkbox'); if (c) c.textContent = '';
+    });
+    ['regEgliseAutreWrap', 'regImpactWrap', 'regDisciplesWrap', 'progEgliseWrap'].forEach(hide);
+    progEtat = 'aucune'; progDemande++;
+  }
+  /** Pré-remplit la fiche avec ce qui est enregistré (pour la mettre à jour). */
+  function remplirFiche(f){
+    viderFiche();
+    if (!f) return;
+    if (f.eglise) {
+      if (EGLISES.indexOf(f.eglise) !== -1) el('regEglise').value = f.eglise;
+      else { el('regEglise').value = AUTRE_EGLISE; el('regEgliseAutre').value = f.eglise; show('regEgliseAutreWrap'); }
+      chargerProgrammesEglise();
+    }
+    if (f.baptise === 'Oui' || f.baptise === 'Non') choisirOuiNon('baptise', f.baptise);
+    String(f.formations || '').split(',').map(function(x){ return x.trim(); }).forEach(function(x){
+      if (x === 'Formation 00') x = 'Formation 001';
+      if (FORMATIONS.indexOf(x) !== -1) cocherFormation(x, true);
+    });
+    [['impact', f.familleImpact, 'regImpact'], ['disciples', f.familleDisciples, 'regDisciples']].forEach(function(t){
+      if (!t[1]) return;
+      if (t[1] === 'Non') choisirOuiNon(t[0], 'Non');
+      else { choisirOuiNon(t[0], 'Oui'); el(t[2]).value = t[1]; }
+    });
+  }
+  /** Renvoie la fiche remplie, ou un message d'erreur (texte). */
+  function lireFiche(){
+    var eglise = el('regEglise').value;
+    if (!eglise) return 'Choisissez votre église.';
+    if (eglise === AUTRE_EGLISE) {
+      eglise = el('regEgliseAutre').value.trim();
+      if (eglise.length < 2) return 'Indiquez le nom de votre église.';
+    }
+    if (progEtat === 'chargement') return 'Patientez : chargement des programmes de votre église…';
+    if (progEtat === 'aucune') { chargerProgrammesEglise(); return 'Patientez : chargement des programmes de votre église…'; }
+    var programmes = [];
+    if (progEtat === 'nouveaux') {
+      programmes = lireProgrammesSaisis();
+      if (typeof programmes === 'string') return programmes;
+    }
+    if (!fiche.baptise) return 'Indiquez si vous êtes baptisé(e).';
+    if (!fiche.impact) return 'Indiquez si vous faites partie d\'une famille d\'impact.';
+    var impact = el('regImpact').value.trim();
+    if (fiche.impact === 'Oui' && impact.length < 2) return 'Indiquez le nom de votre famille d\'impact.';
+    if (!fiche.disciples) return 'Indiquez si vous faites partie d\'une famille de disciples.';
+    var disciples = el('regDisciples').value.trim();
+    if (fiche.disciples === 'Oui' && disciples.length < 2) return 'Indiquez le nom de votre famille de disciples.';
+    return {
+      eglise: eglise, baptise: fiche.baptise, programmes: programmes,
+      formations: FORMATIONS.filter(function(f){ return fiche.formations.indexOf(f) !== -1; }),
+      familleImpact: fiche.impact === 'Oui' ? impact : 'Non',
+      familleDisciples: fiche.disciples === 'Oui' ? disciples : 'Non'
+    };
+  }
+
+  /* ---------- Écran « Ma fiche » ---------- */
+  var ficheObligatoire = false;
+  function openFiche(obligatoire){
+    ficheObligatoire = obligatoire;
+    el('ficheSlot').appendChild(el('ficheBlock')); hide('ficheTitre');
+    el('ficheIntro').textContent = obligatoire
+      ? 'Avant de continuer, merci de remplir votre fiche. Elle aide le superviseur à mieux vous accompagner. Vous pourrez la mettre à jour à tout moment.'
+      : 'Mettez à jour vos informations, par exemple quand vous terminez une formation.';
+    el('ficheBackRow').hidden = obligatoire;
+    el('ficheError').textContent = ''; viderFiche();
+    goto('view-fiche');
+    call('getMaFiche', session.token).then(function(r){ remplirFiche(r.fiche); }).catch(showErr);
+  }
+  el('ficheForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var f = lireFiche();
+    if (typeof f === 'string') { el('ficheError').textContent = f; return; }
+    el('ficheError').textContent = ''; el('ficheSave').disabled = true;
+    call('enregistrerFiche', session.token, f).then(function(s){
+      el('ficheSave').disabled = false; toast('Fiche enregistrée ✓');
+      session.statut = s.statut; saveSession(session);
+      if (ficheObligatoire || el('view-disciple').hidden) suiteDisciple(s); else goto('view-disciple');
+    }).catch(function(e2){ el('ficheSave').disabled = false; el('ficheError').textContent = (e2 && e2.message) || String(e2); });
+  });
+  el('ficheBack').addEventListener('click', function(){ if (dWeek) goto('view-disciple'); else suiteDisciple({ statut: session.statut }); });
+  el('goRegister').addEventListener('click', function(){
+    el('regForm').insertBefore(el('ficheBlock'), el('regError'));
+    show('ficheTitre'); viderFiche();
+    el('regError').textContent = ''; goto('view-register'); el('regPrenom').focus();
+  });
+  el('regBack').addEventListener('click', function(){ goto('view-select'); });
+  el('regForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var p = el('regPrenom').value.trim(), n = el('regNom').value.trim(), t = el('regTel').value.trim();
+    if (p.length < 2) { el('regError').textContent = 'Indiquez votre prénom.'; return; }
+    if (n.length < 2) { el('regError').textContent = 'Indiquez votre nom.'; return; }
+    if (!telValide(t)) { el('regError').textContent = MSG_TEL; return; }
+    var f = lireFiche();
+    if (typeof f === 'string') { el('regError').textContent = f; return; }
+    el('regError').textContent = '';
+    regData = { prenom: p, nom: n, tel: t, fiche: f };
+    openPin('reg1', null, p + ' ' + n);
+  });
+
+  /* ---------- Clavier du code ---------- */
+  var pin = '', pinMode = 'login', pinSlug = null, pinName = '', firstPin = '', pinBusy = false;
+  (function(){
+    ['1','2','3','4','5','6','7','8','9','','0','⌫'].forEach(function(k){
+      var b = document.createElement('button'); b.className = 'key' + (k === '' || k === '⌫' ? ' ghost' : ''); b.textContent = k;
+      if (k === '') { b.disabled = true; b.style.visibility = 'hidden'; } else b.addEventListener('click', function(){ pinPress(k); });
+      if (k === '⌫') b.setAttribute('aria-label', 'Effacer');
+      el('keypad').appendChild(b);
+    });
+  })();
+  function dots(){ var d = el('pinDots').children; for (var i = 0; i < 4; i++) d[i].classList.toggle('on', i < pin.length); }
+  function shake(){ var d = el('pinDots'); d.classList.remove('shake'); void d.offsetWidth; d.classList.add('shake'); }
+  function pinPress(k){
+    if (pinBusy) return;
+    if (k === '⌫') pin = pin.slice(0, -1); else if (pin.length < 4) pin += k;
+    el('pinError').textContent = ''; dots();
+    if (pin.length === 4) pinDone();
+  }
+  document.addEventListener('keydown', function(e){
+    if (el('view-pin').hidden) return;
+    if (/^[0-9]$/.test(e.key)) pinPress(e.key); else if (e.key === 'Backspace') pinPress('⌫');
+  });
+  function openPin(mode, slug, name){
+    pinMode = mode; pinSlug = slug; pinName = name; pin = ''; dots(); el('pinError').textContent = '';
+    setAvatar(el('pinAvatar'), slug === 'tel' ? '#' : name);
+    if (slug === 'tel') el('pinAvatar').textContent = '📱';
+    if (mode === 'login') {
+      el('pinTitle').textContent = slug === 'admin' ? 'Espace Superviseur' : 'Votre code';
+      el('pinSub').textContent = slug === 'admin' ? 'Entrez le code superviseur.' : 'Numéro ' + name + '. Entrez votre code à 4 chiffres.';
+    } else if (mode === 'reg1') {
+      el('pinTitle').textContent = 'Choisissez votre code';
+      el('pinSub').textContent = '4 chiffres faciles à retenir pour vous, difficiles à deviner pour les autres.';
+    } else {
+      el('pinTitle').textContent = 'Confirmez votre code';
+      el('pinSub').textContent = 'Tapez le même code une deuxième fois.';
+    }
+    goto('view-pin');
+  }
+  el('pinBack').addEventListener('click', function(){ goto(pinMode === 'login' ? 'view-select' : 'view-register'); });
+
+  function pinDone(){
+    if (pinMode === 'reg1') { firstPin = pin; setTimeout(function(){ openPin('reg2', null, pinName); }, 150); return; }
+    if (pinMode === 'reg2') {
+      if (pin !== firstPin) { el('pinError').textContent = 'Les deux codes sont différents. Recommencez.'; shake(); setTimeout(function(){ openPin('reg1', null, pinName); }, 900); return; }
+      pinBusy = true;
+      call('inscrire', regData.prenom, regData.nom, regData.tel, pin, regData.fiche).then(function(res){
+        pinBusy = false; saveSession(res); topbar(res.name, 'Bienvenue'); showWait(ST.CANDIDAT); confetti();
+        el('regForm').reset(); viderFiche();
+      }).catch(function(e){ pinBusy = false; goto('view-register'); el('regError').textContent = (e && e.message) || String(e); });
+      return;
+    }
+    pinBusy = true;
+    var connexion = pinSlug === 'admin' ? call('loginOrRegister', 'admin', pin, espaceSuperviseur) : call('connexionTelephone', loginTel, pin);
+    connexion.then(function(res){
+      pinBusy = false;
+      if (res.status === 'wrong_pin') { el('pinError').textContent = pinSlug === 'admin' ? 'Code incorrect, réessayez.' : 'Numéro ou code incorrect. Réessayez.'; shake(); pin = ''; dots(); return; }
+      saveSession(res);
+      if (res.role === 'admin') { if (res.status === 'created') toast('Code superviseur enregistré ✓'); topbar('Superviseur', 'Espace'); loadAdmin(0); return; }
+      if (res.status === 'created') toast('Nouveau code enregistré ✓');
+      topbar(res.name, 'Bon retour');
+      suiteDisciple(res);
+    }).catch(function(e){ pinBusy = false; pin = ''; dots(); showErr(e); });
+  }
+
+  /* ---------- Écran d'attente ---------- */
+  function showWait(statut){
+    goto('view-wait');
+    if (statut === ST.CANDIDAT) {
+      el('waitEmoji').textContent = '⏳'; el('waitTitle').textContent = 'Demande envoyée';
+      el('waitText').textContent = 'Votre inscription attend la validation du superviseur. Revenez sur cette page : dès qu\'elle est acceptée, votre suivi s\'ouvre.';
+      show('waitRefresh');
+    } else if (statut === ST.NON) {
+      el('waitEmoji').textContent = '🤍'; el('waitTitle').textContent = 'Demande non retenue';
+      el('waitText').textContent = 'Votre inscription n\'a pas été retenue pour le moment. Rapprochez-vous du superviseur pour en parler.';
+      hide('waitRefresh');
+    } else {
+      el('waitEmoji').textContent = '🕊️'; el('waitTitle').textContent = 'Suivi en pause';
+      el('waitText').textContent = 'Votre suivi est actuellement fermé. Rapprochez-vous du superviseur pour le reprendre.';
+      hide('waitRefresh');
+    }
+  }
+  el('waitRefresh').addEventListener('click', function(){
+    if (!session) return;
+    call('getMonStatut', session.token).then(function(s){
+      if (estSuivi(s.statut)) { toast('Inscription validée. Bienvenue !'); confetti(); loadWeek(0); }
+      else { showWait(s.statut); toast('Toujours en attente.'); }
+    }).catch(showErr);
+  });
+
+  /* ---------- Vue disciple ---------- */
+  var dWeek = null, dOffset = 0, dHistory = null, badgesBefore = null;
+  var ZONE_INFO = {
+    vert:   { icon:'🟢', nom:'Zone verte' },
+    orange: { icon:'🟠', nom:'Zone orange' },
+    rouge:  { icon:'🔴', nom:'Zone rouge' }
+  };
+  function zoneOf(score, v){ return score >= v.seuilActif ? 'vert' : (score >= v.seuilCritique ? 'orange' : 'rouge'); }
+  function fmtFin(id){ if (!id) return ''; var p = id.split('-'); return p[2] + '/' + p[1]; }
+
+  /**
+   * Charge une semaine. Au premier affichage, l'écran de chargement reste visible
+   * jusqu'à l'arrivée des données (plus d'écran vide à « 0% »).
+   * Si on change vite de semaine, seule la dernière demandée s'affiche.
+   */
+  var semaineDemandee = 0;
+  function loadWeek(offset){
+    var premier = el('view-disciple').hidden, n = ++semaineDemandee;
+    if (premier) chargement();
+    call('getMyWeek', session.token, offset).then(function(v){
+      if (n !== semaineDemandee) return;
+      if (premier || v.offsetWeeks !== dOffset) badgesBefore = null;
+      renderWeek(v);
+      if (premier) goto('view-disciple');
+      if (!dHistory) loadHistory();
+    }).catch(function(e){ showErr(e); if (premier) chargementEchoue(function(){ loadWeek(offset); }); });
+  }
+  function loadHistory(){
+    call('getMyHistory', session.token).then(function(h){ dHistory = h; renderHistory(); }).catch(showErr);
+  }
+
+  /**
+   * Envoie une case cochée. La case touchée est bloquée jusqu'à la réponse (pas de double clic).
+   * Plusieurs cases peuvent partir en même temps : l'écran n'est redessiné qu'une fois
+   * toutes les réponses arrivées, et si plusieurs étaient en route, on relit la semaine
+   * pour afficher l'état exact enregistré (les réponses peuvent arriver dans le désordre).
+   */
+  var envoisEnCours = 0, envoisDuLot = 0;
+  function send(promise, bouton){
+    envoisEnCours++; envoisDuLot++;
+    if (bouton) bouton.disabled = true;
+    function fin(){
+      envoisEnCours--;
+      if (bouton) bouton.disabled = false;
+      if (envoisEnCours > 0) return false;
+      var plusieurs = envoisDuLot > 1; envoisDuLot = 0;
+      return plusieurs ? 'relire' : 'afficher';
+    }
+    return promise.then(function(v){
+      var suite = fin();
+      if (!suite || v.offsetWeeks !== dOffset) return;
+      if (suite === 'relire') loadWeek(dOffset); else onUpdated(v);
+    }).catch(function(e){
+      var suite = fin();
+      showErr(e);
+      if (suite && session) loadWeek(dOffset);
+    });
+  }
+
+  function weekBadges(v){
+    var list = [];
+    v.criteresJour.forEach(function(c){
+      var prevus = c.prevus.filter(Boolean).length;
+      var faits = c.jours.filter(function(f, i){ return f && c.prevus[i]; }).length;
+      var icon = c.id === 'commande_matin' ? '☀️' : c.id === 'bible' ? '📖' : c.id === 'priere' ? '🙏' : '⭐';
+      var nom = c.id === 'commande_matin' ? 'Matinal' : c.id === 'bible' ? 'Parole vivante' : c.id === 'priere' ? 'Genoux pliés' : c.label;
+      list.push({ id: 'j_' + c.id, icon: icon, name: nom + ' ' + prevus + '/' + prevus, on: prevus > 0 && faits >= prevus });
+    });
+    var prog = v.programmes ? v.programmes.liste : [];
+    if (prog.length) {
+      list.push({ id: 'prog', icon: '⛪', name: 'Fidèle au culte', on: prog.every(function(p){ return p.present; }) });
+      var suivis = prog.filter(function(p){ return p.present; });
+      list.push({ id: 'heure', icon: '⏰', name: "Toujours à l'heure", on: suivis.length > 0 && suivis.every(function(p){ return p.alHeure; }) });
+    }
+    var jeune = v.criteresSemaine.filter(function(c){ return c.id === 'jeune'; })[0];
+    if (jeune) list.push({ id: 'jeune', icon: '🕊️', name: 'Jeûne', on: jeune.elements.every(function(e){ return e.fait; }) });
+    list.push({ id: 'seuil', icon: '🎯', name: 'Zone verte', on: v.score >= v.seuilActif });
+    list.push({ id: 'parfait', icon: '👑', name: 'Semaine parfaite', on: v.score >= 100 });
+    return list;
+  }
+
+  function dayState(c, i){
+    var a = c.absences[i];
+    if (c.jours[i]) return 'on';
+    if (a && a.etat === 'Acceptée') return 'excused';
+    if (a && a.etat === 'En attente') return 'pending';
+    if (a && a.etat === 'Refusée') return 'refused';
+    return '';
+  }
+
+  function renderWeek(v){
+    if (v.groupe === undefined && dWeek) v.groupe = dWeek.groupe;
+    dWeek = v; dOffset = v.offsetWeeks;
+    renderGroupe(v.groupe);
+    el('dWeekLabel').textContent = v.label;
+    el('dNext').disabled = v.offsetWeeks >= 0;
+    el('dPrev').disabled = !v.canGoBack;
+    el('roChip').hidden = v.editable;
+
+    var verse = VERSES[Math.floor(Date.now() / 86400000) % VERSES.length];
+    el('verseText').textContent = '« ' + verse.t + ' »'; el('verseRef').textContent = verse.r;
+
+    // Période d'essai
+    el('essaiBanner').hidden = !v.essai;
+    if (v.essai) {
+      el('essaiTitle').textContent = v.essai.numero === 0 ? "Votre période d'essai commence lundi"
+        : v.essai.numero > v.essai.total ? "Période d'essai terminée" : "Période d'essai · semaine " + v.essai.numero + ' sur ' + v.essai.total;
+      el('essaiText').textContent = v.essai.numero > v.essai.total
+        ? ' Le superviseur va faire le bilan avec vous.'
+        : ' Visez une moyenne d\'au moins ' + v.seuilActif + ' % sur les ' + v.essai.total + ' semaines pour être confirmé(e) Disciple' + (v.essai.fin ? ' (bilan le ' + fmtFin(v.essai.fin) + ').' : '.');
+    }
+    // Statut de zone
+    var zb = { 'En observation': ['🟠', 'Vous êtes en observation', ' Revenez à ' + v.seuilActif + ' % ou plus : le superviseur verra vos progrès et décidera de votre retour en Disciple actif.', 'warn'],
+               'Zone critique':  ['🔴', 'Vous êtes en zone critique', ' Le superviseur va prendre contact avec vous. Chaque case cochée compte, courage !', 'warn'] }[v.statut];
+    el('zoneBanner').hidden = !zb;
+    if (zb) { el('zoneBannerIcon').textContent = zb[0]; el('zoneBannerTitle').textContent = zb[1]; el('zoneBannerText').textContent = zb[2]; }
+
+    el('dComment').hidden = !v.commentaire;
+    el('dCommentText').textContent = v.commentaire;
+
+    // Série
+    el('serieChip').hidden = !v.serie;
+    if (v.serie) { el('serieVal').textContent = v.serie.jours; el('serieLab').textContent = (v.serie.jours > 1 ? 'jours' : 'jour') + " d'affilée"; }
+
+    renderDaily(v);
+    renderWeekly(v);
+    renderProgrammes(v);
+    renderAutres(v);
+    renderScore();
+  }
+
+  /* Autres activités (texte libre, hors score). On n'écrase pas un texte en cours de saisie. */
+  var autresModifies = false, autresSemaine = null;
+  function renderAutres(v){
+    var a = v.autres || { enseignements: '', programmes: '' };
+    if (!autresModifies || autresSemaine !== v.weekId) {
+      el('autresEns').value = a.enseignements; el('autresProg').value = a.programmes; autresModifies = false;
+    }
+    autresSemaine = v.weekId;
+    el('autresEns').disabled = el('autresProg').disabled = !v.editable;
+    el('autresSave').hidden = !v.editable;
+  }
+  ['autresEns', 'autresProg'].forEach(function(id){ el(id).addEventListener('input', function(){ autresModifies = true; }); });
+  el('autresSave').addEventListener('click', function(){
+    el('autresSave').disabled = true;
+    call('setAutres', session.token, dOffset, el('autresEns').value, el('autresProg').value).then(function(v){
+      el('autresSave').disabled = false; autresModifies = false; onUpdated(v); toast('Enregistré ✓');
+    }).catch(function(e){ el('autresSave').disabled = false; showErr(e); });
+  });
+  el('dFicheBtn').addEventListener('click', function(){ openFiche(false); });
+
+  function renderDaily(v){
+    var dl = el('dailyList'); dl.innerHTML = '';
+    v.criteresJour.forEach(function(c){
+      var prevus = c.prevus.filter(Boolean).length;
+      var faits = c.jours.filter(function(f, i){ return f && c.prevus[i]; }).length;
+      var icon = c.id === 'commande_matin' ? '☀️' : c.id === 'bible' ? '📖' : c.id === 'priere' ? '🙏' : '⭐';
+      var card = document.createElement('div'); card.className = 'mission';
+      card.innerHTML = '<div class="m-head"><div class="m-icon" style="background:var(--gold-soft)">' + icon + '</div>' +
+        '<div class="m-title"><h3>' + esc(c.label) + '</h3><span class="sub">' + (prevus === 7 ? '7 jours sur 7' : prevus + ' jours prévus') + '</span></div>' +
+        '<span class="m-pill' + (faits >= prevus ? ' done' : '') + '">' + faits + '/' + prevus + '</span></div><div class="day-row"></div>';
+      var row = card.querySelector('.day-row');
+      var peutMotif = false;
+      c.jours.forEach(function(fait, i){
+        var b = document.createElement('button');
+        if (!c.prevus[i]) { b.className = 'day-btn off'; b.disabled = true; b.setAttribute('aria-hidden', 'true'); row.appendChild(b); return; }
+        var future = i > v.jourCourant, st = dayState(c, i);
+        b.className = 'day-btn' + (st ? ' ' + st : '') + (future ? ' future' : '') + (v.offsetWeeks === 0 && i === v.jourCourant ? ' today' : '');
+        var mark = st === 'on' ? '✓' : st === 'excused' ? 'abs.' : st === 'pending' ? '⏳' : st === 'refused' ? '✗' : '';
+        b.innerHTML = JOUR_LETTRE[i] + '<small>' + mark + '</small>';
+        b.setAttribute('aria-label', JOUR_NOM[i] + (st === 'on' ? ' : fait' : st === 'excused' ? ' : absence acceptée' : st === 'pending' ? ' : motif en attente' : ''));
+        b.setAttribute('aria-pressed', fait ? 'true' : 'false');
+        b.disabled = !v.editable || future || st === 'excused';
+        if (!fait && !future && st !== 'excused') peutMotif = true;
+        if (!b.disabled) b.addEventListener('click', function(){
+          var nv = !b.classList.contains('on');
+          b.classList.toggle('on', nv); b.querySelector('small').textContent = nv ? '✓' : '';
+          send(call('setCritereJour', session.token, dOffset, c.id, JOURS[i], nv), b);
+        });
+        row.appendChild(b);
+      });
+      var notes = c.absences.map(function(a, i){ return a && !c.jours[i] ? '<span class="abs-note ' + esc(a.etat.split(' ')[0]) + '">' + JOUR_NOM[i] + ' : ' + esc(a.motif) + ' · ' + esc(a.etat.toLowerCase()) + '</span>' : ''; }).filter(String);
+      if (notes.length) { var n = document.createElement('div'); n.className = 'prog-actions'; n.innerHTML = notes.join(''); card.appendChild(n); }
+      if (v.editable && peutMotif) {
+        var l = document.createElement('button'); l.className = 'abs-link'; l.textContent = "Un jour manqué ? Indiquer un motif d'absence";
+        l.addEventListener('click', function(){ openAbsence({ critere: c.id, label: c.label, jour: true, c: c }); });
+        card.appendChild(l);
+      }
+      dl.appendChild(card);
+    });
+  }
+
+  function renderWeekly(v){
+    var wl = el('weeklyList'); wl.innerHTML = '';
+    v.criteresSemaine.forEach(function(c){
+      var done = c.elements.filter(function(e){ return e.fait; }).length;
+      var icon = c.id === 'enseignements' ? '🎓' : c.id === 'jeune' ? '🕊️' : '✅';
+      var card = document.createElement('div'); card.className = 'mission';
+      card.innerHTML = '<div class="m-head"><div class="m-icon" style="background:var(--sky-soft)">' + icon + '</div>' +
+        '<div class="m-title"><h3>' + esc(c.label) + '</h3><span class="sub">' + (c.elements.length > 1 ? c.elements.length + ' cases' : 'Oui / Non') + '</span></div>' +
+        '<span class="m-pill' + (done === c.elements.length ? ' done' : '') + '">' + done + '/' + c.elements.length + '</span></div><div class="check-list"></div>';
+      var list = card.querySelector('.check-list');
+      c.elements.forEach(function(e, i){
+        var r = document.createElement('button');
+        r.className = 'check-row' + (e.fait ? ' on' : '');
+        r.disabled = !v.editable;
+        r.setAttribute('aria-pressed', e.fait ? 'true' : 'false');
+        r.innerHTML = '<span class="checkbox">' + (e.fait ? '✓' : '') + '</span><span class="row-text">' + esc(e.label) + '</span>';
+        if (v.editable) r.addEventListener('click', function(){
+          var nv = !r.classList.contains('on');
+          r.classList.toggle('on', nv); r.querySelector('.checkbox').textContent = nv ? '✓' : '';
+          send(call('setCritereSemaine', session.token, dOffset, c.id, i, nv), r);
+        });
+        list.appendChild(r);
+      });
+      wl.appendChild(card);
+    });
+  }
+
+  function renderProgrammes(v){
+    el('progCard').hidden = !v.programmes;
+    if (!v.programmes) return;
+    el('progTitle').textContent = v.programmes.label + (v.eglise ? ' · ' + v.eglise : '');
+    var host = el('progList'); host.innerHTML = '';
+    var liste = v.programmes.liste;
+    var attendus = liste.filter(function(p){ return p.present || !(p.absence && p.absence.etat === 'Acceptée'); }).length;
+    var suivis = liste.filter(function(p){ return p.present; }).length;
+    el('progPill').textContent = suivis + '/' + attendus;
+    el('progPill').classList.toggle('done', attendus > 0 && suivis >= attendus);
+    liste.forEach(function(p){
+      var excused = !p.present && p.absence && p.absence.etat === 'Acceptée';
+      var r = document.createElement('div'); r.className = 'prog-row' + (p.present ? ' on' : '') + (excused ? ' excused' : '');
+      var sous = (p.type === 'optionnel' ? 'Programme optionnel' + (p.date ? ' · ' + p.date : '') : p.horaire) + (p.aVenir ? ' · à venir' : '');
+      r.innerHTML = '<div class="prog-top"><span class="prog-name">' + esc(p.nom) + '<span>' + esc(sous) + '</span></span>' +
+        '<button class="tog" data-k="present"' + (v.editable && !excused && !p.aVenir ? '' : ' disabled') + '>' + (p.present ? '✓ ' : '') + 'Présent</button>' +
+        '<button class="tog late" data-k="heure"' + (v.editable && p.present ? '' : ' disabled') + '>' + (p.alHeure ? '✓ ' : '') + "À l'heure</button></div>";
+      var tp = r.querySelector('[data-k=present]'), th = r.querySelector('[data-k=heure]');
+      tp.classList.toggle('on', p.present); th.classList.toggle('on', p.alHeure);
+      tp.setAttribute('aria-pressed', p.present ? 'true' : 'false'); th.setAttribute('aria-pressed', p.alHeure ? 'true' : 'false');
+      // Les deux boutons d'un programme restent bloqués jusqu'au prochain affichage de la semaine
+      tp.addEventListener('click', function(){ tp.disabled = th.disabled = true; send(call('setPresence', session.token, dOffset, p.id, !p.present, false)); });
+      th.addEventListener('click', function(){ tp.disabled = th.disabled = true; send(call('setPresence', session.token, dOffset, p.id, true, !p.alHeure)); });
+      if (!p.present && !p.aVenir) {
+        var act = document.createElement('div'); act.className = 'prog-actions';
+        if (p.absence) act.innerHTML = '<span class="abs-note ' + esc(p.absence.etat.split(' ')[0]) + '">Absence : ' + esc(p.absence.motif) + ' · ' + esc(p.absence.etat.toLowerCase()) + '</span>';
+        if (v.editable && !excused) {
+          var l = document.createElement('button'); l.className = 'abs-link';
+          l.textContent = p.absence ? 'Modifier le motif' : "Absent(e) ? Indiquer un motif";
+          l.addEventListener('click', function(){ openAbsence({ critere: 'programmes', element: p.id, label: p.nom, absence: p.absence }); });
+          act.appendChild(l);
+        }
+        if (act.childNodes.length) r.appendChild(act);
+      }
+      host.appendChild(r);
+    });
+    el('ponctRow').hidden = !v.ponctualite;
+    var pd = (v.detail || []).filter(function(x){ return x.type === 'ponctualite'; })[0];
+    el('ponctPill').textContent = pd && pd.attendu ? pd.fait + '/' + pd.attendu : '–';
+    el('ponctPill').classList.toggle('done', !!(pd && pd.attendu && pd.fait === pd.attendu));
+  }
+
+  function renderScore(){
+    var v = dWeek;
+    var close = v.cloturee !== false;
+    var zone = zoneOf(v.score, v);
+    el('dRing').className = 'ring' + (close ? ' ' + zone : '');
+    el('dRing').style.setProperty('--pct', v.score);
+    el('tickActif').style.setProperty('--s', v.seuilActif);
+    el('tickCrit').style.setProperty('--s', v.seuilCritique);
+    el('dPct').textContent = v.score + '%';
+    el('dRingSub').textContent = close ? (v.offsetWeeks === 0 ? 'semaine close' : 'score final') : 'en cours · ' + v.joursEcoules + ' j/7';
+    var zp = el('zonePill');
+    if (close) { zp.className = 'zone-pill ' + zone; zp.textContent = ZONE_INFO[zone].icon + ' ' + ZONE_INFO[zone].nom; }
+    else { zp.className = 'hchip'; zp.textContent = '⏳ Jour ' + v.joursEcoules + ' sur 7'; }
+
+    if (close) {
+      var lv = levelFor(v.score), idx = LEVELS.indexOf(lv), next = LEVELS[idx + 1];
+      el('lvName').textContent = lv.icon + ' ' + lv.name;
+      el('lvFill').style.width = next ? Math.round(((v.score - lv.min) / (next.min - lv.min)) * 100) + '%' : '100%';
+      el('lvMsg').textContent = next ? 'Niveau obtenu pour cette semaine.' : 'Semaine parfaite. Gloire à Dieu !';
+      document.querySelector('#view-disciple .lv-k').textContent = 'Niveau de la semaine';
+    } else {
+      document.querySelector('#view-disciple .lv-k').textContent = 'Semaine en cours';
+      el('lvName').textContent = v.score + ' % réussi jusqu\'ici';
+      el('lvFill').style.width = Math.round(v.joursEcoules / 7 * 100) + '%';
+      el('lvMsg').textContent = 'Niveau, zone et badges sont attribués dimanche soir, une fois tous les jours et tous les programmes de la semaine passés.';
+    }
+    el('valChip').textContent = v.validation === 'Validé' ? '🛡️ Validée' : v.validation === 'Corrigé' ? '🛡️ Corrigée' : '⏳ À valider';
+
+    // Détail par critère
+    var dg = el('detailGrid'); dg.innerHTML = '';
+    (v.detail || []).forEach(function(x){
+      var t = document.createElement('div'); t.className = 'detail-tile';
+      var z = x.taux === null ? '' : zoneOf(x.taux, v);
+      t.innerHTML = '<span class="dl">' + esc(x.label) + '</span><span class="dv">' + (x.taux === null ? '–' : x.taux + ' %') +
+        ' <small style="font-size:.7rem;color:var(--muted);font-family:Nunito,sans-serif;font-weight:800;">' + (x.attendu ? x.fait + '/' + x.attendu + (close ? '' : ' jusqu\'ici') : (close ? 'ne compte pas' : 'pas encore')) + '</small></span>' +
+        '<span class="mini-bar"><i class="' + z + '" style="width:' + (x.taux || 0) + '%"></i></span>';
+      dg.appendChild(t);
+    });
+
+    // Badges : attribués seulement à la clôture
+    var badges = weekBadges(v), g = el('badgeGrid'), count = 0, fresh = null, now = {};
+    g.innerHTML = '';
+    badges.forEach(function(b){
+      var on = close && b.on;
+      if (on) { count++; now[b.id] = true; }
+      var isNew = on && badgesBefore && !badgesBefore[b.id];
+      if (isNew && !fresh) fresh = b;
+      var d = document.createElement('div');
+      d.className = 'badge' + (on ? ' on' : '') + (isNew ? ' pop' : '');
+      d.innerHTML = '<span class="bi">' + b.icon + '</span><span class="bn">' + esc(b.name) + '</span>';
+      g.appendChild(d);
+    });
+    el('badgeCount').textContent = close ? count + '/' + badges.length : 'dimanche soir';
+    el('badgeAside').textContent = close ? count + ' sur ' + badges.length : 'attribués dimanche soir';
+    if (fresh) { toast('Badge débloqué : ' + fresh.icon + ' ' + fresh.name); confetti(); }
+    badgesBefore = now;
+  }
+
+  function renderGroupe(g){
+    el('groupCard').hidden = !g;
+    if (!g) return;
+    el('groupSub').textContent = g.semaine;
+    if (!g.disponible) {
+      el('groupAvg').textContent = '–'; el('groupVert').textContent = '–';
+      el('groupNote').textContent = 'Les statistiques du groupe s\'affichent dès que ' + g.minimum + ' disciples ont rempli une semaine complète.';
+      return;
+    }
+    el('groupAvg').textContent = g.moyenne + ' %';
+    el('groupVert').textContent = g.vert + ' sur ' + g.participants;
+    el('groupNote').textContent = 'Dernière semaine close. Statistiques anonymes : aucun nom n\'est affiché.';
+  }
+
+  function onUpdated(v){
+    renderWeek(v);
+    if (dHistory && dOffset === 0) { dHistory[dHistory.length - 1].score = v.score; renderHistory(); }
+    return v;
+  }
+  function renderHistory(){
+    if (!dHistory) return;
+    show('dProgress');
+    renderChart(el('dChart'), 'Score par semaine', dHistory, dWeek ? dWeek.seuilActif : 75, dWeek ? dWeek.seuilCritique : 50);
+  }
+
+  el('dPrev').addEventListener('click', function(){ loadWeek(dOffset - 1); });
+  el('dNext').addEventListener('click', function(){ if (dOffset < 0) loadWeek(dOffset + 1); });
+
+  /* ---------- Motif d'absence ---------- */
+  var absCtx = null;
+  function openAbsence(o){
+    absCtx = { critere: o.critere, element: o.element || null, motif: '', label: o.label, jour: !!o.jour, c: o.c };
+    el('absTitle').textContent = "Motif d'absence · " + o.label;
+    el('absError').textContent = ''; el('absPrec').value = '';
+    el('absDayWrap').hidden = !o.jour;
+    if (o.jour) {
+      var host = el('absDays'); host.innerHTML = '';
+      o.c.jours.forEach(function(f, i){
+        var b = document.createElement('button'); b.type = 'button'; b.className = 'choice'; b.textContent = JOUR_LETTRE[i];
+        b.setAttribute('aria-label', JOUR_NOM[i]);
+        var a = o.c.absences[i];
+        b.disabled = !o.c.prevus[i] || f || i > dWeek.jourCourant || (a && a.etat === 'Acceptée');
+        b.addEventListener('click', function(){
+          absCtx.element = JOURS[i];
+          Array.prototype.forEach.call(host.children, function(x){ x.classList.toggle('on', x === b); });
+          fillAbsence(o.c.absences[i]);
+        });
+        host.appendChild(b);
+      });
+      fillAbsence(null);
+    } else fillAbsence(o.absence);
+    show('absOverlay');
+  }
+  function fillAbsence(a){
+    absCtx.motif = a ? a.motif : '';
+    el('absPrec').value = a ? a.precision : '';
+    el('absRemove').hidden = !(a && a.etat === 'En attente');
+    var host = el('absMotifs'); host.innerHTML = '';
+    dWeek.motifs.forEach(function(m){
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'choice' + (absCtx.motif === m ? ' on' : ''); b.textContent = m;
+      b.addEventListener('click', function(){ absCtx.motif = m; fillAbsence({ motif: m, precision: el('absPrec').value, etat: a ? a.etat : '' }); });
+      host.appendChild(b);
+    });
+    el('absPrecReq').textContent = absCtx.motif === 'Autre' ? '(obligatoire)' : '(facultatif)';
+  }
+  el('absClose').addEventListener('click', function(){ hide('absOverlay'); });
+  el('absSave').addEventListener('click', function(){
+    if (absCtx.jour && !absCtx.element) { el('absError').textContent = 'Choisissez le jour.'; return; }
+    if (!absCtx.motif) { el('absError').textContent = 'Choisissez un motif.'; return; }
+    if (absCtx.motif === 'Autre' && !el('absPrec').value.trim()) { el('absError').textContent = 'Précisez le motif.'; return; }
+    el('absSave').disabled = true;
+    call('declarerAbsence', session.token, dOffset, absCtx.critere, absCtx.element, absCtx.motif, el('absPrec').value.trim()).then(function(v){
+      el('absSave').disabled = false; hide('absOverlay'); onUpdated(v); toast('Motif envoyé au superviseur ✓');
+    }).catch(function(e){ el('absSave').disabled = false; el('absError').textContent = (e && e.message) || String(e); });
+  });
+  el('absRemove').addEventListener('click', function(){
+    call('annulerAbsence', session.token, dOffset, absCtx.critere, absCtx.element).then(function(v){
+      hide('absOverlay'); onUpdated(v); toast('Motif retiré');
+    }).catch(showErr);
+  });
+
+  /* ---------- Graphique ---------- */
+  var SVG_NS = 'http://www.w3.org/2000/svg';
+  function svgEl(tag, a){ var n = document.createElementNS(SVG_NS, tag); Object.keys(a || {}).forEach(function(k){ n.setAttribute(k, a[k]); }); return n; }
+  function renderChart(host, title, points, seuil, seuilBas){
+    host.innerHTML = '';
+    var key = 'score', lastIdx = -1;
+    points.forEach(function(p, i){ if (p[key] !== null && p[key] !== undefined) lastIdx = i; });
+    var head = document.createElement('div'); head.className = 'trend-head';
+    head.innerHTML = '<span class="trend-title">' + esc(title) + '</span><span class="trend-value">' + (lastIdx === -1 ? '–' : points[lastIdx][key] + ' %') + '</span>';
+    host.appendChild(head);
+    if (lastIdx === -1 || points.length < 2) { var e = document.createElement('div'); e.className = 'trend-empty'; e.textContent = 'Pas encore de données'; host.appendChild(e); return; }
+    var n = points.length, W = Math.max(host.clientWidth - 24, 240), H = 150, padL = 30, padR = 10, padT = 10, padB = 20;
+    var step = (W - padL - padR) / (n - 1);
+    function x(i){ return padL + i * step; }
+    function y(v){ return padT + (100 - Math.min(100, v)) * (H - padT - padB) / 100; }
+    function has(i){ return points[i][key] !== null && points[i][key] !== undefined; }
+    var svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, 'class': 'trend-svg', role: 'img', tabindex: '0' });
+    svg.setAttribute('aria-label', title + '. ' + points.map(function(p, i){ return p.long + ' : ' + (has(i) ? p[key] + ' %' : 'pas de données'); }).join(' ; '));
+    [0, 50, 100].forEach(function(g){
+      svg.appendChild(svgEl('line', { x1: padL, x2: W - padR, y1: y(g), y2: y(g), 'class': 'tc-grid' }));
+      var t = svgEl('text', { x: padL - 6, y: y(g) + 3, 'text-anchor': 'end', 'class': 'tc-axis' }); t.textContent = g; svg.appendChild(t);
+    });
+    if (seuil !== undefined) {
+      svg.appendChild(svgEl('line', { x1: padL, x2: W - padR, y1: y(seuil), y2: y(seuil), 'class': 'tc-seuil' }));
+      var st = svgEl('text', { x: W - padR, y: y(seuil) - 4, 'text-anchor': 'end', 'class': 'tc-seuil-lab' }); st.textContent = 'seuil ' + seuil + ' %'; svg.appendChild(st);
+    }
+    if (seuilBas !== undefined) {
+      svg.appendChild(svgEl('line', { x1: padL, x2: W - padR, y1: y(seuilBas), y2: y(seuilBas), 'class': 'tc-seuil bas' }));
+      var sb = svgEl('text', { x: W - padR, y: y(seuilBas) - 4, 'text-anchor': 'end', 'class': 'tc-seuil-lab bas' }); sb.textContent = seuilBas + ' %'; svg.appendChild(sb);
+    }
+    points.forEach(function(p, i){
+      if (!(n <= 5 || (n - 1 - i) % 2 === 0)) return;
+      var t = svgEl('text', { x: x(i), y: H - 4, 'text-anchor': i === n - 1 ? 'end' : (i === 0 ? 'start' : 'middle'), 'class': 'tc-axis' });
+      t.textContent = i === n - 1 ? 'En cours' : p.label; svg.appendChild(t);
+    });
+    var runs = [], cur = [];
+    points.forEach(function(p, i){ if (has(i)) cur.push(i); else if (cur.length) { runs.push(cur); cur = []; } });
+    if (cur.length) runs.push(cur);
+    var lr = runs[runs.length - 1];
+    if (lr[lr.length - 1] === n - 1 && lr.length >= 2) {
+      var a = lr[lr.length - 2];
+      svg.appendChild(svgEl('path', { d: 'M' + x(a) + ' ' + y(points[a][key]) + ' L' + x(n - 1) + ' ' + y(points[n - 1][key]), 'class': 'tc-line tc-current' }));
+      lr.pop();
+    }
+    runs.forEach(function(run){
+      if (!run.length) return;
+      if (run.length === 1) { svg.appendChild(svgEl('circle', { cx: x(run[0]), cy: y(points[run[0]][key]), r: 4, 'class': 'tc-dot' })); return; }
+      var d = run.map(function(i, k){ return (k ? 'L' : 'M') + x(i) + ' ' + y(points[i][key]); }).join(' ');
+      svg.appendChild(svgEl('path', { d: d + ' L' + x(run[run.length - 1]) + ' ' + y(0) + ' L' + x(run[0]) + ' ' + y(0) + ' Z', 'class': 'tc-area' }));
+      svg.appendChild(svgEl('path', { d: d, 'class': 'tc-line' }));
+    });
+    svg.appendChild(svgEl('circle', { cx: x(lastIdx), cy: y(points[lastIdx][key]), r: 4, 'class': 'tc-dot' }));
+    var cross = svgEl('line', { y1: padT, y2: H - padB, 'class': 'tc-cross', visibility: 'hidden' });
+    var mk = svgEl('circle', { r: 4, 'class': 'tc-dot', visibility: 'hidden' });
+    svg.appendChild(cross); svg.appendChild(mk);
+    svg.appendChild(svgEl('rect', { x: 0, y: 0, width: W, height: H, fill: 'transparent' }));
+    host.appendChild(svg);
+    var tip = document.createElement('div'); tip.className = 'trend-tip'; tip.hidden = true;
+    var tv = document.createElement('strong'), tl = document.createElement('span'); tip.appendChild(tv); tip.appendChild(tl); host.appendChild(tip);
+    var active = lastIdx;
+    function at(i){
+      active = i;
+      cross.setAttribute('x1', x(i)); cross.setAttribute('x2', x(i)); cross.setAttribute('visibility', 'visible');
+      if (has(i)) { mk.setAttribute('cx', x(i)); mk.setAttribute('cy', y(points[i][key])); mk.setAttribute('visibility', 'visible'); } else mk.setAttribute('visibility', 'hidden');
+      tv.textContent = has(i) ? points[i][key] + ' %' : 'Pas de données';
+      tl.textContent = points[i].long + (i === n - 1 ? ' (en cours)' : '');
+      tip.hidden = false;
+      var r = svg.getBoundingClientRect(), hr = host.getBoundingClientRect();
+      var px = r.left - hr.left - host.clientLeft + x(i) * (r.width / W);
+      tip.style.left = Math.min(Math.max(px - tip.offsetWidth / 2, 0), host.clientWidth - tip.offsetWidth) + 'px';
+      tip.style.top = (r.top - hr.top - host.clientTop + 2) + 'px';
+    }
+    function off(){ cross.setAttribute('visibility', 'hidden'); mk.setAttribute('visibility', 'hidden'); tip.hidden = true; }
+    svg.addEventListener('pointermove', function(ev){ var r = svg.getBoundingClientRect(); at(Math.min(n - 1, Math.max(0, Math.round(((ev.clientX - r.left) * (W / r.width) - padL) / step)))); });
+    svg.addEventListener('pointerleave', off);
+    svg.addEventListener('focus', function(){ at(lastIdx); });
+    svg.addEventListener('blur', off);
+    svg.addEventListener('keydown', function(ev){
+      if (ev.key === 'ArrowLeft' && active > 0) { ev.preventDefault(); at(active - 1); }
+      if (ev.key === 'ArrowRight' && active < n - 1) { ev.preventDefault(); at(active + 1); }
+    });
+  }
+
+  /* ---------- Superviseur : onglets ---------- */
+  var aOffset = 0, aData = null;
+  var ZONE_ICON = { vert:'🟢', orange:'🟠', rouge:'🔴', aucune:'⚪', encours:'⏳' };
+  Array.prototype.forEach.call(document.querySelectorAll('.tabs button'), function(b){
+    b.addEventListener('click', function(){ openTab(b.dataset.tab); });
+  });
+  function openTab(tab){
+    Array.prototype.forEach.call(document.querySelectorAll('.tabs button'), function(x){
+      x.classList.toggle('on', x.dataset.tab === tab); x.setAttribute('aria-selected', x.dataset.tab === tab ? 'true' : 'false');
+    });
+    ['semaine','demandes','reglages'].forEach(function(t){ el('tab-' + t).hidden = t !== tab; });
+    if (tab === 'demandes') loadDemandes();
+    if (tab === 'reglages') loadSettings();
+    if (tab === 'semaine') loadAdmin(aOffset);
+    window.scrollTo(0, 0);
+  }
+
+  /** Comme loadWeek : écran de chargement au premier affichage, seule la dernière semaine demandée s'affiche. */
+  var tableauDemande = 0;
+  function loadAdmin(offset){
+    var premier = el('view-admin').hidden, n = ++tableauDemande;
+    if (premier) chargement();
+    call('getAdminDashboard', session.token, offset).then(function(d){
+      if (n !== tableauDemande) return;
+      renderAdmin(d);
+      if (premier) goto('view-admin');
+    }).catch(function(e){ showErr(e); if (premier) chargementEchoue(function(){ loadAdmin(offset); }); });
+  }
+
+  var ALERT_ICON = { critique:'🔴', observation:'🟠', remonte:'📈', essai_ok:'🎓', essai_ko:'⏳', absences:'📝' };
+  function renderAdmin(d){
+    aData = d; aOffset = d.offsetWeeks;
+    el('aWeekLabel').textContent = d.label;
+    el('aNext').disabled = d.offsetWeeks >= 0;
+    el('aPrev').disabled = !d.canGoBack;
+    el('sAvg').textContent = d.average + '%';
+    el('sVert').textContent = d.enCours ? '–' : d.vert; el('sOrange').textContent = d.enCours ? '–' : d.orange; el('sRouge').textContent = d.enCours ? '–' : d.rouge;
+    el('aWeekLabel').textContent = d.label + (d.enCours ? ' · en cours (jour ' + d.joursEcoules + '/7)' : '');
+    el('lbA').textContent = d.seuilActif; el('lbC').textContent = d.seuilCritique;
+    var nbDemandes = d.enAttente + d.absencesEnAttente;
+    el('reqCount').hidden = !nbDemandes; el('reqCount').textContent = nbDemandes;
+
+    var al = el('alertList'); al.innerHTML = '';
+    el('alertWrap').hidden = !d.alertes.length;
+    el('alertAside').textContent = d.aValider ? d.aValider + ' semaine' + (d.aValider > 1 ? 's' : '') + ' à valider' : '';
+    d.alertes.forEach(function(a){
+      var b = document.createElement('button');
+      var cls = a.type === 'critique' ? 'critique' : a.type === 'remonte' || a.type === 'essai_ok' ? 'remonte' : 'observation';
+      b.className = 'alert ' + cls;
+      b.innerHTML = '<span class="ai">' + (ALERT_ICON[a.type] || '⚠️') + '</span><span>' + esc(a.texte) + ' <u>' + (a.slug ? 'Ouvrir la fiche' : 'Voir') + '</u></span>';
+      b.addEventListener('click', function(){ if (a.slug) openDetail(a.slug); else openTab('demandes'); });
+      al.appendChild(b);
+    });
+
+    var rows = d.rows, pod = el('podium'); pod.innerHTML = '';
+    var top = rows.filter(function(r){ return r.rempli && r.percent > 0; }).slice(0, 3);
+    pod.hidden = top.length < 2;
+    var medals = ['🥇','🥈','🥉'];
+    [1, 0, 2].forEach(function(i){
+      var r = top[i];
+      if (!r) { pod.appendChild(document.createElement('div')); return; }
+      var b = document.createElement('button'); b.className = 'pod p' + (i + 1);
+      b.innerHTML = avatarHtml(r.name) + '<span class="pn">' + esc(r.name) + '</span><span class="pp">' + r.percent + '%</span><div class="step">' + medals[i] + '</div>';
+      b.addEventListener('click', function(){ openDetail(r.slug); });
+      pod.appendChild(b);
+    });
+
+    var rl = el('rankList'); rl.innerHTML = '';
+    el('rankEmpty').hidden = rows.length > 0;
+    el('rankAside').textContent = rows.length + ' disciple' + (rows.length > 1 ? 's' : '');
+    rows.forEach(function(r, i){ rl.appendChild(rowEl(r, String(i + 1), d)); });
+
+    var ol = el('othersList'); ol.innerHTML = '';
+    el('othersWrap').hidden = !d.autres.length;
+    d.autres.forEach(function(r){
+      var b = document.createElement('button'); b.className = 'leader-row';
+      b.innerHTML = '<span class="leader-rank">–</span>' + avatarHtml(r.name) + '<span class="leader-name">' + esc(r.name) +
+        '<span class="chips">' + statutChip(r.statut) + (r.depuis ? '<span class="chip out">depuis le ' + esc(r.depuis.slice(0, 10)) + '</span>' : '') + '</span></span>';
+      b.addEventListener('click', function(){ openDetail(r.slug); });
+      ol.appendChild(b);
+    });
+
+    renderChart(el('teamChart'), 'Score moyen', d.teamHistory, d.seuilActif, d.seuilCritique);
+  }
+  function rowEl(r, rank, d){
+    var b = document.createElement('button'); b.className = 'leader-row';
+    var z = r.rempli ? r.zone : 'aucune';
+    var fill = z === 'vert' ? 'good' : z === 'orange' ? 'orange' : z === 'encours' ? 'encours' : 'bad';
+    b.innerHTML = '<span class="leader-rank">' + esc(rank) + '</span>' + avatarHtml(r.name) +
+      '<span class="leader-name">' + esc(r.name) +
+        '<span class="bar-track"><span class="bar-fill ' + fill + '" style="width:' + Math.min(100, r.percent) + '%"></span>' +
+        '<span class="bar-seuil" style="left:' + d.seuilCritique + '%"></span><span class="bar-seuil" style="left:' + d.seuilActif + '%"></span></span>' +
+        '<span class="chips">' + statutChip(r.statut) + validationChip(r.validation) + '</span>' +
+      '</span><span class="leader-pct">' + ZONE_ICON[z] + ' ' + r.percent + '%</span>';
+    b.addEventListener('click', function(){ openDetail(r.slug); });
+    return b;
+  }
+  el('aPrev').addEventListener('click', function(){ loadAdmin(aOffset - 1); });
+  el('aNext').addEventListener('click', function(){ if (aOffset < 0) loadAdmin(aOffset + 1); });
+
+  /* ---------- Superviseur : demandes (inscriptions + motifs d'absence) ---------- */
+  function loadDemandes(){
+    Promise.all([call('getInscriptionsEnAttente', session.token), call('getAbsencesEnAttente', session.token)])
+      .then(function(res){ renderRequests(res[0]); renderAbsences(res[1]); updateDemandesCount(res[0].length + res[1].length); })
+      .catch(showErr);
+  }
+  /** Fiche de renseignement (église, baptême, formations, familles), si elle a été remplie. */
+  function ficheHtml(f){
+    if (!f || !f.eglise) return '';
+    var lignes = [['Église', f.eglise], ['Baptisé(e)', f.baptise], ['Formations', f.formations || 'Aucune'],
+      ['Famille d\'impact', f.familleImpact], ['Famille de disciples', f.familleDisciples]];
+    return '<div class="detail-grid">' + lignes.map(function(l){
+      return '<div class="detail-tile"><span class="dl">' + esc(l[0]) + '</span><span style="font-weight:800;font-size:.9rem;overflow-wrap:anywhere;">' + esc(l[1] || '–') + '</span></div>';
+    }).join('') + '</div>';
+  }
+  function updateDemandesCount(n){ el('reqCount').hidden = !n; el('reqCount').textContent = n; }
+  function renderRequests(list){
+    var host = el('reqList'); host.innerHTML = '';
+    el('reqEmpty').hidden = list.length > 0;
+    el('reqAside').textContent = list.length ? list.length + ' en attente' : '';
+    list.forEach(function(q){
+      var c = document.createElement('div'); c.className = 'req-card';
+      c.innerHTML = '<div class="req-top">' + avatarHtml(q.name) + '<div class="info"><b>' + esc(q.name) + '</b><span>' + esc(String(q.telephone).replace(/^'/, '')) +
+        ' · inscrit le ' + esc(q.date) + '</span></div></div>' + ficheHtml(q.fiche) +
+        '<p class="hint">Accepter le fait entrer en période d\'essai.</p>' +
+        '<div class="row-btns"><button class="big-btn soft" data-d="refuser">Non retenu</button><button class="big-btn mint" data-d="accepter">Accepter</button></div>';
+      Array.prototype.forEach.call(c.querySelectorAll('button[data-d]'), function(btn){
+        btn.addEventListener('click', function(){
+          if (btn.dataset.d === 'accepter') decide(q, 'accepter', '', btn).catch(function(){});
+          else askStatus({ title: 'Ne pas retenir ' + q.name + ' ?', text: 'Son statut passera à « Non retenu ». Vous pourrez revoir sa demande plus tard depuis sa fiche.',
+            motifLabel: 'Motif (facultatif)', required: false, ok: function(m){ return decide(q, 'refuser', m); } });
+        });
+      });
+      host.appendChild(c);
+    });
+  }
+  function decide(q, decision, motif, btn){
+    if (btn) btn.disabled = true;
+    return call('validerInscription', session.token, q.id, decision, motif).then(function(res){
+      toast(res.name + (decision === 'accepter' ? " entre en période d'essai ✓" : ' : non retenu'));
+      if (decision === 'accepter') confetti();
+      loadDemandes();
+    }).catch(function(e){ if (btn) btn.disabled = false; showErr(e); throw e; });
+  }
+  function renderAbsences(list){
+    var host = el('absList'); host.innerHTML = '';
+    el('absEmpty').hidden = list.length > 0;
+    el('absAside').textContent = list.length ? list.length + ' à examiner' : '';
+    list.forEach(function(a){
+      var c = document.createElement('div'); c.className = 'req-card';
+      c.innerHTML = '<div class="req-top">' + avatarHtml(a.name) + '<div class="info"><b>' + esc(a.name) + '</b><span>' + esc(a.libelle) + ' · ' + esc(a.semaine) + '</span></div></div>' +
+        '<div class="note" style="background:var(--sky-soft);border-radius:12px;padding:8px 10px;font-weight:800;font-size:.86rem;">' + esc(a.motif) + (a.precision ? ' : ' + esc(a.precision) : '') + '</div>' +
+        '<div class="row-btns"><button class="big-btn soft" data-ok="0">Refuser</button><button class="big-btn mint" data-ok="1">Accepter</button></div>';
+      Array.prototype.forEach.call(c.querySelectorAll('button[data-ok]'), function(btn){
+        btn.addEventListener('click', function(){
+          btn.disabled = true;
+          call('deciderAbsence', session.token, a.id, btn.dataset.ok === '1').then(function(rest){
+            toast(btn.dataset.ok === '1' ? 'Absence acceptée : retirée du calcul ✓' : 'Absence refusée');
+            renderAbsences(rest);
+            updateDemandesCount(el('reqList').children.length + rest.length);
+          }).catch(function(e){ btn.disabled = false; showErr(e); });
+        });
+      });
+      host.appendChild(c);
+    });
+  }
+
+  /* ---------- Superviseur : réglages ---------- */
+  var newCritDays = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+  function loadSettings(){ call('getReglages', session.token).then(renderSettings).catch(showErr); }
+  function renderSettings(s){
+    el('rgActif').value = s.seuilActif; el('rgActifVal').textContent = s.seuilActif + '%';
+    el('rgCrit').value = s.seuilCritique; el('rgCritVal').textContent = s.seuilCritique + '%';
+    setSelect('rgZone', s.semainesZone); setSelect('rgEssai', s.semainesEssai);
+    el('rgError').textContent = '';
+    renderProgAdmin(s.programmes);
+    reglagesEglises = s.eglises || [];
+    remplirSelect('newFixeEglise', reglagesEglises.map(function(e){ return [e, e]; }), el('newFixeEglise').value || reglagesEglises[0]);
+    remplirSelect('newProgEglise', [['', 'Toutes les églises']].concat(reglagesEglises.map(function(e){ return [e, e]; })), el('newProgEglise').value || '');
+
+    var host = el('critList'); host.innerHTML = '';
+    var TYPE_LAB = { jour:'Chaque jour', semaine:'Chaque semaine', programmes:'Programmes', ponctualite:'Calculé' };
+    s.criteres.forEach(function(c){
+      var r = document.createElement('div'); r.className = 'crit-row' + (c.actif ? '' : ' off');
+      r.style.flexWrap = 'wrap';
+      var info = TYPE_LAB[c.type] + (c.type === 'semaine' ? ' · ' + c.elements.length + ' case' + (c.elements.length > 1 ? 's' : '') : '') + ' · poids ' + c.poids + (c.actif ? '' : ' · retiré');
+      r.innerHTML = '<span class="cl">' + esc(c.label) + '<span>' + esc(info) + '</span></span>' +
+        '<button class="mini-btn" data-a="poids">Poids ' + c.poids + '</button>' +
+        '<button class="mini-btn" data-a="actif">' + (c.actif ? 'Retirer' : 'Remettre') + '</button>';
+      if (c.type === 'jour') {
+        var days = document.createElement('div'); days.className = 'choice-grid'; days.style.cssText = 'grid-template-columns:repeat(7,minmax(0,1fr));width:100%;';
+        JOURS.forEach(function(j, i){
+          var b = document.createElement('button'); b.type = 'button';
+          var on = c.joursPrevus.indexOf(j) !== -1;
+          b.className = 'choice' + (on ? ' on' : ''); b.textContent = JOUR_LETTRE[i]; b.setAttribute('aria-label', JOUR_NOM[i]); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+          b.addEventListener('click', function(){
+            var liste = on ? c.joursPrevus.filter(function(x){ return x !== j; }) : c.joursPrevus.concat([j]);
+            call('modifierCritere', session.token, c.id, { joursPrevus: liste }).then(function(s2){ renderSettings(s2); toast(c.label + ' : ' + liste.length + ' jours prévus'); }).catch(showErr);
+          });
+          days.appendChild(b);
+        });
+        r.appendChild(days);
+      }
+      r.querySelector('[data-a=actif]').addEventListener('click', function(){
+        call('modifierCritere', session.token, c.id, { actif: !c.actif }).then(function(s2){
+          renderSettings(s2); toast(c.actif ? 'Critère retiré. Son historique est gardé.' : 'Critère remis ✓');
+        }).catch(showErr);
+      });
+      r.querySelector('[data-a=poids]').addEventListener('click', function(){
+        var next = c.poids >= 3 ? 1 : c.poids + 1;
+        call('modifierCritere', session.token, c.id, { poids: next }).then(function(s2){ renderSettings(s2); toast('Poids : ' + next); }).catch(showErr);
+      });
+      host.appendChild(r);
+    });
+  }
+  function setSelect(id, v){
+    var s = el(id);
+    if (!Array.prototype.some.call(s.options, function(o){ return o.value === String(v); })) {
+      var o = document.createElement('option'); o.value = String(v); o.textContent = v + ' semaines'; s.appendChild(o);
+    }
+    s.value = String(v);
+  }
+  var reglagesEglises = [];
+  function remplirSelect(id, options, valeur){
+    var s = el(id); s.innerHTML = options.map(function(o){ return '<option value="' + esc(o[0]) + '">' + esc(o[1]) + '</option>'; }).join('');
+    if (valeur !== undefined) s.value = valeur;
+  }
+  /** Programmes groupés par église ; les optionnels « toutes les églises » à la fin. */
+  function renderProgAdmin(list){
+    var host = el('progAdminList'); host.innerHTML = '';
+    var groupes = {}, ordre = [];
+    list.forEach(function(p){
+      var g = p.eglise || 'Toutes les églises';
+      if (!groupes[g]) { groupes[g] = []; ordre.push(g); }
+      groupes[g].push(p);
+    });
+    if (!ordre.length) host.innerHTML = '<div class="empty-box">Aucun programme pour l\'instant.</div>';
+    ordre.forEach(function(g){
+      var titre = document.createElement('h4'); titre.style.cssText = 'font-size:.9rem;color:var(--violet);margin-top:4px;'; titre.textContent = g;
+      host.appendChild(titre);
+      groupes[g].forEach(function(p){
+        var r = document.createElement('div'); r.className = 'crit-row';
+        r.innerHTML = '<span class="cl">' + esc(p.nom) + '<span>' + (p.type === 'fixe' ? 'Chaque semaine · ' + esc(p.horaire) : 'Optionnel · ' + esc(p.date)) + '</span></span>' +
+          '<button class="mini-btn" data-a="del">Retirer</button>';
+        r.querySelector('[data-a=del]').addEventListener('click', function(){
+          askStatus({ title: 'Retirer « ' + p.nom + ' » ?', text: (p.type === 'fixe' ? 'Ce programme ne sera plus demandé aux disciples de ' + g + '.' : 'Ce programme optionnel sera retiré.') + ' Les présences déjà notées sont gardées.',
+            noMotif: true, ok: function(){ return call('retirerProgramme', session.token, p.id).then(function(l2){ renderProgAdmin(l2); toast('Programme retiré'); }); } });
+        });
+        host.appendChild(r);
+      });
+    });
+  }
+  remplirSelect('newFixeJour', JOUR_NOM.map(function(j){ return [j, j]; }), 'Dimanche');
+  el('addFixe').addEventListener('click', function(){
+    var eglise = el('newFixeEglise').value, nom = el('newFixeNom').value.trim(), heure = el('newFixeHeure').value;
+    if (nom.length < 2) { toast('Donnez un nom au programme.', true); return; }
+    if (!heure) { toast('Indiquez l\'heure.', true); return; }
+    call('ajouterProgrammeEglise', session.token, eglise, nom, el('newFixeJour').value, heure).then(function(l2){
+      el('newFixeNom').value = ''; el('newFixeHeure').value = ''; renderProgAdmin(l2); toast('Programme ajouté pour ' + eglise + ' ✓');
+    }).catch(showErr);
+  });
+  el('rgActif').addEventListener('input', function(){ el('rgActifVal').textContent = el('rgActif').value + '%'; });
+  el('rgCrit').addEventListener('input', function(){ el('rgCritVal').textContent = el('rgCrit').value + '%'; });
+  el('rgSave').addEventListener('click', function(){
+    var v = { seuilActif: Number(el('rgActif').value), seuilCritique: Number(el('rgCrit').value),
+              semainesZone: Number(el('rgZone').value), semainesEssai: Number(el('rgEssai').value) };
+    if (v.seuilCritique >= v.seuilActif) { el('rgError').textContent = 'Le seuil critique doit être plus bas que le seuil « Disciple actif ».'; return; }
+    call('setReglages', session.token, v).then(function(s){ renderSettings(s); toast('Réglages enregistrés ✓'); })
+      .catch(function(e){ el('rgError').textContent = (e && e.message) || String(e); });
+  });
+  el('addProg').addEventListener('click', function(){
+    var nom = el('newProgNom').value.trim(), date = el('newProgDate').value;
+    if (nom.length < 3) { toast('Donnez un nom au programme.', true); return; }
+    if (!date) { toast('Choisissez une date.', true); return; }
+    call('ajouterProgrammeOptionnel', session.token, nom, date, el('newProgEglise').value).then(function(l2){
+      el('newProgNom').value = ''; el('newProgDate').value = ''; renderProgAdmin(l2); toast('Programme ajouté pour la semaine concernée ✓');
+    }).catch(showErr);
+  });
+  (function buildNewCritDays(){
+    var host = el('newCritDays');
+    JOURS.forEach(function(j, i){
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'choice on'; b.textContent = JOUR_LETTRE[i]; b.setAttribute('aria-label', JOUR_NOM[i]);
+      b.addEventListener('click', function(){
+        var k = newCritDays.indexOf(j);
+        if (k === -1) newCritDays.push(j); else newCritDays.splice(k, 1);
+        b.classList.toggle('on', k === -1);
+      });
+      host.appendChild(b);
+    });
+  })();
+  el('newCritType').addEventListener('change', function(){
+    var jour = el('newCritType').value === 'jour';
+    el('newCritDaysWrap').hidden = !jour; el('newCritCasesWrap').hidden = jour;
+  });
+  el('addCrit').addEventListener('click', function(){
+    var lab = el('newCritLabel').value.trim(), type = el('newCritType').value;
+    if (lab.length < 3) { toast('Donnez un nom au critère.', true); return; }
+    var detail = type === 'jour' ? newCritDays.slice() : el('newCritCases').value.split(';').map(function(x){ return x.trim(); }).filter(String);
+    if (type === 'jour' && !detail.length) { toast('Choisissez au moins un jour.', true); return; }
+    call('ajouterCritere', session.token, lab, type, detail, Number(el('newCritPoids').value) || 1).then(function(s){
+      el('newCritLabel').value = ''; el('newCritCases').value = ''; renderSettings(s); toast('Critère ajouté ✓');
+    }).catch(showErr);
+  });
+
+  /* ---------- Superviseur : fiche disciple ---------- */
+  var det = null, detOffset = 0, ficheDemandee = 0;
+  function openDetail(id, offset){
+    detOffset = offset || 0;
+    var n = ++ficheDemandee;
+    call('getLeaderDetail', session.token, id, detOffset).then(function(d){
+      if (n !== ficheDemandee) return;
+      renderDetail(d); show('detailOverlay');
+    }).catch(showErr);
+  }
+
+  /**
+   * Corrections de cases dans la fiche : la fiche n'est redessinée qu'une fois toutes
+   * les réponses arrivées. Si plusieurs corrections étaient en route, on relit la fiche
+   * pour afficher l'état exact enregistré.
+   */
+  var correctionsEnCours = 0, correctionsDuLot = 0;
+  function finCorrection(nd){
+    correctionsEnCours--;
+    if (correctionsEnCours > 0) return;
+    var plusieurs = correctionsDuLot > 1; correctionsDuLot = 0;
+    if (!session) return;
+    if (nd && !plusieurs) { ficheDemandee++; renderDetail(nd); toast('Correction enregistrée ✓'); }
+    else if (det && !el('detailOverlay').hidden) {
+      var n = ++ficheDemandee;
+      call('getLeaderDetail', session.token, det.slug, detOffset).then(function(d){ if (n === ficheDemandee) renderDetail(d); }).catch(showErr);
+      if (nd) toast('Corrections enregistrées ✓');
+    }
+    if (aData) loadAdmin(aOffset);
+  }
+  function absMark(a){ return a ? (a.etat === 'Acceptée' ? 'abs.' : a.etat === 'En attente' ? '⏳' : '✗') : ''; }
+  function renderDetail(d){
+    det = d;
+    var v = d.semaine;
+    el('detName').textContent = d.name;
+    var h = [];
+    h.push('<div class="chips">' + statutChip(d.statut) + '<span class="chip out">' + esc(d.telephone) + '</span>' +
+      (d.inscrit ? '<span class="chip out">inscrit le ' + esc(d.inscrit.slice(0, 10)) + '</span>' : '') +
+      (v.serie ? '<span class="chip essai">🔥 ' + v.serie.jours + ' jours d\'affilée</span>' : '') + '</div>');
+    h.push('<div class="detail-sec"><h4>Fiche de renseignement</h4>' + (d.ficheComplete ? ficheHtml(d.fiche)
+      : '<p class="hint">Pas encore remplie : elle lui sera demandée à sa prochaine connexion.</p>') + '</div>');
+
+    if (d.essai) {
+      var e = d.essai, ok = e.reussi;
+      h.push('<div class="detail-sec"><h4>Période d\'essai · ' + (e.passees ? 'moyenne ' + e.moyenne + ' %' + (e.passees < e.semaines.length ? ' sur ' + e.passees + ' semaine' + (e.passees > 1 ? 's' : '') + ' terminée' + (e.passees > 1 ? 's' : '') : '') : 'aucune semaine terminée') + '</h4><div class="detail-grid">' +
+        e.semaines.map(function(s, i){ var z = s.score === null ? '' : zoneOf(s.score, v);
+          return '<div class="detail-tile"><span class="dl">Semaine ' + (i + 1) + ' · ' + esc(s.label.replace('Semaine du ', '')) + '</span><span class="dv">' + (s.score === null ? '–' : s.score + ' %') +
+            '</span><span class="mini-bar"><i class="' + z + '" style="width:' + (s.score || 0) + '%"></i></span></div>'; }).join('') + '</div>' +
+        (e.termine
+          ? '<div class="banner ' + (ok ? 'ok' : 'warn') + '"><span class="bi">' + (ok ? '🎓' : '⏳') + '</span><span><b>' + (ok ? 'Essai réussi : moyenne ≥ ' + v.seuilActif + ' %' : 'Moyenne sous ' + v.seuilActif + ' %') + '</b>' +
+            (ok ? ' Vous pouvez le confirmer Disciple.' : ' Prolongez l\'essai ou choisissez « Non retenu ».') + '</span></div>'
+          : '<p class="hint">Bilan prévu le ' + esc(fmtFin(e.fin)) + '. Vous pouvez décider avant si besoin.</p>') +
+        '<div class="status-btns"><button class="big-btn mint" data-essai="confirmer">Confirmer Disciple</button><button class="big-btn soft" data-essai="prolonger">Prolonger l\'essai</button><button class="big-btn soft" data-essai="non">Non retenu</button></div></div>');
+    }
+
+    if (estSuivi(d.statut)) {
+      var z = v.cloturee === false ? 'encours' : zoneOf(v.score, v);
+      h.push('<div class="week-nav"><button class="nav-arrow" id="detPrev" aria-label="Semaine précédente">‹</button><span class="label">' + esc(v.label) +
+        '</span><button class="nav-arrow" id="detNext" aria-label="Semaine suivante"' + (detOffset >= 0 ? ' disabled' : '') + '>›</button></div>');
+      h.push('<div class="banner ' + (z === 'vert' ? 'ok' : z === 'encours' ? 'info' : 'warn') + '"><span class="bi">' + ZONE_ICON[z] + '</span><span><b>' + v.score + ' %' + (z === 'encours' ? ' jusqu\'ici · jour ' + v.joursEcoules + '/7' : '') + '</b> ' +
+        validationChip(v.validation) + ' Touchez une case pour la corriger.</span></div>');
+      h.push('<div class="detail-grid">' + (v.detail || []).map(function(x){ var zz = x.taux === null ? '' : zoneOf(x.taux, v);
+        return '<div class="detail-tile"><span class="dl">' + esc(x.label) + '</span><span class="dv">' + (x.taux === null ? '–' : x.taux + ' %') +
+          ' <small style="font-size:.7rem;color:var(--muted);font-family:Nunito,sans-serif;">' + (x.attendu ? x.fait + '/' + x.attendu : '') + '</small></span><span class="mini-bar"><i class="' + zz + '" style="width:' + (x.taux || 0) + '%"></i></span></div>'; }).join('') + '</div>');
+      v.criteresJour.forEach(function(c){
+        h.push('<div class="detail-sec"><h4>' + esc(c.label) + '</h4><div class="day-row">' +
+          c.jours.map(function(f, i){
+            if (!c.prevus[i]) return '<span class="day-btn off"></span>';
+            var st = dayState(c, i);
+            return '<button class="day-btn' + (st ? ' ' + st : '') + '" data-t="jour" data-c="' + esc(c.id) + '" data-e="' + JOURS[i] + '" data-v="' + (f ? 1 : 0) + '" aria-label="' + JOUR_NOM[i] + '">' +
+              JOUR_LETTRE[i] + '<small>' + (f ? '✓' : absMark(c.absences[i])) + '</small></button>'; }).join('') + '</div></div>');
+      });
+      v.criteresSemaine.forEach(function(c){
+        h.push('<div class="detail-sec"><h4>' + esc(c.label) + '</h4><div class="check-list">' +
+          c.elements.map(function(e2, i){ return '<button class="check-row' + (e2.fait ? ' on' : '') + '" data-t="semaine" data-c="' + esc(c.id) + '" data-e="' + i + '" data-v="' + (e2.fait ? 1 : 0) + '"><span class="checkbox">' + (e2.fait ? '✓' : '') + '</span><span class="row-text">' + esc(e2.label) + '</span></button>'; }).join('') +
+          '</div></div>');
+      });
+      if (v.programmes) {
+        h.push('<div class="detail-sec"><h4>' + esc(v.programmes.label) + '</h4><div class="stack" style="gap:8px;">' +
+          v.programmes.liste.map(function(p){
+            var ab = p.absence && !p.present ? '<span class="abs-note ' + esc(p.absence.etat.split(' ')[0]) + '">' + esc(p.absence.motif) + ' · ' + esc(p.absence.etat.toLowerCase()) + '</span>' : '';
+            return '<div class="prog-row' + (p.present ? ' on' : '') + '"><div class="prog-top"><span class="prog-name">' + esc(p.nom) + '<span>' + esc(p.type === 'optionnel' ? 'Optionnel · ' + p.date : p.horaire) + '</span></span>' +
+              '<button class="tog' + (p.present ? ' on' : '') + '" data-t="present" data-e="' + esc(p.id) + '" data-v="' + (p.present ? 1 : 0) + '">' + (p.present ? '✓ ' : '') + 'Présent</button>' +
+              '<button class="tog late' + (p.alHeure ? ' on' : '') + '" data-t="alHeure" data-e="' + esc(p.id) + '" data-v="' + (p.alHeure ? 1 : 0) + '">' + (p.alHeure ? '✓ ' : '') + 'À l\'heure</button></div>' + (ab ? '<div class="prog-actions">' + ab + '</div>' : '') + '</div>';
+          }).join('') + '</div></div>');
+      }
+      if (v.autres && (v.autres.enseignements || v.autres.programmes)) {
+        h.push('<div class="detail-sec"><h4>Autres activités (hors score)</h4>' +
+          (v.autres.enseignements ? '<div class="hist-item"><span>Enseignement :</span> ' + esc(v.autres.enseignements) + '</div>' : '') +
+          (v.autres.programmes ? '<div class="hist-item"><span>Programme :</span> ' + esc(v.autres.programmes) + '</div>' : '') + '</div>');
+      }
+      h.push('<div class="detail-sec"><h4>Commentaire pour le disciple</h4><textarea id="detComment" maxlength="500" placeholder="Un mot d\'encouragement ou une consigne…">' + esc(v.commentaire) + '</textarea>' +
+        '<button class="big-btn mint" id="detValidate">' + (v.validation === 'À valider' ? 'Valider la semaine' : 'Enregistrer le commentaire') + '</button></div>');
+      h.push('<div class="detail-sec"><h4>Progression</h4><div class="trend-card" id="detChart"></div></div>');
+    }
+
+    var autres = d.transitions.filter(function(t){ return !(d.essai && (t === ST.ACTIF || t === ST.NON)); });
+    if (autres.length) {
+      h.push('<div class="detail-sec"><h4>Changer le statut</h4><div class="status-btns">' +
+        autres.map(function(t){ return '<button class="big-btn ' + (t === ST.RETIRE ? 'soft' : 'violet') + '" data-st="' + esc(t) + '">' + esc(labelTransition(d.statut, t)) + '</button>'; }).join('') +
+        '</div></div>');
+    }
+    h.push('<div class="detail-sec"><h4>🔒 Note privée (visible par vous seule)</h4><textarea id="detNote" maxlength="1000">' + esc(d.note) + '</textarea></div>');
+    if (d.statuts.length) {
+      h.push('<div class="detail-sec"><h4>Historique des statuts</h4>' + d.statuts.map(function(s){
+        return '<div class="hist-item">' + esc(s.date) + ' · ' + (s.de && s.de !== s.vers ? esc(s.de) + ' → ' : '') + '<b>' + esc(s.vers) + '</b> <span>(' + esc(s.origine) + ')' + (s.motif ? ' · ' + esc(s.motif) : '') + '</span></div>';
+      }).join('') + '</div>');
+    }
+    h.push('<button class="danger-btn" id="detReset">Réinitialiser son code</button>');
+    el('detBody').innerHTML = h.join('');
+
+    if (el('detPrev')) el('detPrev').addEventListener('click', function(){ openDetail(d.slug, detOffset - 1); });
+    if (el('detNext')) el('detNext').addEventListener('click', function(){ if (detOffset < 0) openDetail(d.slug, detOffset + 1); });
+    Array.prototype.forEach.call(el('detBody').querySelectorAll('[data-t]'), function(b){
+      b.addEventListener('click', function(){
+        b.disabled = true; correctionsEnCours++; correctionsDuLot++;
+        var cible = { type: b.dataset.t, critere: b.dataset.c || null, element: b.dataset.e, valeur: b.dataset.v !== '1' };
+        call('corrigerCase', session.token, d.slug, detOffset, cible).then(finCorrection)
+          .catch(function(e2){ showErr(e2); finCorrection(null); });
+      });
+    });
+    if (el('detValidate')) el('detValidate').addEventListener('click', function(){
+      el('detValidate').disabled = true;
+      call('validerSemaine', session.token, d.slug, detOffset, el('detComment').value).then(function(nd){
+        renderDetail(nd); toast('Semaine validée ✓'); if (aData) loadAdmin(aOffset);
+      }).catch(function(e2){ el('detValidate').disabled = false; showErr(e2); });
+    });
+    Array.prototype.forEach.call(el('detBody').querySelectorAll('[data-essai]'), function(b){
+      b.addEventListener('click', function(){
+        var a = b.dataset.essai;
+        if (a === 'prolonger') {
+          askStatus({ title: 'Prolonger l\'essai de ' + d.name + ' ?', text: 'La période d\'essai continue pour une nouvelle durée. Ce sera inscrit dans l\'historique.', noMotif: true,
+            ok: function(){ return call('prolongerEssai', session.token, d.slug).then(function(nd){ renderDetail(nd); toast('Essai prolongé ✓'); if (aData) loadAdmin(aOffset); }); } });
+        } else {
+          var to = a === 'confirmer' ? ST.ACTIF : ST.NON;
+          askStatus({ title: (a === 'confirmer' ? 'Confirmer ' + d.name + ' Disciple ?' : 'Ne pas retenir ' + d.name + ' ?'),
+            text: a === 'confirmer' ? 'Son statut passera à « Disciple actif ». Les zones automatiques s\'appliqueront ensuite.' : 'Son statut passera à « Non retenu ».',
+            motifLabel: 'Motif (facultatif)', required: false,
+            ok: function(m){ return call('changerStatutManuel', session.token, d.slug, to, m).then(function(nd){ renderDetail(nd); toast('Statut : ' + to); if (to === ST.ACTIF) confetti(); if (aData) loadAdmin(aOffset); }); } });
+        }
+      });
+    });
+    Array.prototype.forEach.call(el('detBody').querySelectorAll('[data-st]'), function(b){
+      b.addEventListener('click', function(){
+        var t = b.dataset.st;
+        askStatus({ title: labelTransition(d.statut, t) + ' : ' + d.name, text: 'Le statut passera de « ' + d.statut + ' » à « ' + t + ' ». Ce changement sera inscrit dans l\'historique.',
+          motifLabel: t === ST.RETIRE ? 'Motif du retrait (obligatoire)' : 'Motif (facultatif)', required: t === ST.RETIRE,
+          ok: function(m){ return call('changerStatutManuel', session.token, d.slug, t, m).then(function(nd){ renderDetail(nd); toast('Statut : ' + t); if (aData) loadAdmin(aOffset); }); } });
+      });
+    });
+    el('detNote').addEventListener('blur', function(){
+      if (el('detNote').value === d.note) return;
+      call('setNoteSuperviseur', session.token, d.slug, el('detNote').value).then(function(){ d.note = el('detNote').value; toast('Note enregistrée ✓'); }).catch(showErr);
+    });
+    el('detReset').addEventListener('click', function(){
+      askStatus({ title: 'Réinitialiser le code de ' + d.name + ' ?', text: 'Son code actuel ne marchera plus et ses appareils seront déconnectés. Un nouveau code à 4 chiffres va être créé : vous le lui transmettrez.',
+        noMotif: true, ok: function(){ return call('resetPin', session.token, d.slug).then(function(r){
+          el('recapTitle').textContent = 'Nouveau code de ' + r.name + ' : ' + r.code;
+          el('recapText').value = 'Bonjour ' + r.name + ', votre nouveau code Discipolat est : ' + r.code + '\nConnectez-vous avec votre numéro de téléphone et ce code.';
+          show('recapOverlay');
+        }); } });
+    });
+    if (el('detChart')) renderChart(el('detChart'), 'Score par semaine', d.history, v.seuilActif, v.seuilCritique);
+  }
+  function labelTransition(from, to){
+    if (to === ST.ACTIF) return from === ST.RETIRE ? 'Réintégrer' : from === ST.ESSAI ? 'Confirmer Disciple' : 'Retour en Disciple actif';
+    if (to === ST.RETIRE) return 'Retirer';
+    if (to === ST.OBS) return 'Mettre en observation';
+    if (to === ST.CANDIDAT) return 'Revoir la demande';
+    if (to === ST.NON) return 'Non retenu';
+    return to;
+  }
+  el('detClose').addEventListener('click', function(){ hide('detailOverlay'); });
+
+  /* ---------- Fenêtre de confirmation ---------- */
+  var stCtx = null;
+  function askStatus(o){
+    stCtx = o;
+    el('stTitle').textContent = o.title; el('stText').textContent = o.text;
+    el('stMotif').value = ''; el('stError').textContent = '';
+    el('stMotif').parentNode.hidden = !!o.noMotif;
+    el('stMotifLab').textContent = o.motifLabel || 'Motif';
+    el('stOk').disabled = false;
+    show('statusOverlay');
+  }
+  el('stCancel').addEventListener('click', function(){ hide('statusOverlay'); });
+  el('stClose').addEventListener('click', function(){ hide('statusOverlay'); });
+  el('stOk').addEventListener('click', function(){
+    var m = el('stMotif').value.trim();
+    if (stCtx.required && !m) { el('stError').textContent = 'Le motif est obligatoire.'; return; }
+    el('stOk').disabled = true;
+    Promise.resolve(stCtx.ok(m)).then(function(){ hide('statusOverlay'); }).catch(function(e){ el('stOk').disabled = false; el('stError').textContent = (e && e.message) || String(e); });
+  });
+
+  /* ---------- Récap ---------- */
+  function openRecap(btnId, fn, titre){
+    el(btnId).disabled = true;
+    call(fn, session.token, aOffset).then(function(t){ el(btnId).disabled = false; el('recapTitle').textContent = titre; el('recapText').value = t; show('recapOverlay'); })
+      .catch(function(e){ el(btnId).disabled = false; showErr(e); });
+  }
+  el('recapBtn').addEventListener('click', function(){ openRecap('recapBtn', 'generateRecap', 'Récap détaillé · pour vous seule'); });
+  el('recapGroupBtn').addEventListener('click', function(){ openRecap('recapGroupBtn', 'generateRecapGroupe', 'Récap à partager au groupe');
+  });
+  el('recapClose').addEventListener('click', function(){ hide('recapOverlay'); });
+  el('recapCopy').addEventListener('click', function(){
+    var ta = el('recapText');
+    function fb(){ ta.focus(); ta.select(); var ok = false; try { ok = document.execCommand('copy'); } catch(e) {} toast(ok ? 'Texte copié ✓' : 'Sélectionnez le texte et copiez-le (appui long)'); }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(ta.value).then(function(){ toast('Texte copié ✓'); }, fb); else fb();
+  });
+
+  /*
+   * Lien « Espace Superviseur » : seulement avec l'adresse réservée (…?espace=CLÉ).
+   * Sur la page GitHub, la clé est gardée sur l'appareil : l'icône installée (qui s'ouvre
+   * sans « ?espace= ») garde ainsi l'accès superviseur sur le téléphone du superviseur.
+   */
+  var CLE_ESPACE = 'discipolat_espace';
+  function majLienSuperviseur(){ el('adminLinkRow').hidden = !espaceSuperviseur; }
+  if (EN_APPS_SCRIPT) {
+    try {
+      google.script.url.getLocation(function(loc){
+        espaceSuperviseur = (loc && loc.parameter && loc.parameter.espace) || '';
+        majLienSuperviseur();
+      });
+    } catch(e) {}
   } else {
-    var frame = document.getElementById('app');
-    frame.addEventListener('load', function(){ splash.classList.add('hidden'); });
-    frame.src = APP_URL;
+    var m = /[?&]espace=([^&#]+)/.exec(location.search);
+    try {
+      if (m) localStorage.setItem(CLE_ESPACE, decodeURIComponent(m[1]));
+      espaceSuperviseur = localStorage.getItem(CLE_ESPACE) || '';
+    } catch(e) { espaceSuperviseur = m ? decodeURIComponent(m[1]) : ''; }
+    majLienSuperviseur();
+    // Application installable : la page se met à jour toute seule (réseau d'abord, voir sw.js)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
+    }
   }
-
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js'); });
-  }
+  boot();
 </script>
 </body>
 </html>

@@ -14,8 +14,13 @@
  *    après 5 codes faux) : deviner un code devient pratiquement impossible ;
  *  - la fonction « debloquerSuperviseur » (à lancer depuis l'éditeur) lève le blocage
  *    de l'espace superviseur.
- *  - fiche de renseignement à l'inscription : église, baptême, formations suivies,
- *    famille d'impact, famille de disciples (visible dans l'onglet Demandes).
+ *  - fiche de renseignement : église, baptême, formations suivies, famille d'impact,
+ *    famille de disciples. Remplie à l'inscription ; obligatoire pour les anciens
+ *    disciples (sans elle, l'application ne s'ouvre pas) ; modifiable par le disciple ;
+ *  - programmes par église : le premier disciple d'une église indique ses programmes
+ *    (jour et heure), ils valent ensuite pour tous les disciples de cette église ;
+ *  - la page peut être servie par GitHub (sans bandeau Google) : elle appelle alors
+ *    ce script par doPost (voir « Accès depuis la page GitHub » en bas du fichier).
  */
 
 var MAX_ESSAIS = 5;                 // codes faux avant un blocage court
@@ -23,7 +28,9 @@ var BLOCAGE_SECONDES = 600;         // blocage court (10 min)
 var MAX_ESSAIS_LONG = 15;           // codes faux avant un blocage long
 var BLOCAGE_LONG_SECONDES = 21600;  // blocage long (6 h, durée maximale du cache)
 var MAX_JETONS = 5;                 // appareils connectés en même temps par personne
-// Adresse publique de l'application (déploiement utilisé par l'application installée)
+// Adresse de la page de l'application, hébergée sur GitHub (sans bandeau Google)
+var ADRESSE_PAGE = 'https://mireillembonda-coder.github.io/discipolat/';
+// Adresse publique du script (déploiement appelé par la page)
 var ADRESSE_APP = 'https://script.google.com/macros/s/AKfycbyNXdW6FmBmK3yr0oQWpCBfAk-rrKkz0bv8WBuYwyqLxZ48hFlXCiCqFenPh23TQhwQ/exec';
 var MSG_TEL = 'Indiquez un numéro camerounais : 9 chiffres commençant par 6 (le +237 est facultatif).';
 
@@ -94,6 +101,94 @@ function nettoyerFiche_(f) {
   };
 }
 
+/** Fiche complète : église, baptême et familles renseignés (les formations peuvent être « Aucune »). */
+function ficheComplete_(d) {
+  return ['Eglise', 'Baptise', 'Formations', 'FamilleImpact', 'FamilleDisciples']
+    .every(function(k){ return String(d[k] || '').trim() !== ''; });
+}
+
+/**
+ * Programmes d'une église : [{ nom, jour, heure }] envoyés par le formulaire.
+ * jour = 'Lundi'…'Dimanche', heure = '18:00' ou '18h00'. Renvoie [{ nom, horaire }].
+ */
+function nettoyerProgrammes_(liste) {
+  return (Array.isArray(liste) ? liste : []).slice(0, 12).map(function(p){
+    p = p || {};
+    var nom = String(p.nom || '').trim().slice(0, 40);
+    if (nom.length < 2) throw new Error('Donnez un nom à chaque programme (ex. : Culte 1).');
+    var jour = String(p.jour || '');
+    if (JOURS_LONGS.indexOf(jour) === -1) throw new Error('Choisissez le jour du programme « ' + nom + ' ».');
+    var m = String(p.heure || '').trim().match(/^(\d{1,2})\s*[:hH]\s*(\d{2})?$/);
+    if (!m || Number(m[1]) > 23 || Number(m[2] || 0) > 59) throw new Error('Indiquez l\'heure du programme « ' + nom + ' » (ex. : 08:00).');
+    var heure = ('0' + Number(m[1])).slice(-2) + 'h' + (m[2] || '00');
+    return { nom: nom, horaire: jour + ' ' + heure };
+  });
+}
+
+/** Programmes réguliers (fixes et actifs) d'une église, dans l'ordre. */
+function programmesEglise_(eglise, tous) {
+  return (tous || lire_(ONGLETS.PROGRAMMES))
+    .filter(function(p){ return p.Id && estVrai_(p.Actif) && String(p.Type) === 'fixe' && egliseProgramme_(p) === eglise; })
+    .sort(function(a, b){ return (Number(a.Ordre) || 99) - (Number(b.Ordre) || 99); })
+    .map(function(p){ return { id: String(p.Id), nom: String(p.Nom), horaire: String(p.Horaire || '') }; });
+}
+
+/** Ajoute des programmes réguliers à une église (à appeler sous verrou). */
+function creerProgrammesEglise_(eglise, programmes) {
+  assurerColonnes_(ONGLETS.PROGRAMMES);
+  var tous = lire_(ONGLETS.PROGRAMMES);
+  var ids = tous.map(function(p){ return String(p.Id); });
+  var ordre = programmesEglise_(eglise, tous).length;
+  programmes.forEach(function(p){
+    var base = slugifier_(eglise.replace(/^ICC\s+/i, '')).replace(/-/g, '_').slice(0, 16) + '_' + slugifier_(p.nom).replace(/-/g, '_').slice(0, 16);
+    var id = base, n = 2;
+    while (ids.indexOf(id) !== -1) { id = base + '_' + n; n++; }
+    ids.push(id);
+    ordre++;
+    ajouterLigne_(ONGLETS.PROGRAMMES, { Id: id, Nom: p.nom, Type: 'fixe', Horaire: p.horaire, Date: '', Semaine: '',
+      Actif: true, Ordre: ordre, Eglise: eglise });
+  });
+}
+
+/**
+ * Si l'église n'a encore aucun programme, enregistre ceux indiqués par le disciple
+ * (ils valent alors pour toute l'église). Sinon, la liste existante est gardée.
+ * À appeler sous verrou.
+ */
+function assurerProgrammesEglise_(eglise, programmesEnvoyes) {
+  if (programmesEglise_(eglise).length) return;
+  var liste = nettoyerProgrammes_(programmesEnvoyes);
+  if (!liste.length) throw new Error('Indiquez au moins un programme de votre église (ex. : Culte, dimanche 08:00).');
+  creerProgrammesEglise_(eglise, liste);
+}
+
+/** Pour le formulaire : programmes déjà enregistrés pour une église (vide si aucun). */
+function getProgrammesEglise(eglise) {
+  eglise = String(eglise || '').trim();
+  if (eglise.length < 2) return [];
+  return programmesEglise_(eglise).map(function(p){ return { nom: p.nom, horaire: p.horaire }; });
+}
+
+/** Fiche du disciple connecté, pour la compléter ou la mettre à jour. */
+function getMaFiche(token) {
+  var d = sessionDisciple_(token, true);
+  return { fiche: ficheDe_(d), complete: ficheComplete_(d), programmes: getProgrammesEglise(egliseDe_(d)) };
+}
+
+/** Enregistre la fiche du disciple connecté (et les programmes de son église si elle n'en a pas). */
+function enregistrerFiche(token, fiche) {
+  var d = sessionDisciple_(token, true);
+  var champs = nettoyerFiche_(fiche);
+  var verrou = LockService.getScriptLock();
+  verrou.waitLock(20000);
+  try {
+    assurerColonnes_(ONGLETS.DISCIPLES);
+    assurerProgrammesEglise_(champs.Eglise, fiche && fiche.programmes);
+    majLigne_(ONGLETS.DISCIPLES, d._ligne, champs);
+  } finally { verrou.releaseLock(); }
+  return getMonStatut(token);
+}
+
 /** La fiche d'un disciple telle qu'enregistrée (vide pour les inscrits d'avant la fiche). */
 function ficheDe_(d) {
   return {
@@ -142,6 +237,7 @@ function inscrire(prenom, nom, telephone, pin, fiche) {
       PinHash: hacherPin_(pin, salt), PinSalt: salt, Jeton: jeton
     };
     Object.keys(champsFiche).forEach(function(k){ ligne[k] = champsFiche[k]; });
+    assurerProgrammesEglise_(champsFiche.Eglise, fiche && fiche.programmes);
     ajouterLigne_(ONGLETS.DISCIPLES, ligne);
     journaliserStatut_(id, prenom, '', STATUTS.CANDIDAT, 'Disciple', 'Inscription');
     return { status: 'pending', token: jeton, slug: id, name: prenom + ' ' + nom, role: 'disciple', statut: STATUTS.CANDIDAT };
@@ -196,7 +292,7 @@ function connexionTelephone(telephone, pin) {
 function ouvrirSession_(d, statusConnexion) {
   var jeton = nouveauJeton_('d', d.Id);
   ajouterJeton_(ONGLETS.DISCIPLES, d._ligne, 'Jeton', d.Jeton, jeton);
-  var res = { token: jeton, slug: String(d.Id), name: nomAffiche_(d), role: 'disciple', statut: d.Statut };
+  var res = { token: jeton, slug: String(d.Id), name: nomAffiche_(d), role: 'disciple', statut: d.Statut, ficheComplete: ficheComplete_(d) };
   if (d.Statut === STATUTS.CANDIDAT) res.status = 'pending';
   else if (d.Statut === STATUTS.NON_RETENU) res.status = 'not_retained';
   else if (d.Statut === STATUTS.RETIRE) res.status = 'withdrawn';
@@ -227,7 +323,7 @@ function connexionSuperviseur_(pin) {
 /** Pour l'écran « en attente » : relit le statut sans redemander le code. */
 function getMonStatut(token) {
   var d = sessionDisciple_(token, true);
-  return { statut: d.Statut, name: nomAffiche_(d) };
+  return { statut: d.Statut, name: nomAffiche_(d), ficheComplete: ficheComplete_(d) };
 }
 
 /* =====================================================================
@@ -336,7 +432,9 @@ function adresseSuperviseur() {
     cle = Utilities.getUuid().replace(/-/g, '').slice(0, 16);
     ecrireReglage_('CleSuperviseur', cle);
   }
-  Logger.log('Adresse de l\'espace superviseur (à garder pour vous) :\n' + ADRESSE_APP + '?espace=' + cle);
+  Logger.log('Adresse de l\'espace superviseur (à garder pour vous) :\n' + ADRESSE_PAGE + '?espace=' + cle +
+    '\n\nAdresse à donner aux disciples :\n' + ADRESSE_PAGE +
+    '\n\n(Ancienne adresse superviseur, toujours valable : ' + ADRESSE_APP + '?espace=' + cle + ')');
 }
 
 /** À lancer depuis l'éditeur si l'espace superviseur est bloqué après trop de codes faux. */
@@ -371,6 +469,8 @@ function sessionDisciple_(token, accepterTousStatuts) {
   if (!accepterTousStatuts && STATUTS_SUIVIS.indexOf(d.Statut) === -1) {
     throw new Error('Votre compte n\'est pas actif (statut : ' + d.Statut + ').');
   }
+  // La fiche de renseignement est obligatoire pour remplir son suivi
+  if (!accepterTousStatuts && !ficheComplete_(d)) throw new Error('Complétez votre fiche de renseignement pour continuer.');
   return d;
 }
 
@@ -421,4 +521,37 @@ function enregistrerEchec_(slug) {
 
 function effacerEchecs_(slug) {
   CacheService.getScriptCache().removeAll(['echecs_' + slug, 'echecs6h_' + slug]);
+}
+
+/* =====================================================================
+ * Accès depuis la page GitHub
+ * La page envoie { fn: 'nomDeFonction', args: [...] } en POST (texte JSON) ;
+ * seules les fonctions de la liste ci-dessous peuvent être appelées.
+ * ===================================================================== */
+
+var FONCTIONS_PUBLIQUES = [
+  // disciple
+  'inscrire', 'connexionTelephone', 'getMonStatut', 'getProgrammesEglise', 'getMaFiche', 'enregistrerFiche',
+  'getMyWeek', 'getMyHistory', 'setCritereJour', 'setCritereSemaine', 'setPresence', 'declarerAbsence',
+  'annulerAbsence', 'setAutres',
+  // superviseur (chaque fonction vérifie elle-même le jeton du superviseur)
+  'loginOrRegister', 'getAdminDashboard', 'getInscriptionsEnAttente', 'getAbsencesEnAttente', 'validerInscription',
+  'deciderAbsence', 'getReglages', 'setReglages', 'ajouterProgrammeOptionnel', 'ajouterProgrammeEglise',
+  'retirerProgramme', 'modifierCritere', 'ajouterCritere', 'getLeaderDetail', 'corrigerCase', 'validerSemaine',
+  'prolongerEssai', 'changerStatutManuel', 'setNoteSuperviseur', 'resetPin', 'generateRecap', 'generateRecapGroupe'
+];
+
+function doPost(e) {
+  var reponse;
+  try {
+    var demande = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+    var fn = String(demande.fn || '');
+    if (FONCTIONS_PUBLIQUES.indexOf(fn) === -1) throw new Error('Action inconnue.');
+    var args = Array.isArray(demande.args) ? demande.args : [];
+    var portee = typeof globalThis !== 'undefined' ? globalThis : this;
+    reponse = { ok: true, result: portee[fn].apply(null, args) };
+  } catch (err) {
+    reponse = { ok: false, error: (err && err.message) || String(err) };
+  }
+  return ContentService.createTextOutput(JSON.stringify(reponse)).setMimeType(ContentService.MimeType.JSON);
 }

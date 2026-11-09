@@ -221,13 +221,14 @@ function getLeaderDetail(token, id, offset) {
   offset = Math.min(0, Number(offset) || 0);
   var criteres = lireCriteres_(true);
   var semaine = semaineId_(offset);
-  var vue = construireVueSemaine_(d, semaine, offset, chargerSemaine_(d.Id, semaine), criteres, true);
+  var vue = construireVueSemaine_(d, semaine, offset, chargerSemaine_(d, semaine), criteres, true);
   vue.editable = true; // le superviseur peut toujours corriger
   var scores = {};
   lire_(ONGLETS.SUIVI).forEach(function(l){ scores[String(l.Cle)] = Number(l.Score) || 0; });
   return {
     slug: String(d.Id), name: nomAffiche_(d), telephone: String(d.Telephone).replace(/^'/, ''), statut: d.Statut,
     inscrit: fmtDate_(d.DateInscription), note: String(d.NoteSuperviseur || ''),
+    fiche: ficheDe_(d), ficheComplete: ficheComplete_(d), eglise: egliseDe_(d),
     transitions: TRANSITIONS_MANUELLES[d.Statut] || [],
     essai: d.Statut === STATUTS.ESSAI ? bilanEssai_(d, scores) : null,
     semaine: vue,
@@ -251,7 +252,7 @@ function validerSemaine(token, id, offset, commentaire) {
   var verrou = LockService.getScriptLock();
   verrou.waitLock(20000);
   try {
-    var ctx = chargerSemaine_(d.Id, semaine);
+    var ctx = chargerSemaine_(d, semaine);
     var etat = ctx.ligne && ctx.ligne.Validation === VALIDATION.CORRIGE ? VALIDATION.CORRIGE : VALIDATION.VALIDE;
     recalculerSemaine_(d, semaine, criteres, {
       Validation: etat, DateValidation: maintenant_(), CommentaireSuperviseur: String(commentaire || '').slice(0, 500)
@@ -275,7 +276,7 @@ function corrigerCase(token, id, offset, cible) {
   var verrou = LockService.getScriptLock();
   verrou.waitLock(20000);
   try {
-    var ctx = chargerSemaine_(d.Id, semaine);
+    var ctx = chargerSemaine_(d, semaine);
     var ligne = ctx.ligne || creerLigneSemaine_(d, semaine, criteres);
     var valeur = !!cible.valeur, ancien, libelle;
     if (cible.type === 'jour' || cible.type === 'semaine') {
@@ -351,13 +352,41 @@ function getProgrammes(token) {
     .filter(function(p){ return String(p.Type) === 'fixe' || texteSemaine_(p.Semaine) >= depuis; })
     .map(function(p){
       return { id: String(p.Id), nom: String(p.Nom), type: String(p.Type), horaire: String(p.Horaire || ''),
-               date: fmtDate_(p.Date).slice(0, 10), semaine: texteSemaine_(p.Semaine) };
+               date: fmtDate_(p.Date).slice(0, 10), semaine: texteSemaine_(p.Semaine), eglise: egliseProgramme_(p),
+               ordre: Number(p.Ordre) || 99 };
     })
-    .sort(function(a, b){ return (a.type === 'fixe' ? 0 : 1) - (b.type === 'fixe' ? 0 : 1) || (a.semaine < b.semaine ? -1 : 1); });
+    .sort(function(a, b){
+      return (a.eglise || '~').localeCompare(b.eglise || '~', 'fr') || (a.type === 'fixe' ? 0 : 1) - (b.type === 'fixe' ? 0 : 1)
+        || a.ordre - b.ordre || (a.semaine < b.semaine ? -1 : 1);
+    });
 }
 
-/** dateIso = 'aaaa-mm-jj' (le programme apparaît pour la semaine de cette date). */
-function ajouterProgrammeOptionnel(token, nom, dateIso) {
+/** Églises connues : la liste de départ, plus celles écrites par des disciples ou utilisées par des programmes. */
+function eglisesConnues_() {
+  var liste = EGLISES.slice();
+  function ajouter(e){ e = String(e || '').trim(); if (e && liste.indexOf(e) === -1) liste.push(e); }
+  lire_(ONGLETS.DISCIPLES).forEach(function(d){ ajouter(d.Eglise); });
+  lire_(ONGLETS.PROGRAMMES).forEach(function(p){ ajouter(egliseProgramme_(p)); });
+  return liste;
+}
+
+/** Ajoute un programme régulier (chaque semaine) à une église. jour = 'Lundi'…'Dimanche', heure = '18:00' ou '18h00'. */
+function ajouterProgrammeEglise(token, eglise, nom, jour, heure) {
+  sessionAdmin_(token);
+  eglise = String(eglise || '').trim();
+  if (eglise.length < 2) throw new Error('Choisissez l\'église.');
+  var p = nettoyerProgrammes_([{ nom: nom, jour: jour, heure: heure }])[0];
+  var verrou = LockService.getScriptLock();
+  verrou.waitLock(20000);
+  try { creerProgrammesEglise_(eglise, [p]); } finally { verrou.releaseLock(); }
+  return getProgrammes(token);
+}
+
+/**
+ * dateIso = 'aaaa-mm-jj' (le programme apparaît pour la semaine de cette date).
+ * eglise = '' : le programme concerne toutes les églises.
+ */
+function ajouterProgrammeOptionnel(token, nom, dateIso, eglise) {
   sessionAdmin_(token);
   nom = String(nom || '').trim();
   if (nom.length < 3) throw new Error('Donnez un nom au programme.');
@@ -370,17 +399,18 @@ function ajouterProgrammeOptionnel(token, nom, dateIso) {
   var base = 'opt_' + slugifier_(nom).replace(/-/g, '_').slice(0, 20) + '_' + semaine.replace(/-/g, '');
   var id = base, n = 2;
   while (ids.indexOf(id) !== -1) { id = base + '_' + n; n++; }
+  assurerColonnes_(ONGLETS.PROGRAMMES);
   ajouterLigne_(ONGLETS.PROGRAMMES, { Id: id, Nom: nom, Type: 'optionnel', Horaire: '',
-    Date: Utilities.formatDate(date, tz_(), 'dd/MM/yyyy'), Semaine: "'" + semaine, Actif: true, Ordre: 50 });
+    Date: Utilities.formatDate(date, tz_(), 'dd/MM/yyyy'), Semaine: "'" + semaine, Actif: true, Ordre: 50,
+    Eglise: String(eglise || '').trim() });
   return getProgrammes(token);
 }
 
-/** Retire un programme optionnel (les présences déjà notées sont gardées dans Presences). */
+/** Retire un programme (les présences déjà notées sont gardées dans Presences). */
 function retirerProgramme(token, id) {
   sessionAdmin_(token);
   var p = lire_(ONGLETS.PROGRAMMES).filter(function(x){ return String(x.Id) === String(id); })[0];
   if (!p) throw new Error('Programme introuvable.');
-  if (String(p.Type) === 'fixe') throw new Error('Les programmes fixes se modifient dans l\'onglet Programmes de la Google Sheet.');
   majLigne_(ONGLETS.PROGRAMMES, p._ligne, { Actif: false });
   return getProgrammes(token);
 }
@@ -426,6 +456,7 @@ function getReglages(token) {
              poids: c.Poids, actif: c.Actif, ordre: c.Ordre };
   });
   r.programmes = getProgrammes(token);
+  r.eglises = eglisesConnues_();
   return r;
 }
 

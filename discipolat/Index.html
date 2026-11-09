@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Discipolat</title>
+<meta name="description" content="Suivi hebdomadaire des disciples · ICC">
+<meta name="theme-color" content="#6A2BD9">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&amp;family=Nunito:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet">
@@ -415,7 +420,7 @@
     <!-- ACCUEIL -->
     <section id="view-select" class="view" hidden>
       <div class="welcome">
-        <span class="kicker">ICC Centre-Ville · Disciples</span>
+        <span class="kicker">ICC · Disciples</span>
         <h1>Disci<span>polat</span></h1>
         <p>Petits pas, grands résultats. Connectez-vous pour remplir votre semaine.</p>
       </div>
@@ -443,12 +448,19 @@
         <div class="field"><label for="regTel">Téléphone</label><input id="regTel" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" placeholder="Ex : 6 71 23 45 67" required>
           <p class="hint">9 chiffres commençant par 6 (le +237 est facultatif). Il sert à éviter les doublons et n'est visible que par le superviseur.</p></div>
 
-        <!-- Fiche de renseignement -->
-        <div class="sec-head" style="margin-top:8px;"><h2>Fiche de renseignement</h2></div>
+        <!-- Fiche de renseignement (déplacée dans l'écran « Ma fiche » quand le disciple la complète ou la modifie) -->
+        <div id="ficheBlock" class="stack">
+        <div class="sec-head" style="margin-top:8px;" id="ficheTitre"><h2>Fiche de renseignement</h2></div>
         <div class="field"><label for="regEglise">Votre église</label>
           <select id="regEglise" required><option value="">Choisissez votre église…</option></select></div>
         <div class="field" id="regEgliseAutreWrap" hidden><label for="regEgliseAutre">Nom de votre église</label>
           <input id="regEgliseAutre" maxlength="60"></div>
+        <div class="field" id="progEgliseWrap" hidden>
+          <label>Programmes de votre église</label>
+          <p class="hint" id="progEgliseHint"></p>
+          <div class="stack" id="progEgliseList" style="gap:8px;"></div>
+          <button type="button" class="big-btn soft" id="progEgliseAdd" hidden>+ Ajouter un programme</button>
+        </div>
         <div class="field"><label>Êtes-vous baptisé(e) ?</label>
           <div class="choice-grid oui-non" data-champ="baptise"></div></div>
         <div class="field"><label>Formations déjà suivies</label>
@@ -462,11 +474,27 @@
           <div class="choice-grid oui-non" data-champ="disciples"></div></div>
         <div class="field" id="regDisciplesWrap" hidden><label for="regDisciples">Nom de votre famille de disciples</label>
           <input id="regDisciples" maxlength="60"></div>
+        </div>
 
         <p class="error-text" id="regError"></p>
         <button class="big-btn violet" type="submit">Choisir mon code</button>
       </form>
       <div class="link-row"><button class="link-btn" id="regBack">← Retour</button></div>
+    </section>
+
+    <!-- MA FICHE (obligatoire pour les anciens disciples, modifiable ensuite) -->
+    <section id="view-fiche" class="view" hidden>
+      <div class="welcome">
+        <span class="kicker">Fiche de renseignement</span>
+        <h1>Ma <span>fiche</span></h1>
+        <p id="ficheIntro"></p>
+      </div>
+      <form id="ficheForm" class="stack" novalidate>
+        <div id="ficheSlot"></div>
+        <p class="error-text" id="ficheError"></p>
+        <button class="big-btn violet" type="submit" id="ficheSave">Enregistrer ma fiche</button>
+      </form>
+      <div class="link-row" id="ficheBackRow"><button class="link-btn" id="ficheBack">← Retour</button></div>
     </section>
 
     <!-- CODE PIN -->
@@ -564,6 +592,18 @@
         </div>
       </div>
 
+      <div class="mission" id="autresCard">
+        <div class="m-head">
+          <div class="m-icon" style="background:var(--violet-soft)">✍️</div>
+          <div class="m-title"><h3>Autres activités</h3><span class="sub">Facultatif · ne compte pas dans le score</span></div>
+        </div>
+        <div class="field"><label for="autresEns">Autre enseignement suivi</label>
+          <textarea id="autresEns" maxlength="300" placeholder="Ex : enseignement sur la prière, pasteur…"></textarea></div>
+        <div class="field"><label for="autresProg">Autre programme auquel j'ai participé</label>
+          <textarea id="autresProg" maxlength="300" placeholder="Ex : veillée de prière à ICC Biyem-Assi"></textarea></div>
+        <button class="big-btn soft" id="autresSave">Enregistrer</button>
+      </div>
+
       <div class="stack">
         <div class="sec-head"><h2>Détail du score</h2></div>
         <div class="detail-grid" id="detailGrid"></div>
@@ -573,6 +613,7 @@
         <div class="sec-head"><h2>Ma progression</h2><span class="aside">8 dernières semaines</span></div>
         <div class="trend-card" id="dChart"></div>
       </div>
+      <button class="big-btn soft" id="dFicheBtn">📋 Ma fiche de renseignement</button>
     </section>
 
     <!-- SUPERVISEUR -->
@@ -647,9 +688,19 @@
         </div>
 
         <div class="set-card">
-          <div class="sec-head"><h2>Programmes</h2></div>
+          <div class="sec-head"><h2>Programmes</h2><span class="aside">par église</span></div>
+          <p class="hint">Chaque église a ses programmes réguliers. Ils sont indiqués par le premier disciple de l'église qui s'inscrit ; vous pouvez les corriger ici.</p>
           <div class="stack" id="progAdminList" style="gap:8px;"></div>
-          <h4 style="font-size:.95rem;">Ajouter un programme optionnel</h4>
+          <h4 style="font-size:.95rem;">Ajouter un programme régulier à une église</h4>
+          <div class="field"><label for="newFixeEglise">Église</label><select id="newFixeEglise"></select></div>
+          <div class="field"><label for="newFixeNom">Nom</label><input id="newFixeNom" maxlength="40" placeholder="Ex : Culte 3"></div>
+          <div class="two-col" style="grid-template-columns:1fr 1fr;">
+            <div class="field"><label for="newFixeJour">Jour</label><select id="newFixeJour"></select></div>
+            <div class="field"><label for="newFixeHeure">Heure</label><input id="newFixeHeure" type="time"></div>
+          </div>
+          <button class="big-btn soft" id="addFixe">Ajouter le programme régulier</button>
+          <h4 style="font-size:.95rem;">Ajouter un programme optionnel (une seule fois)</h4>
+          <div class="field"><label for="newProgEglise">Pour</label><select id="newProgEglise"></select></div>
           <div class="two-col" style="grid-template-columns:3fr 2fr;">
             <div class="field"><label for="newProgNom">Nom</label><input id="newProgNom" maxlength="60" placeholder="Ex : Veillée de prière"></div>
             <div class="field"><label for="newProgDate">Date</label><input id="newProgDate" type="date"></div>
@@ -779,13 +830,30 @@
   // Barre violette en haut de l'écran tant qu'un appel au serveur est en cours
   var appelsEnCours = 0;
   function occupe(delta){ appelsEnCours += delta; el('busyBar').hidden = appelsEnCours <= 0; }
+  /*
+   * La page fonctionne à deux endroits :
+   *  - dans Apps Script (ancienne adresse …/exec) : appels par google.script.run ;
+   *  - sur GitHub (sans bandeau Google) : appels en POST vers le script (doPost).
+   */
+  var APP_URL = 'https://script.google.com/macros/s/AKfycbyNXdW6FmBmK3yr0oQWpCBfAk-rrKkz0bv8WBuYwyqLxZ48hFlXCiCqFenPh23TQhwQ/exec';
+  var EN_APPS_SCRIPT = !!(window.google && google.script && google.script.run);
+  function appelServeur(name, args){
+    if (EN_APPS_SCRIPT) return new Promise(function(resolve, reject){
+      var r = google.script.run.withSuccessHandler(resolve).withFailureHandler(reject);
+      r[name].apply(r, args);
+    });
+    return fetch(APP_URL, { method: 'POST', body: JSON.stringify({ fn: name, args: args }) })
+      .catch(function(){ throw new Error('Connexion impossible. Vérifiez votre connexion internet et réessayez.'); })
+      .then(function(rep){
+        if (!rep.ok) throw new Error('Le serveur ne répond pas (' + rep.status + '). Réessayez dans un instant.');
+        return rep.json();
+      })
+      .then(function(j){ if (!j.ok) throw new Error(j.error); return j.result; });
+  }
   function call(name){
     var args = Array.prototype.slice.call(arguments, 1);
     occupe(1);
-    return new Promise(function(resolve, reject){
-      var r = google.script.run.withSuccessHandler(resolve).withFailureHandler(reject);
-      r[name].apply(r, args);
-    }).then(function(v){ occupe(-1); return v; }, function(e){ occupe(-1); throw e; });
+    return appelServeur(name, args).then(function(v){ occupe(-1); return v; }, function(e){ occupe(-1); throw e; });
   }
   function toast(msg, err){
     var host = el('toastHost'); host.innerHTML = '';
@@ -796,9 +864,10 @@
     var msg = (e && e.message) || String(e);
     toast(msg, true);
     if (/Session expirée|Reconnectez-vous/.test(msg)) logout();
+    else if (/fiche de renseignement/.test(msg) && session && session.role === 'disciple') openFiche(true);
   }
 
-  var VIEWS = ['view-loading','view-select','view-register','view-pin','view-wait','view-disciple','view-admin'];
+  var VIEWS = ['view-loading','view-select','view-register','view-fiche','view-pin','view-wait','view-disciple','view-admin'];
   function goto(v){ VIEWS.forEach(function(x){ el(x).hidden = x !== v; }); window.scrollTo(0, 0); }
 
   /* ---------- Écran de chargement ---------- */
@@ -860,13 +929,18 @@
     call('getMonStatut', session.token).then(function(s){
       session.statut = s.statut; saveSession(session);
       topbar(s.name, 'Bon retour');
-      if (estSuivi(s.statut)) loadWeek(0);
-      else showWait(s.statut);
+      suiteDisciple(s);
     }).catch(function(e){ showErr(e); chargementEchoue(routeDisciple); });
+  }
+  /** Après connexion : fiche obligatoire d'abord, puis le suivi (ou l'écran d'attente). */
+  function suiteDisciple(s){
+    if (s.ficheComplete === false) { openFiche(true); return; }
+    if (estSuivi(s.statut)) loadWeek(0);
+    else showWait(s.statut);
   }
   function logout(){
     try { localStorage.removeItem(SESSION_KEY); } catch(e) {}
-    session = null; dHistory = null; badgesBefore = null;
+    session = null; dHistory = null; badgesBefore = null; dWeek = null; autresModifies = false;
     ['detailOverlay','statusOverlay','recapOverlay'].forEach(hide);
     el('loginTel').value = ''; loginTel = '';
     hide('topbar'); goto('view-select');
@@ -877,48 +951,137 @@
   /* ---------- Inscription ---------- */
   var regData = null;
 
-  /* Fiche de renseignement : église, baptême, formations, familles */
+  /* Fiche de renseignement : église, programmes de l'église, baptême, formations, familles */
   var EGLISES = ['ICC Yaoundé - Eglise Principale', 'ICC Odza Borne 10', 'ICC Biyem-Assi', 'ICC Soa', 'ICC Oyom-Abang', 'ICC Bafoussam',
     'ICC Sangmelima', 'ICC Nsam', 'ICC Mbalngong', 'ICC Centre-Ville', 'ICC Nkoabang', 'ICC Dschang', 'ICC Bandjoun', 'ICC Ebolowa',
     'ICC Mbalmayo', 'ICC Garoua', 'ICC Obala', 'ICC Mbankomo', 'ICC Foulassi', 'ICC Obobogo', 'ICC Okola'];
   var AUTRE_EGLISE = 'Autre église';
   var FORMATIONS = ['Formation 001', 'Formation 101', 'Formation 201'];
   var fiche = { baptise: '', impact: '', disciples: '', formations: [] };
+  // Programmes de l'église : 'aucune' (église pas choisie), 'chargement', 'existants' (déjà connus) ou 'nouveaux' (à saisir)
+  var progEtat = 'aucune', progDemande = 0;
+
+  function choisirOuiNon(champ, v){
+    fiche[champ] = v;
+    var g = document.querySelector('.oui-non[data-champ="' + champ + '"]');
+    Array.prototype.forEach.call(g.children, function(x){ x.classList.toggle('on', x.textContent === v); x.setAttribute('aria-pressed', x.textContent === v ? 'true' : 'false'); });
+    if (champ === 'impact') el('regImpactWrap').hidden = v !== 'Oui';
+    if (champ === 'disciples') el('regDisciplesWrap').hidden = v !== 'Oui';
+  }
+  function cocherFormation(f, on){
+    fiche.formations = fiche.formations.filter(function(x){ return x !== f; });
+    if (on) fiche.formations.push(f);
+    Array.prototype.forEach.call(el('regFormations').children, function(r){
+      if (r.dataset.f !== f) return;
+      r.classList.toggle('on', on); r.querySelector('.checkbox').textContent = on ? '✓' : ''; r.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+  function nomEglise(){
+    var v = el('regEglise').value;
+    return v === AUTRE_EGLISE ? el('regEgliseAutre').value.trim() : v;
+  }
   (function construireFiche(){
     var sel = el('regEglise');
     EGLISES.concat([AUTRE_EGLISE]).forEach(function(e){ var o = document.createElement('option'); o.value = e; o.textContent = e; sel.appendChild(o); });
-    sel.addEventListener('change', function(){ el('regEgliseAutreWrap').hidden = sel.value !== AUTRE_EGLISE; });
+    sel.addEventListener('change', function(){ el('regEgliseAutreWrap').hidden = sel.value !== AUTRE_EGLISE; chargerProgrammesEglise(); });
+    el('regEgliseAutre').addEventListener('change', chargerProgrammesEglise);
     Array.prototype.forEach.call(document.querySelectorAll('.oui-non'), function(g){
       ['Oui', 'Non'].forEach(function(v){
         var b = document.createElement('button'); b.type = 'button'; b.className = 'choice'; b.textContent = v;
         b.setAttribute('aria-pressed', 'false');
-        b.addEventListener('click', function(){
-          fiche[g.dataset.champ] = v;
-          Array.prototype.forEach.call(g.children, function(x){ x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
-          if (g.dataset.champ === 'impact') el('regImpactWrap').hidden = v !== 'Oui';
-          if (g.dataset.champ === 'disciples') el('regDisciplesWrap').hidden = v !== 'Oui';
-        });
+        b.addEventListener('click', function(){ choisirOuiNon(g.dataset.champ, v); });
         g.appendChild(b);
       });
     });
     FORMATIONS.forEach(function(f){
-      var r = document.createElement('button'); r.type = 'button'; r.className = 'check-row'; r.setAttribute('aria-pressed', 'false');
+      var r = document.createElement('button'); r.type = 'button'; r.className = 'check-row'; r.dataset.f = f; r.setAttribute('aria-pressed', 'false');
       r.innerHTML = '<span class="checkbox"></span><span class="row-text">' + esc(f) + '</span>';
-      r.addEventListener('click', function(){
-        var on = !r.classList.contains('on');
-        r.classList.toggle('on', on); r.querySelector('.checkbox').textContent = on ? '✓' : ''; r.setAttribute('aria-pressed', on ? 'true' : 'false');
-        fiche.formations = fiche.formations.filter(function(x){ return x !== f; });
-        if (on) fiche.formations.push(f);
-      });
+      r.addEventListener('click', function(){ cocherFormation(f, !r.classList.contains('on')); });
       el('regFormations').appendChild(r);
     });
+    el('progEgliseAdd').addEventListener('click', function(){ ajouterLigneProgramme(); });
   })();
+
+  /* Programmes de l'église : lus sur le serveur ; si l'église n'en a pas encore, le disciple les saisit */
+  function chargerProgrammesEglise(){
+    var eglise = nomEglise(), n = ++progDemande;
+    el('progEgliseList').innerHTML = ''; hide('progEgliseAdd');
+    if (eglise.length < 2) { progEtat = 'aucune'; hide('progEgliseWrap'); return; }
+    progEtat = 'chargement'; show('progEgliseWrap');
+    el('progEgliseHint').textContent = 'Chargement des programmes de ' + eglise + '…';
+    call('getProgrammesEglise', eglise).then(function(liste){
+      if (n !== progDemande) return;
+      if (liste.length) {
+        progEtat = 'existants';
+        el('progEgliseHint').textContent = 'Programmes enregistrés pour ' + eglise + '. Une erreur ? Signalez-la au superviseur.';
+        el('progEgliseList').innerHTML = liste.map(function(p){
+          return '<div class="crit-row"><span class="cl">' + esc(p.nom) + '<span>' + esc(p.horaire) + '</span></span></div>';
+        }).join('');
+      } else {
+        progEtat = 'nouveaux';
+        el('progEgliseHint').textContent = 'Vous êtes le premier de ' + eglise + ' : indiquez ses programmes réguliers (cultes, étude biblique…). Ils serviront à tous les disciples de votre église.';
+        ajouterLigneProgramme(); show('progEgliseAdd');
+      }
+    }).catch(function(e){
+      if (n !== progDemande) return;
+      progEtat = 'aucune'; el('progEgliseHint').textContent = (e && e.message) || String(e);
+    });
+  }
+  function ajouterLigneProgramme(){
+    var r = document.createElement('div'); r.className = 'crit-row prog-saisie'; r.style.flexWrap = 'wrap';
+    r.innerHTML = '<input class="pNom" maxlength="40" placeholder="Nom (ex : Culte 1)" aria-label="Nom du programme" style="flex:1 1 100%;">' +
+      '<select class="pJour" aria-label="Jour" style="flex:1;"><option value="">Jour…</option>' + JOUR_NOM.map(function(j){ return '<option>' + j + '</option>'; }).join('') + '</select>' +
+      '<input class="pHeure" type="time" aria-label="Heure" style="flex:1;">' +
+      '<button type="button" class="mini-btn" aria-label="Retirer ce programme">✕</button>';
+    Array.prototype.forEach.call(r.querySelectorAll('input,select'), function(x){
+      x.style.cssText += ';border:2px solid var(--border);border-radius:12px;padding:10px;font:inherit;font-weight:700;background:var(--surface);color:var(--ink);min-width:0;';
+    });
+    r.querySelector('button').addEventListener('click', function(){ r.remove(); });
+    el('progEgliseList').appendChild(r);
+  }
+  function lireProgrammesSaisis(){
+    var out = [], err = '';
+    Array.prototype.forEach.call(el('progEgliseList').querySelectorAll('.prog-saisie'), function(r){
+      var nom = r.querySelector('.pNom').value.trim(), jour = r.querySelector('.pJour').value, heure = r.querySelector('.pHeure').value;
+      if (!nom && !jour && !heure) return;
+      if (nom.length < 2) err = err || 'Donnez un nom à chaque programme.';
+      else if (!jour) err = err || 'Choisissez le jour de « ' + nom + ' ».';
+      else if (!heure) err = err || 'Indiquez l\'heure de « ' + nom + ' ».';
+      out.push({ nom: nom, jour: jour, heure: heure });
+    });
+    if (err) return err;
+    if (!out.length) return 'Indiquez au moins un programme de votre église.';
+    return out;
+  }
+
   function viderFiche(){
     fiche = { baptise: '', impact: '', disciples: '', formations: [] };
-    Array.prototype.forEach.call(document.querySelectorAll('#regForm .choice, #regFormations .check-row'), function(x){
+    el('regEglise').value = ''; el('regEgliseAutre').value = ''; el('regImpact').value = ''; el('regDisciples').value = '';
+    Array.prototype.forEach.call(document.querySelectorAll('#ficheBlock .choice, #regFormations .check-row'), function(x){
       x.classList.remove('on'); x.setAttribute('aria-pressed', 'false'); var c = x.querySelector('.checkbox'); if (c) c.textContent = '';
     });
-    ['regEgliseAutreWrap', 'regImpactWrap', 'regDisciplesWrap'].forEach(hide);
+    ['regEgliseAutreWrap', 'regImpactWrap', 'regDisciplesWrap', 'progEgliseWrap'].forEach(hide);
+    progEtat = 'aucune'; progDemande++;
+  }
+  /** Pré-remplit la fiche avec ce qui est enregistré (pour la mettre à jour). */
+  function remplirFiche(f){
+    viderFiche();
+    if (!f) return;
+    if (f.eglise) {
+      if (EGLISES.indexOf(f.eglise) !== -1) el('regEglise').value = f.eglise;
+      else { el('regEglise').value = AUTRE_EGLISE; el('regEgliseAutre').value = f.eglise; show('regEgliseAutreWrap'); }
+      chargerProgrammesEglise();
+    }
+    if (f.baptise === 'Oui' || f.baptise === 'Non') choisirOuiNon('baptise', f.baptise);
+    String(f.formations || '').split(',').map(function(x){ return x.trim(); }).forEach(function(x){
+      if (x === 'Formation 00') x = 'Formation 001';
+      if (FORMATIONS.indexOf(x) !== -1) cocherFormation(x, true);
+    });
+    [['impact', f.familleImpact, 'regImpact'], ['disciples', f.familleDisciples, 'regDisciples']].forEach(function(t){
+      if (!t[1]) return;
+      if (t[1] === 'Non') choisirOuiNon(t[0], 'Non');
+      else { choisirOuiNon(t[0], 'Oui'); el(t[2]).value = t[1]; }
+    });
   }
   /** Renvoie la fiche remplie, ou un message d'erreur (texte). */
   function lireFiche(){
@@ -928,6 +1091,13 @@
       eglise = el('regEgliseAutre').value.trim();
       if (eglise.length < 2) return 'Indiquez le nom de votre église.';
     }
+    if (progEtat === 'chargement') return 'Patientez : chargement des programmes de votre église…';
+    if (progEtat === 'aucune') { chargerProgrammesEglise(); return 'Patientez : chargement des programmes de votre église…'; }
+    var programmes = [];
+    if (progEtat === 'nouveaux') {
+      programmes = lireProgrammesSaisis();
+      if (typeof programmes === 'string') return programmes;
+    }
     if (!fiche.baptise) return 'Indiquez si vous êtes baptisé(e).';
     if (!fiche.impact) return 'Indiquez si vous faites partie d\'une famille d\'impact.';
     var impact = el('regImpact').value.trim();
@@ -936,14 +1106,43 @@
     var disciples = el('regDisciples').value.trim();
     if (fiche.disciples === 'Oui' && disciples.length < 2) return 'Indiquez le nom de votre famille de disciples.';
     return {
-      eglise: eglise, baptise: fiche.baptise,
+      eglise: eglise, baptise: fiche.baptise, programmes: programmes,
       formations: FORMATIONS.filter(function(f){ return fiche.formations.indexOf(f) !== -1; }),
       familleImpact: fiche.impact === 'Oui' ? impact : 'Non',
       familleDisciples: fiche.disciples === 'Oui' ? disciples : 'Non'
     };
   }
 
-  el('goRegister').addEventListener('click', function(){ el('regError').textContent = ''; goto('view-register'); el('regPrenom').focus(); });
+  /* ---------- Écran « Ma fiche » ---------- */
+  var ficheObligatoire = false;
+  function openFiche(obligatoire){
+    ficheObligatoire = obligatoire;
+    el('ficheSlot').appendChild(el('ficheBlock')); hide('ficheTitre');
+    el('ficheIntro').textContent = obligatoire
+      ? 'Avant de continuer, merci de remplir votre fiche. Elle aide le superviseur à mieux vous accompagner. Vous pourrez la mettre à jour à tout moment.'
+      : 'Mettez à jour vos informations, par exemple quand vous terminez une formation.';
+    el('ficheBackRow').hidden = obligatoire;
+    el('ficheError').textContent = ''; viderFiche();
+    goto('view-fiche');
+    call('getMaFiche', session.token).then(function(r){ remplirFiche(r.fiche); }).catch(showErr);
+  }
+  el('ficheForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var f = lireFiche();
+    if (typeof f === 'string') { el('ficheError').textContent = f; return; }
+    el('ficheError').textContent = ''; el('ficheSave').disabled = true;
+    call('enregistrerFiche', session.token, f).then(function(s){
+      el('ficheSave').disabled = false; toast('Fiche enregistrée ✓');
+      session.statut = s.statut; saveSession(session);
+      if (ficheObligatoire || el('view-disciple').hidden) suiteDisciple(s); else goto('view-disciple');
+    }).catch(function(e2){ el('ficheSave').disabled = false; el('ficheError').textContent = (e2 && e2.message) || String(e2); });
+  });
+  el('ficheBack').addEventListener('click', function(){ if (dWeek) goto('view-disciple'); else suiteDisciple({ statut: session.statut }); });
+  el('goRegister').addEventListener('click', function(){
+    el('regForm').insertBefore(el('ficheBlock'), el('regError'));
+    show('ficheTitre'); viderFiche();
+    el('regError').textContent = ''; goto('view-register'); el('regPrenom').focus();
+  });
   el('regBack').addEventListener('click', function(){ goto('view-select'); });
   el('regForm').addEventListener('submit', function(e){
     e.preventDefault();
@@ -1018,8 +1217,7 @@
       if (res.role === 'admin') { if (res.status === 'created') toast('Code superviseur enregistré ✓'); topbar('Superviseur', 'Espace'); loadAdmin(0); return; }
       if (res.status === 'created') toast('Nouveau code enregistré ✓');
       topbar(res.name, 'Bon retour');
-      if (estSuivi(res.statut)) loadWeek(0);
-      else showWait(res.statut);
+      suiteDisciple(res);
     }).catch(function(e){ pinBusy = false; pin = ''; dots(); showErr(e); });
   }
 
@@ -1175,8 +1373,29 @@
     renderDaily(v);
     renderWeekly(v);
     renderProgrammes(v);
+    renderAutres(v);
     renderScore();
   }
+
+  /* Autres activités (texte libre, hors score). On n'écrase pas un texte en cours de saisie. */
+  var autresModifies = false, autresSemaine = null;
+  function renderAutres(v){
+    var a = v.autres || { enseignements: '', programmes: '' };
+    if (!autresModifies || autresSemaine !== v.weekId) {
+      el('autresEns').value = a.enseignements; el('autresProg').value = a.programmes; autresModifies = false;
+    }
+    autresSemaine = v.weekId;
+    el('autresEns').disabled = el('autresProg').disabled = !v.editable;
+    el('autresSave').hidden = !v.editable;
+  }
+  ['autresEns', 'autresProg'].forEach(function(id){ el(id).addEventListener('input', function(){ autresModifies = true; }); });
+  el('autresSave').addEventListener('click', function(){
+    el('autresSave').disabled = true;
+    call('setAutres', session.token, dOffset, el('autresEns').value, el('autresProg').value).then(function(v){
+      el('autresSave').disabled = false; autresModifies = false; onUpdated(v); toast('Enregistré ✓');
+    }).catch(function(e){ el('autresSave').disabled = false; showErr(e); });
+  });
+  el('dFicheBtn').addEventListener('click', function(){ openFiche(false); });
 
   function renderDaily(v){
     var dl = el('dailyList'); dl.innerHTML = '';
@@ -1249,7 +1468,7 @@
   function renderProgrammes(v){
     el('progCard').hidden = !v.programmes;
     if (!v.programmes) return;
-    el('progTitle').textContent = v.programmes.label;
+    el('progTitle').textContent = v.programmes.label + (v.eglise ? ' · ' + v.eglise : '');
     var host = el('progList'); host.innerHTML = '';
     var liste = v.programmes.liste;
     var attendus = liste.filter(function(p){ return p.present || !(p.absence && p.absence.etat === 'Acceptée'); }).length;
@@ -1686,6 +1905,9 @@
     setSelect('rgZone', s.semainesZone); setSelect('rgEssai', s.semainesEssai);
     el('rgError').textContent = '';
     renderProgAdmin(s.programmes);
+    reglagesEglises = s.eglises || [];
+    remplirSelect('newFixeEglise', reglagesEglises.map(function(e){ return [e, e]; }), el('newFixeEglise').value || reglagesEglises[0]);
+    remplirSelect('newProgEglise', [['', 'Toutes les églises']].concat(reglagesEglises.map(function(e){ return [e, e]; })), el('newProgEglise').value || '');
 
     var host = el('critList'); host.innerHTML = '';
     var TYPE_LAB = { jour:'Chaque jour', semaine:'Chaque semaine', programmes:'Programmes', ponctualite:'Calculé' };
@@ -1729,19 +1951,45 @@
     }
     s.value = String(v);
   }
+  var reglagesEglises = [];
+  function remplirSelect(id, options, valeur){
+    var s = el(id); s.innerHTML = options.map(function(o){ return '<option value="' + esc(o[0]) + '">' + esc(o[1]) + '</option>'; }).join('');
+    if (valeur !== undefined) s.value = valeur;
+  }
+  /** Programmes groupés par église ; les optionnels « toutes les églises » à la fin. */
   function renderProgAdmin(list){
     var host = el('progAdminList'); host.innerHTML = '';
+    var groupes = {}, ordre = [];
     list.forEach(function(p){
-      var r = document.createElement('div'); r.className = 'crit-row';
-      r.innerHTML = '<span class="cl">' + esc(p.nom) + '<span>' + (p.type === 'fixe' ? 'Chaque semaine · ' + esc(p.horaire) : 'Optionnel · ' + esc(p.date)) + '</span></span>' +
-        (p.type === 'fixe' ? '<span class="chip out">fixe</span>' : '<button class="mini-btn" data-a="del">Retirer</button>');
-      var del = r.querySelector('[data-a=del]');
-      if (del) del.addEventListener('click', function(){
-        call('retirerProgramme', session.token, p.id).then(function(l2){ renderProgAdmin(l2); toast('Programme retiré'); }).catch(showErr);
+      var g = p.eglise || 'Toutes les églises';
+      if (!groupes[g]) { groupes[g] = []; ordre.push(g); }
+      groupes[g].push(p);
+    });
+    if (!ordre.length) host.innerHTML = '<div class="empty-box">Aucun programme pour l\'instant.</div>';
+    ordre.forEach(function(g){
+      var titre = document.createElement('h4'); titre.style.cssText = 'font-size:.9rem;color:var(--violet);margin-top:4px;'; titre.textContent = g;
+      host.appendChild(titre);
+      groupes[g].forEach(function(p){
+        var r = document.createElement('div'); r.className = 'crit-row';
+        r.innerHTML = '<span class="cl">' + esc(p.nom) + '<span>' + (p.type === 'fixe' ? 'Chaque semaine · ' + esc(p.horaire) : 'Optionnel · ' + esc(p.date)) + '</span></span>' +
+          '<button class="mini-btn" data-a="del">Retirer</button>';
+        r.querySelector('[data-a=del]').addEventListener('click', function(){
+          askStatus({ title: 'Retirer « ' + p.nom + ' » ?', text: (p.type === 'fixe' ? 'Ce programme ne sera plus demandé aux disciples de ' + g + '.' : 'Ce programme optionnel sera retiré.') + ' Les présences déjà notées sont gardées.',
+            noMotif: true, ok: function(){ return call('retirerProgramme', session.token, p.id).then(function(l2){ renderProgAdmin(l2); toast('Programme retiré'); }); } });
+        });
+        host.appendChild(r);
       });
-      host.appendChild(r);
     });
   }
+  remplirSelect('newFixeJour', JOUR_NOM.map(function(j){ return [j, j]; }), 'Dimanche');
+  el('addFixe').addEventListener('click', function(){
+    var eglise = el('newFixeEglise').value, nom = el('newFixeNom').value.trim(), heure = el('newFixeHeure').value;
+    if (nom.length < 2) { toast('Donnez un nom au programme.', true); return; }
+    if (!heure) { toast('Indiquez l\'heure.', true); return; }
+    call('ajouterProgrammeEglise', session.token, eglise, nom, el('newFixeJour').value, heure).then(function(l2){
+      el('newFixeNom').value = ''; el('newFixeHeure').value = ''; renderProgAdmin(l2); toast('Programme ajouté pour ' + eglise + ' ✓');
+    }).catch(showErr);
+  });
   el('rgActif').addEventListener('input', function(){ el('rgActifVal').textContent = el('rgActif').value + '%'; });
   el('rgCrit').addEventListener('input', function(){ el('rgCritVal').textContent = el('rgCrit').value + '%'; });
   el('rgSave').addEventListener('click', function(){
@@ -1755,7 +2003,7 @@
     var nom = el('newProgNom').value.trim(), date = el('newProgDate').value;
     if (nom.length < 3) { toast('Donnez un nom au programme.', true); return; }
     if (!date) { toast('Choisissez une date.', true); return; }
-    call('ajouterProgrammeOptionnel', session.token, nom, date).then(function(l2){
+    call('ajouterProgrammeOptionnel', session.token, nom, date, el('newProgEglise').value).then(function(l2){
       el('newProgNom').value = ''; el('newProgDate').value = ''; renderProgAdmin(l2); toast('Programme ajouté pour la semaine concernée ✓');
     }).catch(showErr);
   });
@@ -1824,6 +2072,8 @@
     h.push('<div class="chips">' + statutChip(d.statut) + '<span class="chip out">' + esc(d.telephone) + '</span>' +
       (d.inscrit ? '<span class="chip out">inscrit le ' + esc(d.inscrit.slice(0, 10)) + '</span>' : '') +
       (v.serie ? '<span class="chip essai">🔥 ' + v.serie.jours + ' jours d\'affilée</span>' : '') + '</div>');
+    h.push('<div class="detail-sec"><h4>Fiche de renseignement</h4>' + (d.ficheComplete ? ficheHtml(d.fiche)
+      : '<p class="hint">Pas encore remplie : elle lui sera demandée à sa prochaine connexion.</p>') + '</div>');
 
     if (d.essai) {
       var e = d.essai, ok = e.reussi;
@@ -1868,6 +2118,11 @@
               '<button class="tog' + (p.present ? ' on' : '') + '" data-t="present" data-e="' + esc(p.id) + '" data-v="' + (p.present ? 1 : 0) + '">' + (p.present ? '✓ ' : '') + 'Présent</button>' +
               '<button class="tog late' + (p.alHeure ? ' on' : '') + '" data-t="alHeure" data-e="' + esc(p.id) + '" data-v="' + (p.alHeure ? 1 : 0) + '">' + (p.alHeure ? '✓ ' : '') + 'À l\'heure</button></div>' + (ab ? '<div class="prog-actions">' + ab + '</div>' : '') + '</div>';
           }).join('') + '</div></div>');
+      }
+      if (v.autres && (v.autres.enseignements || v.autres.programmes)) {
+        h.push('<div class="detail-sec"><h4>Autres activités (hors score)</h4>' +
+          (v.autres.enseignements ? '<div class="hist-item"><span>Enseignement :</span> ' + esc(v.autres.enseignements) + '</div>' : '') +
+          (v.autres.programmes ? '<div class="hist-item"><span>Programme :</span> ' + esc(v.autres.programmes) + '</div>' : '') + '</div>');
       }
       h.push('<div class="detail-sec"><h4>Commentaire pour le disciple</h4><textarea id="detComment" maxlength="500" placeholder="Un mot d\'encouragement ou une consigne…">' + esc(v.commentaire) + '</textarea>' +
         '<button class="big-btn mint" id="detValidate">' + (v.validation === 'À valider' ? 'Valider la semaine' : 'Enregistrer le commentaire') + '</button></div>');
@@ -1988,12 +2243,32 @@
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(ta.value).then(function(){ toast('Texte copié ✓'); }, fb); else fb();
   });
 
-  try {
-    google.script.url.getLocation(function(loc){
-      espaceSuperviseur = (loc && loc.parameter && loc.parameter.espace) || '';
-      el('adminLinkRow').hidden = !espaceSuperviseur;
-    });
-  } catch(e) {}
+  /*
+   * Lien « Espace Superviseur » : seulement avec l'adresse réservée (…?espace=CLÉ).
+   * Sur la page GitHub, la clé est gardée sur l'appareil : l'icône installée (qui s'ouvre
+   * sans « ?espace= ») garde ainsi l'accès superviseur sur le téléphone du superviseur.
+   */
+  var CLE_ESPACE = 'discipolat_espace';
+  function majLienSuperviseur(){ el('adminLinkRow').hidden = !espaceSuperviseur; }
+  if (EN_APPS_SCRIPT) {
+    try {
+      google.script.url.getLocation(function(loc){
+        espaceSuperviseur = (loc && loc.parameter && loc.parameter.espace) || '';
+        majLienSuperviseur();
+      });
+    } catch(e) {}
+  } else {
+    var m = /[?&]espace=([^&#]+)/.exec(location.search);
+    try {
+      if (m) localStorage.setItem(CLE_ESPACE, decodeURIComponent(m[1]));
+      espaceSuperviseur = localStorage.getItem(CLE_ESPACE) || '';
+    } catch(e) { espaceSuperviseur = m ? decodeURIComponent(m[1]) : ''; }
+    majLienSuperviseur();
+    // Application installable : la page se met à jour toute seule (réseau d'abord, voir sw.js)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
+    }
+  }
   boot();
 </script>
 </body>

@@ -70,12 +70,17 @@ function cloturerSemaines_() {
  * Chargement des données d'une semaine
  * ===================================================================== */
 
-/** Programmes d'une semaine : fixes actifs + optionnels de cette semaine. */
-function programmesSemaine_(semaine, tous) {
+/**
+ * Programmes d'une semaine pour une église : fixes actifs de l'église
+ * + optionnels de cette semaine (de l'église ou de toutes les églises).
+ */
+function programmesSemaine_(semaine, tous, eglise) {
   return (tous || lire_(ONGLETS.PROGRAMMES))
     .filter(function(p){
       if (!p.Id || !estVrai_(p.Actif)) return false;
-      return String(p.Type) === 'fixe' || texteSemaine_(p.Semaine) === semaine;
+      var e = egliseProgramme_(p);
+      if (String(p.Type) === 'fixe') return e === eglise;
+      return texteSemaine_(p.Semaine) === semaine && (!e || e === eglise);
     })
     .map(function(p){
       return { id: String(p.Id), nom: String(p.Nom), type: String(p.Type), horaire: String(p.Horaire || ''),
@@ -99,8 +104,9 @@ function jourProgramme_(p) {
  * `pre` peut contenir des onglets déjà lus (suivi, presences, absences, programmes)
  * pour éviter de relire la feuille quand on traite plusieurs disciples.
  */
-function chargerSemaine_(idDisciple, semaine, pre) {
+function chargerSemaine_(d, semaine, pre) {
   pre = pre || {};
+  var idDisciple = d.Id;
   var cle = semaine + '_' + idDisciple;
   var suivi = pre.suivi || lire_(ONGLETS.SUIVI);
   var ligne = null;
@@ -123,7 +129,7 @@ function chargerSemaine_(idDisciple, semaine, pre) {
   });
 
   return { ligne: ligne, presences: presences, absences: absences,
-           programmes: programmesSemaine_(semaine, pre.programmes),
+           programmes: programmesSemaine_(semaine, pre.programmes, egliseDe_(d)),
            enCours: !semaineCloturee_(semaine), jour: (new Date().getDay() + 6) % 7 };
 }
 
@@ -195,7 +201,7 @@ function detailTexte_(detail) {
  * champsEnPlus : colonnes à écrire en même temps (ex. Validation).
  */
 function recalculerSemaine_(d, semaine, criteres, champsEnPlus) {
-  var ctx = chargerSemaine_(d.Id, semaine);
+  var ctx = chargerSemaine_(d, semaine);
   if (!ctx.ligne) ctx.ligne = creerLigneSemaine_(d, semaine, criteres);
   var res = calculerScore_(ctx, criteres);
   assurerColonneFin_(ONGLETS.SUIVI, 'Cloture');
@@ -262,7 +268,7 @@ function getMyWeek(token, offset) {
   offset = Math.min(0, Math.max(-SEMAINES_MAX_HISTORIQUE, Number(offset) || 0));
   var criteres = lireCriteres_(true);
   var semaine = semaineId_(offset);
-  var vue = construireVueSemaine_(d, semaine, offset, chargerSemaine_(d.Id, semaine), criteres, true);
+  var vue = construireVueSemaine_(d, semaine, offset, chargerSemaine_(d, semaine), criteres, true);
   vue.groupe = statsGroupe_();
   return vue;
 }
@@ -326,12 +332,12 @@ function setPresence(token, offset, idProgramme, present, alHeure) {
 }
 
 function ecrirePresence_(d, semaine, idProgramme, present, alHeure) {
-  var prog = programmesSemaine_(semaine).filter(function(p){ return p.id === idProgramme; })[0];
+  var prog = programmesSemaine_(semaine, null, egliseDe_(d)).filter(function(p){ return p.id === idProgramme; })[0];
   if (!prog) throw new Error('Ce programme n\'existe pas pour cette semaine.');
   if (present && semaine === semaineId_(0) && prog.jour > (new Date().getDay() + 6) % 7) {
     throw new Error('Ce programme n\'a pas encore eu lieu.');
   }
-  var ctx = chargerSemaine_(d.Id, semaine);
+  var ctx = chargerSemaine_(d, semaine);
   var existant = ctx.presences[idProgramme];
   if (existant) {
     majLigne_(ONGLETS.PRESENCES, existant._ligne, { Present: present, AlHeure: alHeure, DerniereMaj: maintenant_() });
@@ -349,7 +355,7 @@ function declarerAbsence(token, offset, idCritere, element, motif, precision) {
   if (MOTIFS_ABSENCE.indexOf(motif) === -1) throw new Error('Choisissez un motif : ' + MOTIFS_ABSENCE.join(', ') + '.');
   if (motif === 'Autre' && !String(precision || '').trim()) throw new Error('Précisez le motif.');
   return modifier_(token, offset, function(d, semaine, criteres) {
-    var ctx = chargerSemaine_(d.Id, semaine);
+    var ctx = chargerSemaine_(d, semaine);
     var libelle = libelleElement_(criteres, ctx, idCritere, element);
     var a = ctx.absences[idCritere + ':' + element];
     if (a && a.etat === ABSENCE.ACCEPTEE) throw new Error('Cette absence a déjà été acceptée par le superviseur.');
@@ -365,10 +371,25 @@ function declarerAbsence(token, offset, idCritere, element, motif, precision) {
 /** Retire un motif encore en attente. */
 function annulerAbsence(token, offset, idCritere, element) {
   return modifier_(token, offset, function(d, semaine) {
-    var a = chargerSemaine_(d.Id, semaine).absences[idCritere + ':' + element];
+    var a = chargerSemaine_(d, semaine).absences[idCritere + ':' + element];
     if (!a) return;
     if (a.etat === ABSENCE.ACCEPTEE) throw new Error('Cette absence a déjà été acceptée : demandez au superviseur.');
     majLigne_(ONGLETS.ABSENCES, a._ligne, { Etat: ABSENCE.ANNULEE, DateDecision: maintenant_() });
+  });
+}
+
+/**
+ * Autres enseignements suivis et autres programmes de la semaine (texte libre).
+ * Ils sont montrés au superviseur mais ne comptent pas dans le score.
+ */
+function setAutres(token, offset, enseignements, programmes) {
+  return modifier_(token, offset, function(d, semaine, criteres, ligne) {
+    assurerColonneFin_(ONGLETS.SUIVI, 'AutresEnseignements');
+    assurerColonneFin_(ONGLETS.SUIVI, 'AutresProgrammes');
+    majLigne_(ONGLETS.SUIVI, ligne._ligne, {
+      AutresEnseignements: String(enseignements || '').trim().slice(0, 300),
+      AutresProgrammes: String(programmes || '').trim().slice(0, 300)
+    });
   });
 }
 
@@ -392,7 +413,7 @@ function modifier_(token, offset, action) {
   var verrou = LockService.getScriptLock();
   verrou.waitLock(20000);
   try {
-    var ctx = chargerSemaine_(d.Id, semaine);
+    var ctx = chargerSemaine_(d, semaine);
     var ligne = ctx.ligne || creerLigneSemaine_(d, semaine, criteres);
     if (ligne.Validation === VALIDATION.VALIDE || ligne.Validation === VALIDATION.CORRIGE) {
       throw new Error('Le superviseur a déjà validé cette semaine. Elle ne peut plus être modifiée.');
@@ -449,6 +470,8 @@ function construireVueSemaine_(d, semaine, offset, ctx, criteres, avecSerie) {
     validation: ctx.ligne ? String(l.Validation) : VALIDATION.A_VALIDER,
     commentaire: String(l.CommentaireSuperviseur || ''),
     motifs: MOTIFS_ABSENCE,
+    eglise: egliseDe_(d),
+    autres: { enseignements: String(l.AutresEnseignements || ''), programmes: String(l.AutresProgrammes || '') },
     criteresJour: [], criteresSemaine: [], programmes: null, ponctualite: null, serie: null, essai: null
   };
   criteres.forEach(function(c) {
