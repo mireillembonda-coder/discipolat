@@ -73,7 +73,7 @@ function formaterTelephone_(c) {
  * Inscription libre -> statut Candidat
  * ===================================================================== */
 
-var FORMATIONS = ['Formation 00', 'Formation 101', 'Formation 201'];
+var FORMATIONS = ['Formation 001', 'Formation 101', 'Formation 201'];
 
 /** Vérifie et nettoie la fiche de renseignement envoyée par le formulaire d'inscription. */
 function nettoyerFiche_(f) {
