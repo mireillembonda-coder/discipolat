@@ -14,6 +14,8 @@
  *    après 5 codes faux) : deviner un code devient pratiquement impossible ;
  *  - la fonction « debloquerSuperviseur » (à lancer depuis l'éditeur) lève le blocage
  *    de l'espace superviseur.
+ *  - fiche de renseignement à l'inscription : église, baptême, formations suivies,
+ *    famille d'impact, famille de disciples (visible dans l'onglet Demandes).
  */
 
 var MAX_ESSAIS = 5;                 // codes faux avant un blocage court
@@ -71,7 +73,36 @@ function formaterTelephone_(c) {
  * Inscription libre -> statut Candidat
  * ===================================================================== */
 
-function inscrire(prenom, nom, telephone, pin) {
+var FORMATIONS = ['Formation 00', 'Formation 101', 'Formation 201'];
+
+/** Vérifie et nettoie la fiche de renseignement envoyée par le formulaire d'inscription. */
+function nettoyerFiche_(f) {
+  f = f || {};
+  function texte(v, max) { return String(v || '').trim().slice(0, max || 60); }
+  var eglise = texte(f.eglise);
+  if (eglise.length < 2) throw new Error('Choisissez votre église.');
+  var baptise = texte(f.baptise);
+  if (baptise !== 'Oui' && baptise !== 'Non') throw new Error('Indiquez si vous êtes baptisé(e).');
+  var formations = (Array.isArray(f.formations) ? f.formations : []).filter(function(x){ return FORMATIONS.indexOf(x) !== -1; });
+  var impact = texte(f.familleImpact), disciples = texte(f.familleDisciples);
+  if (impact.length < 2) throw new Error('Indiquez votre famille d\'impact (ou « Non »).');
+  if (disciples.length < 2) throw new Error('Indiquez votre famille de disciples (ou « Non »).');
+  return {
+    Eglise: eglise, Baptise: baptise,
+    Formations: formations.length ? formations.join(', ') : 'Aucune',
+    FamilleImpact: impact, FamilleDisciples: disciples
+  };
+}
+
+/** La fiche d'un disciple telle qu'enregistrée (vide pour les inscrits d'avant la fiche). */
+function ficheDe_(d) {
+  return {
+    eglise: String(d.Eglise || ''), baptise: String(d.Baptise || ''), formations: String(d.Formations || ''),
+    familleImpact: String(d.FamilleImpact || ''), familleDisciples: String(d.FamilleDisciples || '')
+  };
+}
+
+function inscrire(prenom, nom, telephone, pin, fiche) {
   prenom = String(prenom || '').trim();
   nom = String(nom || '').trim();
   var tel = telephoneCamerounais_(telephone);
@@ -80,6 +111,7 @@ function inscrire(prenom, nom, telephone, pin) {
   if (!tel) throw new Error(MSG_TEL);
   telephone = formaterTelephone_(tel);
   if (!/^[0-9]{4}$/.test(String(pin))) throw new Error('Le code doit contenir 4 chiffres.');
+  var champsFiche = nettoyerFiche_(fiche);
 
   var verrou = LockService.getScriptLock();
   verrou.waitLock(20000);
@@ -102,11 +134,13 @@ function inscrire(prenom, nom, telephone, pin) {
 
     var salt = Utilities.getUuid();
     var jeton = nouveauJeton_('d', id);
-    ajouterLigne_(ONGLETS.DISCIPLES, {
+    var ligne = {
       Id: id, Prenom: prenom, Nom: nom, Telephone: "'" + telephone,
       Statut: STATUTS.CANDIDAT, DateInscription: maintenant_(), DateDernierStatut: maintenant_(),
       PinHash: hacherPin_(pin, salt), PinSalt: salt, Jeton: jeton
-    });
+    };
+    Object.keys(champsFiche).forEach(function(k){ ligne[k] = champsFiche[k]; });
+    ajouterLigne_(ONGLETS.DISCIPLES, ligne);
     journaliserStatut_(id, prenom, '', STATUTS.CANDIDAT, 'Disciple', 'Inscription');
     return { status: 'pending', token: jeton, slug: id, name: prenom + ' ' + nom, role: 'disciple', statut: STATUTS.CANDIDAT };
   } finally {
@@ -203,7 +237,7 @@ function getInscriptionsEnAttente(token) {
   return lire_(ONGLETS.DISCIPLES)
     .filter(function(d){ return d.Statut === STATUTS.CANDIDAT; })
     .map(function(d){
-      return { id: String(d.Id), name: nomAffiche_(d), telephone: String(d.Telephone), date: fmtDate_(d.DateInscription) };
+      return { id: String(d.Id), name: nomAffiche_(d), telephone: String(d.Telephone), date: fmtDate_(d.DateInscription), fiche: ficheDe_(d) };
     });
 }
 

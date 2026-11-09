@@ -263,6 +263,7 @@
   .legend i.p{border-color:var(--sky);border-style:dashed;}
   .choice-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;}
   .choice{border:2.5px solid var(--border);background:var(--surface);border-radius:14px;padding:11px 4px;font-weight:800;font-size:.84rem;color:var(--ink);cursor:pointer;}
+  .choice-grid.oui-non{grid-template-columns:repeat(2,minmax(0,1fr));}
   .choice.on{background:var(--violet);border-color:var(--violet);color:#fff;}
   .choice[disabled]{opacity:.35;cursor:default;}
   .detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
@@ -441,6 +442,27 @@
         <div class="field"><label for="regNom">Nom</label><input id="regNom" autocomplete="family-name" maxlength="40" required></div>
         <div class="field"><label for="regTel">Téléphone</label><input id="regTel" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" placeholder="Ex : 6 71 23 45 67" required>
           <p class="hint">9 chiffres commençant par 6 (le +237 est facultatif). Il sert à éviter les doublons et n'est visible que par le superviseur.</p></div>
+
+        <!-- Fiche de renseignement -->
+        <div class="sec-head" style="margin-top:8px;"><h2>Fiche de renseignement</h2></div>
+        <div class="field"><label for="regEglise">Votre église</label>
+          <select id="regEglise" required><option value="">Choisissez votre église…</option></select></div>
+        <div class="field" id="regEgliseAutreWrap" hidden><label for="regEgliseAutre">Nom de votre église</label>
+          <input id="regEgliseAutre" maxlength="60"></div>
+        <div class="field"><label>Êtes-vous baptisé(e) ?</label>
+          <div class="choice-grid oui-non" data-champ="baptise"></div></div>
+        <div class="field"><label>Formations déjà suivies</label>
+          <div class="check-list" id="regFormations"></div>
+          <p class="hint">Cochez toutes celles que vous avez terminées. Aucune ? Ne cochez rien.</p></div>
+        <div class="field"><label>Faites-vous partie d'une famille d'impact ?</label>
+          <div class="choice-grid oui-non" data-champ="impact"></div></div>
+        <div class="field" id="regImpactWrap" hidden><label for="regImpact">Nom de votre famille d'impact</label>
+          <input id="regImpact" maxlength="60"></div>
+        <div class="field"><label>Faites-vous partie d'une famille de disciples ?</label>
+          <div class="choice-grid oui-non" data-champ="disciples"></div></div>
+        <div class="field" id="regDisciplesWrap" hidden><label for="regDisciples">Nom de votre famille de disciples</label>
+          <input id="regDisciples" maxlength="60"></div>
+
         <p class="error-text" id="regError"></p>
         <button class="big-btn violet" type="submit">Choisir mon code</button>
       </form>
@@ -854,6 +876,73 @@
 
   /* ---------- Inscription ---------- */
   var regData = null;
+
+  /* Fiche de renseignement : église, baptême, formations, familles */
+  var EGLISES = ['ICC Yaoundé - Eglise Principale', 'ICC Odza Borne 10', 'ICC Biyem-Assi', 'ICC Soa', 'ICC Oyom-Abang', 'ICC Bafoussam',
+    'ICC Sangmelima', 'ICC Nsam', 'ICC Mbalngong', 'ICC Centre-Ville', 'ICC Nkoabang', 'ICC Dschang', 'ICC Bandjoun', 'ICC Ebolowa',
+    'ICC Mbalmayo', 'ICC Garoua', 'ICC Obala', 'ICC Mbankomo', 'ICC Foulassi', 'ICC Obobogo', 'ICC Okola'];
+  var AUTRE_EGLISE = 'Autre église';
+  var FORMATIONS = ['Formation 00', 'Formation 101', 'Formation 201'];
+  var fiche = { baptise: '', impact: '', disciples: '', formations: [] };
+  (function construireFiche(){
+    var sel = el('regEglise');
+    EGLISES.concat([AUTRE_EGLISE]).forEach(function(e){ var o = document.createElement('option'); o.value = e; o.textContent = e; sel.appendChild(o); });
+    sel.addEventListener('change', function(){ el('regEgliseAutreWrap').hidden = sel.value !== AUTRE_EGLISE; });
+    Array.prototype.forEach.call(document.querySelectorAll('.oui-non'), function(g){
+      ['Oui', 'Non'].forEach(function(v){
+        var b = document.createElement('button'); b.type = 'button'; b.className = 'choice'; b.textContent = v;
+        b.setAttribute('aria-pressed', 'false');
+        b.addEventListener('click', function(){
+          fiche[g.dataset.champ] = v;
+          Array.prototype.forEach.call(g.children, function(x){ x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+          if (g.dataset.champ === 'impact') el('regImpactWrap').hidden = v !== 'Oui';
+          if (g.dataset.champ === 'disciples') el('regDisciplesWrap').hidden = v !== 'Oui';
+        });
+        g.appendChild(b);
+      });
+    });
+    FORMATIONS.forEach(function(f){
+      var r = document.createElement('button'); r.type = 'button'; r.className = 'check-row'; r.setAttribute('aria-pressed', 'false');
+      r.innerHTML = '<span class="checkbox"></span><span class="row-text">' + esc(f) + '</span>';
+      r.addEventListener('click', function(){
+        var on = !r.classList.contains('on');
+        r.classList.toggle('on', on); r.querySelector('.checkbox').textContent = on ? '✓' : ''; r.setAttribute('aria-pressed', on ? 'true' : 'false');
+        fiche.formations = fiche.formations.filter(function(x){ return x !== f; });
+        if (on) fiche.formations.push(f);
+      });
+      el('regFormations').appendChild(r);
+    });
+  })();
+  function viderFiche(){
+    fiche = { baptise: '', impact: '', disciples: '', formations: [] };
+    Array.prototype.forEach.call(document.querySelectorAll('#regForm .choice, #regFormations .check-row'), function(x){
+      x.classList.remove('on'); x.setAttribute('aria-pressed', 'false'); var c = x.querySelector('.checkbox'); if (c) c.textContent = '';
+    });
+    ['regEgliseAutreWrap', 'regImpactWrap', 'regDisciplesWrap'].forEach(hide);
+  }
+  /** Renvoie la fiche remplie, ou un message d'erreur (texte). */
+  function lireFiche(){
+    var eglise = el('regEglise').value;
+    if (!eglise) return 'Choisissez votre église.';
+    if (eglise === AUTRE_EGLISE) {
+      eglise = el('regEgliseAutre').value.trim();
+      if (eglise.length < 2) return 'Indiquez le nom de votre église.';
+    }
+    if (!fiche.baptise) return 'Indiquez si vous êtes baptisé(e).';
+    if (!fiche.impact) return 'Indiquez si vous faites partie d\'une famille d\'impact.';
+    var impact = el('regImpact').value.trim();
+    if (fiche.impact === 'Oui' && impact.length < 2) return 'Indiquez le nom de votre famille d\'impact.';
+    if (!fiche.disciples) return 'Indiquez si vous faites partie d\'une famille de disciples.';
+    var disciples = el('regDisciples').value.trim();
+    if (fiche.disciples === 'Oui' && disciples.length < 2) return 'Indiquez le nom de votre famille de disciples.';
+    return {
+      eglise: eglise, baptise: fiche.baptise,
+      formations: FORMATIONS.filter(function(f){ return fiche.formations.indexOf(f) !== -1; }),
+      familleImpact: fiche.impact === 'Oui' ? impact : 'Non',
+      familleDisciples: fiche.disciples === 'Oui' ? disciples : 'Non'
+    };
+  }
+
   el('goRegister').addEventListener('click', function(){ el('regError').textContent = ''; goto('view-register'); el('regPrenom').focus(); });
   el('regBack').addEventListener('click', function(){ goto('view-select'); });
   el('regForm').addEventListener('submit', function(e){
@@ -862,7 +951,10 @@
     if (p.length < 2) { el('regError').textContent = 'Indiquez votre prénom.'; return; }
     if (n.length < 2) { el('regError').textContent = 'Indiquez votre nom.'; return; }
     if (!telValide(t)) { el('regError').textContent = MSG_TEL; return; }
-    regData = { prenom: p, nom: n, tel: t };
+    var f = lireFiche();
+    if (typeof f === 'string') { el('regError').textContent = f; return; }
+    el('regError').textContent = '';
+    regData = { prenom: p, nom: n, tel: t, fiche: f };
     openPin('reg1', null, p + ' ' + n);
   });
 
@@ -911,9 +1003,9 @@
     if (pinMode === 'reg2') {
       if (pin !== firstPin) { el('pinError').textContent = 'Les deux codes sont différents. Recommencez.'; shake(); setTimeout(function(){ openPin('reg1', null, pinName); }, 900); return; }
       pinBusy = true;
-      call('inscrire', regData.prenom, regData.nom, regData.tel, pin).then(function(res){
+      call('inscrire', regData.prenom, regData.nom, regData.tel, pin, regData.fiche).then(function(res){
         pinBusy = false; saveSession(res); topbar(res.name, 'Bienvenue'); showWait(ST.CANDIDAT); confetti();
-        el('regForm').reset();
+        el('regForm').reset(); viderFiche();
       }).catch(function(e){ pinBusy = false; goto('view-register'); el('regError').textContent = (e && e.message) || String(e); });
       return;
     }
@@ -1524,6 +1616,15 @@
       .then(function(res){ renderRequests(res[0]); renderAbsences(res[1]); updateDemandesCount(res[0].length + res[1].length); })
       .catch(showErr);
   }
+  /** Fiche de renseignement (église, baptême, formations, familles), si elle a été remplie. */
+  function ficheHtml(f){
+    if (!f || !f.eglise) return '';
+    var lignes = [['Église', f.eglise], ['Baptisé(e)', f.baptise], ['Formations', f.formations || 'Aucune'],
+      ['Famille d\'impact', f.familleImpact], ['Famille de disciples', f.familleDisciples]];
+    return '<div class="detail-grid">' + lignes.map(function(l){
+      return '<div class="detail-tile"><span class="dl">' + esc(l[0]) + '</span><span style="font-weight:800;font-size:.9rem;overflow-wrap:anywhere;">' + esc(l[1] || '–') + '</span></div>';
+    }).join('') + '</div>';
+  }
   function updateDemandesCount(n){ el('reqCount').hidden = !n; el('reqCount').textContent = n; }
   function renderRequests(list){
     var host = el('reqList'); host.innerHTML = '';
@@ -1532,7 +1633,7 @@
     list.forEach(function(q){
       var c = document.createElement('div'); c.className = 'req-card';
       c.innerHTML = '<div class="req-top">' + avatarHtml(q.name) + '<div class="info"><b>' + esc(q.name) + '</b><span>' + esc(String(q.telephone).replace(/^'/, '')) +
-        ' · inscrit le ' + esc(q.date) + '</span></div></div>' +
+        ' · inscrit le ' + esc(q.date) + '</span></div></div>' + ficheHtml(q.fiche) +
         '<p class="hint">Accepter le fait entrer en période d\'essai.</p>' +
         '<div class="row-btns"><button class="big-btn soft" data-d="refuser">Non retenu</button><button class="big-btn mint" data-d="accepter">Accepter</button></div>';
       Array.prototype.forEach.call(c.querySelectorAll('button[data-d]'), function(btn){
