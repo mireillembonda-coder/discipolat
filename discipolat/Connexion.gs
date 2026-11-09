@@ -116,6 +116,8 @@ function inscrire(prenom, nom, telephone, pin, fiche) {
   var verrou = LockService.getScriptLock();
   verrou.waitLock(20000);
   try {
+    // Crée les colonnes de la fiche si l'onglet Disciples date d'avant la fiche
+    assurerColonnes_(ONGLETS.DISCIPLES);
     var disciples = lire_(ONGLETS.DISCIPLES);
     var cle = cleTelephone_(telephone);
     var doublon = disciples.filter(function(d){

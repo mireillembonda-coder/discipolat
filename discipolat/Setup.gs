@@ -51,7 +51,8 @@ var JOURS = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
 
 var ENTETES = {};
 ENTETES[ONGLETS.DISCIPLES] = ['Id','Prenom','Nom','Telephone','Statut','DateInscription','DateValidation','FinEssai',
-  'DateConfirmation','DateDernierStatut','PinHash','PinSalt','Jeton','NoteSuperviseur'];
+  'DateConfirmation','DateDernierStatut','PinHash','PinSalt','Jeton','NoteSuperviseur',
+  'Eglise','Baptise','Formations','FamilleImpact','FamilleDisciples'];
 // Les colonnes des critères (ex. commande_matin_Lun, enseignements_1) sont ajoutées par assurerColonnesSuivi_
 ENTETES[ONGLETS.SUIVI] = ['Cle','Semaine','DiscipleId','Prenom','Score','DetailScore','Validation','DateValidation',
   'CommentaireSuperviseur','DerniereMaj'];
@@ -158,6 +159,12 @@ function installer() {
 
   // 5. Colonnes des critères dans Suivi
   assurerColonnesSuivi_(lireCriteres_(false));
+
+  // 6. Colonnes ajoutées depuis (ex. fiche de renseignement) dans les onglets existants
+  Object.keys(ENTETES).forEach(function(nom) {
+    var ajoutees = assurerColonnes_(nom);
+    if (ajoutees.length) journal.push('Colonnes ajoutées dans ' + nom + ' : ' + ajoutees.join(', '));
+  });
 
   Logger.log(journal.length ? journal.join('\n') : 'Rien à faire : tout est déjà installé.');
   return journal;
@@ -275,6 +282,22 @@ function lireLignes_(sh) {
 function lire_(nom) { return lireLignes_(feuille_(nom)); }
 
 function entetes_(sh) { return sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0]; }
+
+/**
+ * Ajoute à la fin d'un onglet les colonnes de ENTETES qui lui manquent
+ * (onglet créé avec une ancienne version). Ne supprime ni ne déplace rien.
+ * Renvoie la liste des colonnes ajoutées.
+ */
+function assurerColonnes_(nom) {
+  var sh = feuille_(nom);
+  var ent = entetes_(sh);
+  var manquantes = (ENTETES[nom] || []).filter(function(h){ return ent.indexOf(h) === -1; });
+  if (manquantes.length) {
+    sh.getRange(1, sh.getLastColumn() + 1, 1, manquantes.length).setValues([manquantes])
+      .setFontWeight('bold').setBackground('#EDE4FF');
+  }
+  return manquantes;
+}
 
 /** Ajoute une ligne à partir d'un objet (les colonnes absentes restent vides). */
 function ajouterLigne_(nom, obj) {
