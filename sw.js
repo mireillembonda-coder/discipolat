@@ -1,6 +1,6 @@
 // Garde la coquille de Discipolat en mémoire pour qu'elle s'ouvre vite.
 // Les données, elles, viennent toujours d'Apps Script (en ligne).
-var CACHE = 'discipolat-v1';
+var CACHE = 'discipolat-v2';
 var FILES = [
   './',
   'index.html',
