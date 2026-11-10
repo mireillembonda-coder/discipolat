@@ -1,6 +1,6 @@
 // Garde la coquille de Discipolat en mémoire pour qu'elle s'ouvre vite.
 // Les données, elles, viennent toujours d'Apps Script (en ligne).
-var CACHE = 'discipolat-v2';
+var CACHE = 'discipolat-v3';
 var FILES = [
   './',
   'index.html',
@@ -23,16 +23,24 @@ self.addEventListener('activate', function(event) {
   self.clients.claim();
 });
 
-// Réseau d'abord, mémoire si pas de connexion
+// Mémoire d'abord : la coquille s'ouvre tout de suite depuis le téléphone,
+// même si github.io répond mal (données mobiles). La version en ligne est
+// récupérée en arrière-plan et servira à la prochaine ouverture.
 self.addEventListener('fetch', function(event) {
   if (event.request.method !== 'GET' || new URL(event.request.url).origin !== location.origin) return;
-  event.respondWith(
-    fetch(event.request).then(function(response) {
-      var copy = response.clone();
-      caches.open(CACHE).then(function(cache) { cache.put(event.request, copy); });
-      return response;
-    }).catch(function() {
-      return caches.match(event.request).then(function(hit) { return hit || caches.match('index.html'); });
-    })
-  );
+  var page = event.request.mode === 'navigate';
+  event.respondWith(caches.open(CACHE).then(function(cache) {
+    var cle = page ? 'index.html' : event.request;
+    return cache.match(cle, { ignoreSearch: true }).then(function(hit) {
+      var reseau = fetch(event.request).then(function(response) {
+        if (response && response.ok) cache.put(cle, response.clone());
+        return response;
+      });
+      if (hit) {
+        event.waitUntil(reseau.catch(function() {}));
+        return hit;
+      }
+      return reseau.catch(function() { return cache.match('index.html'); });
+    });
+  }));
 });
