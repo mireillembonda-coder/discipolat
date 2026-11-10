@@ -46,7 +46,15 @@
   } else {
     var frame = document.getElementById('app');
     frame.addEventListener('load', function(){ splash.classList.add('hidden'); });
-    frame.src = APP_URL;
+    // Lien superviseur (…/?espace=CLÉ) : la clé est transmise à l'application
+    // et gardée sur l'appareil, pour que l'icône installée garde l'accès superviseur.
+    var espace = '';
+    var m = /[?&]espace=([^&#]+)/.exec(location.search);
+    try {
+      if (m) localStorage.setItem('discipolat_espace', decodeURIComponent(m[1]));
+      espace = localStorage.getItem('discipolat_espace') || '';
+    } catch (e) { espace = m ? decodeURIComponent(m[1]) : ''; }
+    frame.src = espace ? APP_URL + '?espace=' + encodeURIComponent(espace) : APP_URL;
   }
 
   if ('serviceWorker' in navigator) {
