@@ -29,6 +29,15 @@ const FPS = 30;
   }
   ff.stdin.end();
   await new Promise(r => ff.on('close', r));
+  // Voix off : node render.js out/discipolat.mp4 --audio voix.m4a
+  const ai = process.argv.indexOf('--audio');
+  if (ai > 0) {
+    const tmp = out.replace(/\.mp4$/, '') + '-muet.mp4';
+    require('fs').renameSync(out, tmp);
+    await new Promise(r => spawn('ffmpeg', ['-y', '-v', 'error', '-i', tmp, '-i', process.argv[ai + 1],
+      '-af', 'highpass=f=80,loudnorm=I=-16:TP=-1.5:LRA=11,apad', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k',
+      '-shortest', '-movflags', '+faststart', out], { stdio: 'inherit' }).on('close', r));
+  }
   await browser.close();
   console.log('OK', out, total + 's');
 })();
