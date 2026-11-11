@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Discipolat — vidéo de présentation</title>
+<style>
+  :root{
+    --bg:#120923; --bg2:#1E1238; --violet:#6A2BD9; --lilas:#A47BFF; --ink:#F5EFFF;
+    --muted:#B3A4D6; --orange:#FF7A3D; --vert:#34D399; --rouge:#FF5C7A; --or:#F5B83D;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:1920px;height:1080px;overflow:hidden;background:var(--bg)}
+  body{font-family:"Inter Display","Inter",system-ui,sans-serif;color:var(--ink);position:relative}
+  #bg{position:absolute;inset:0;background:
+      radial-gradient(900px 700px at var(--gx,20%) var(--gy,30%), rgba(106,43,217,.45), transparent 70%),
+      radial-gradient(700px 600px at 85% 85%, rgba(255,122,61,.14), transparent 70%),
+      var(--bg)}
+  .scene{position:absolute;inset:0;opacity:0}
+  .anim{will-change:transform,opacity}
+  /* Téléphone */
+  .phone{position:absolute;width:628px;height:793px;border-radius:56px;padding:14px;
+    background:linear-gradient(160deg,#3a2a62,#1a1030);box-shadow:0 40px 120px rgba(0,0,0,.6),0 0 0 2px rgba(164,123,255,.25) inset}
+  .phone .screen{width:100%;height:100%;border-radius:44px;overflow:hidden;position:relative;background:#110922}
+  .phone img{position:absolute;left:0;top:0;width:100%;height:100%;display:block;transform-origin:50% 25%}
+  /* Textes */
+  .kicker{font-size:30px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--orange)}
+  .title{font-size:84px;font-weight:800;line-height:1.04;letter-spacing:-.02em}
+  .title em{font-style:normal;color:var(--lilas)}
+  .sub{font-size:36px;line-height:1.35;color:var(--muted);font-weight:500}
+  .txt{position:absolute;left:150px;top:0;bottom:0;width:900px;display:flex;flex-direction:column;justify-content:center;gap:28px}
+  .chips{display:flex;flex-direction:column;gap:18px;margin-top:10px}
+  .chip{display:flex;align-items:center;gap:18px;font-size:34px;font-weight:600;background:rgba(164,123,255,.12);
+    border:2px solid rgba(164,123,255,.3);border-radius:22px;padding:16px 26px;width:fit-content}
+  .chip .ico{font-size:38px}
+  .step{display:inline-flex;align-items:center;justify-content:center;width:74px;height:74px;border-radius:22px;
+    background:var(--violet);font-size:40px;font-weight:800;color:#fff}
+  .logo{width:220px;height:220px;border-radius:56px;background:linear-gradient(140deg,#5B21D6,#8B3BEA);position:relative;
+    display:flex;align-items:center;justify-content:center;font-size:150px;font-weight:900;color:#fff;box-shadow:0 30px 90px rgba(106,43,217,.6)}
+  .logo::after{content:"";position:absolute;width:44px;height:44px;border-radius:50%;background:var(--orange);top:40px;right:42px}
+  .center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:34px;text-align:center}
+  .zones{display:flex;gap:30px}
+  .zone{width:340px;padding:34px 20px;border-radius:30px;background:var(--bg2);border:2px solid rgba(255,255,255,.08)}
+  .zone b{display:block;font-size:64px;font-weight:800}
+  .zone span{font-size:30px;color:var(--muted);font-weight:600}
+  .dot{display:inline-block;width:30px;height:30px;border-radius:50%;margin-bottom:14px}
+  .bar{position:absolute;left:0;bottom:0;height:8px;background:linear-gradient(90deg,var(--violet),var(--orange))}
+</style>
+</head>
+<body>
+<div id="bg"></div>
+
+<!-- 1. Intro -->
+<section class="scene" id="s1">
+  <div class="center">
+    <div class="logo anim" data-in="pop">D</div>
+    <div class="title anim" data-in="up" data-d=".5" style="font-size:120px">Discipolat</div>
+    <div class="sub anim" data-in="up" data-d="1" style="font-size:42px">Le suivi des disciples, semaine après semaine</div>
+    <div class="kicker anim" data-in="up" data-d="1.5">ICC Centre-Ville</div>
+  </div>
+</section>
+
+<!-- 2. Question -->
+<section class="scene" id="s2">
+  <div class="center" style="padding:0 200px">
+    <div class="title anim" data-in="up" style="font-size:96px">Où en est <em>chaque disciple</em>&nbsp;?</div>
+    <div class="sub anim" data-in="up" data-d=".8" style="font-size:44px">Prière, Parole, présence à l'église, ponctualité…<br>Discipolat rend la marche visible, pour chacun et pour le superviseur.</div>
+  </div>
+</section>
+
+<!-- 3. Inscription -->
+<section class="scene" id="s3">
+  <div class="txt">
+    <div class="kicker anim" data-in="up">Côté disciple</div>
+    <div class="anim" data-in="up" data-d=".2"><span class="step">1</span></div>
+    <div class="title anim" data-in="up" data-d=".3">Je rejoins<br>le <em>suivi</em></div>
+    <div class="chips">
+      <div class="chip anim" data-in="left" data-d="1"><span class="ico">📝</span>Une fiche simple : église, baptême, formations</div>
+      <div class="chip anim" data-in="left" data-d="1.5"><span class="ico">🔐</span>Je choisis mon code personnel</div>
+      <div class="chip anim" data-in="left" data-d="2"><span class="ico">✅</span>Le superviseur valide ma demande</div>
+    </div>
+  </div>
+  <div class="phone anim" data-in="right" data-d=".2" style="left:1170px;top:144px"><div class="screen"><img src="shots/inscription1.jpg" data-pan><img src="shots/inscription2.jpg" data-pan data-swap></div></div>
+</section>
+
+<!-- 4. Accueil -->
+<section class="scene" id="s4">
+  <div class="txt">
+    <div class="kicker anim" data-in="up">Côté disciple</div>
+    <div class="anim" data-in="up" data-d=".2"><span class="step">2</span></div>
+    <div class="title anim" data-in="up" data-d=".3">Je vois<br>ma <em>semaine</em></div>
+    <div class="chips">
+      <div class="chip anim" data-in="left" data-d="1"><span class="ico">📈</span>Mon pourcentage, jour après jour</div>
+      <div class="chip anim" data-in="left" data-d="1.5"><span class="ico">🌱</span>Période d'essai : 4 semaines, objectif 75 %</div>
+      <div class="chip anim" data-in="left" data-d="2"><span class="ico">👥</span>La moyenne du groupe, sans aucun nom</div>
+    </div>
+  </div>
+  <div class="phone anim" data-in="right" data-d=".2" style="left:1170px;top:144px"><div class="screen"><img src="shots/accueil.jpg" data-pan></div></div>
+</section>
+
+<!-- 5. Chaque jour -->
+<section class="scene" id="s5">
+  <div class="txt">
+    <div class="kicker anim" data-in="up">Côté disciple</div>
+    <div class="anim" data-in="up" data-d=".2"><span class="step">3</span></div>
+    <div class="title anim" data-in="up" data-d=".3">Je coche<br><em>chaque jour</em></div>
+    <div class="chips">
+      <div class="chip anim" data-in="left" data-d="1"><span class="ico">☀️</span>Commande au matin</div>
+      <div class="chip anim" data-in="left" data-d="1.4"><span class="ico">📖</span>Lecture-méditation de la Bible</div>
+      <div class="chip anim" data-in="left" data-d="1.8"><span class="ico">🙏</span>Prière personnelle, jeûne…</div>
+      <div class="chip anim" data-in="left" data-d="2.2"><span class="ico">🏅</span>Des badges chaque dimanche soir</div>
+    </div>
+  </div>
+  <div class="phone anim" data-in="right" data-d=".2" style="left:1170px;top:144px"><div class="screen"><img src="shots/quotidien.jpg" data-pan></div></div>
+</section>
+
+<!-- 6. Programmes -->
+<section class="scene" id="s6">
+  <div class="txt">
+    <div class="kicker anim" data-in="up">Côté disciple</div>
+    <div class="anim" data-in="up" data-d=".2"><span class="step">4</span></div>
+    <div class="title anim" data-in="up" data-d=".3">Les programmes<br>de l'<em>église</em></div>
+    <div class="chips">
+      <div class="chip anim" data-in="left" data-d="1"><span class="ico">⛪</span>Étude biblique, ADP, cultes</div>
+      <div class="chip anim" data-in="left" data-d="1.5"><span class="ico">⏰</span>« Présent », puis « À l'heure »</div>
+      <div class="chip anim" data-in="left" data-d="2"><span class="ico">💬</span>Absent ? J'indique un motif</div>
+    </div>
+  </div>
+  <div class="phone anim" data-in="right" data-d=".2" style="left:1170px;top:144px"><div class="screen"><img src="shots/programmes.jpg" data-pan></div></div>
+</section>
+
+<!-- 7. Superviseur semaine -->
+<section class="scene" id="s7">
+  <div class="txt">
+    <div class="kicker anim" data-in="up" style="color:var(--or)">Côté superviseur</div>
+    <div class="title anim" data-in="up" data-d=".3">Toute l'équipe<br>d'un <em>coup d'œil</em></div>
+    <div class="chips">
+      <div class="chip anim" data-in="left" data-d="1"><span class="ico">📊</span>La moyenne de la semaine</div>
+      <div class="chip anim" data-in="left" data-d="1.5"><span class="ico">🏆</span>Le podium des plus réguliers</div>
+      <div class="chip anim" data-in="left" data-d="2"><span class="ico">🟢</span>Chaque disciple et sa zone</div>
+    </div>
+  </div>
+  <div class="phone anim" data-in="right" data-d=".2" style="left:1170px;top:144px"><div class="screen"><img src="shots/sup-semaine.jpg" data-pan></div></div>
+</section>
+
+<!-- 8. Demandes -->
+<section class="scene" id="s8">
+  <div class="txt">
+    <div class="kicker anim" data-in="up" style="color:var(--or)">Côté superviseur</div>
+    <div class="title anim" data-in="up" data-d=".3">Il <em>valide</em><br>les demandes</div>
+    <div class="chips">
+      <div class="chip anim" data-in="left" data-d="1"><span class="ico">🙋</span>Les nouvelles inscriptions</div>
+      <div class="chip anim" data-in="left" data-d="1.5"><span class="ico">📋</span>La fiche de chaque disciple</div>
+      <div class="chip anim" data-in="left" data-d="2"><span class="ico">⚖️</span>Les motifs d'absence : accepté ou refusé</div>
+    </div>
+  </div>
+  <div class="phone anim" data-in="right" data-d=".2" style="left:1170px;top:144px"><div class="screen"><img src="shots/sup-demandes.jpg" data-pan></div></div>
+</section>
+
+<!-- 9. Réglages -->
+<section class="scene" id="s9">
+  <div class="txt">
+    <div class="kicker anim" data-in="up" style="color:var(--or)">Côté superviseur</div>
+    <div class="title anim" data-in="up" data-d=".3">Il <em>règle</em><br>les critères</div>
+    <div class="chips">
+      <div class="chip anim" data-in="left" data-d="1"><span class="ico">🎚️</span>Les seuils des zones</div>
+      <div class="chip anim" data-in="left" data-d="1.5"><span class="ico">➕</span>Les critères et leur poids</div>
+      <div class="chip anim" data-in="left" data-d="2"><span class="ico">⛪</span>Les programmes de chaque église</div>
+    </div>
+  </div>
+  <div class="phone anim" data-in="right" data-d=".2" style="left:1170px;top:144px"><div class="screen"><img src="shots/sup-reglages.jpg" data-pan><img src="shots/sup-criteres.jpg" data-pan data-swap></div></div>
+</section>
+
+<!-- 10. Zones -->
+<section class="scene" id="s10">
+  <div class="center">
+    <div class="title anim" data-in="up" style="font-size:80px">Trois zones, une <em>vision claire</em></div>
+    <div class="zones">
+      <div class="zone anim" data-in="pop" data-d=".6"><span class="dot" style="background:var(--vert)"></span><b>≥ 75 %</b><span>Disciple actif</span></div>
+      <div class="zone anim" data-in="pop" data-d="1"><span class="dot" style="background:var(--orange)"></span><b>50 – 75 %</b><span>À encourager</span></div>
+      <div class="zone anim" data-in="pop" data-d="1.4"><span class="dot" style="background:var(--rouge)"></span><b>&lt; 50 %</b><span>Zone critique</span></div>
+    </div>
+    <div class="sub anim" data-in="up" data-d="2.2">Le superviseur sait qui accompagner, et quand.</div>
+  </div>
+</section>
+
+<!-- 11. Outro -->
+<section class="scene" id="s11">
+  <div class="center">
+    <div class="logo anim" data-in="pop">D</div>
+    <div class="title anim" data-in="up" data-d=".4" style="font-size:110px">Discipolat</div>
+    <div class="sub anim" data-in="up" data-d=".9" style="font-size:46px">Grandir ensemble, avec constance.</div>
+    <div class="sub anim" data-in="up" data-d="1.6" style="font-size:34px;font-style:italic">« Je puis tout par celui qui me fortifie. » — Philippiens 4:13</div>
+  </div>
+</section>
+
+<div class="bar" id="bar"></div>
+
+<script>
+// Durée de chaque scène (secondes) — à ajuster pour suivre la voix.
+var SCENES = [
+  ['s1', 6], ['s2', 7], ['s3', 9], ['s4', 9], ['s5', 9], ['s6', 8],
+  ['s7', 9], ['s8', 8], ['s9', 8], ['s10', 8], ['s11', 6]
+];
+var FADE = .6;
+var TOTAL = SCENES.reduce(function(a, s){ return a + s[1]; }, 0);
+
+function clamp(x){ return x < 0 ? 0 : x > 1 ? 1 : x; }
+function ease(x){ x = clamp(x); return 1 - Math.pow(1 - x, 3); }
+function easeIO(x){ x = clamp(x); return x < .5 ? 4*x*x*x : 1 - Math.pow(-2*x + 2, 3) / 2; }
+
+var starts = [], acc = 0;
+SCENES.forEach(function(s){ starts.push(acc); acc += s[1]; });
+
+function render(t){
+  SCENES.forEach(function(s, i){
+    var el = document.getElementById(s[0]);
+    var lt = t - starts[i], d = s[1];
+    var vis = lt >= -FADE && lt <= d;
+    if (!vis){ el.style.opacity = 0; return; }
+    var o = Math.min(clamp((lt + (i === 0 ? FADE : 0)) / FADE), clamp((d - lt) / FADE));
+    el.style.opacity = o;
+    el.querySelectorAll('.anim').forEach(function(a){
+      var p = ease((lt - parseFloat(a.dataset.d || 0)) / .8);
+      var k = a.dataset.in, tr = '';
+      if (k === 'up') tr = 'translateY(' + (40 * (1 - p)) + 'px)';
+      else if (k === 'left') tr = 'translateX(' + (-60 * (1 - p)) + 'px)';
+      else if (k === 'right') tr = 'translateX(' + (120 * (1 - p)) + 'px) rotate(' + (3 * (1 - p)) + 'deg)';
+      else if (k === 'pop') tr = 'scale(' + (.6 + .4 * p) + ')';
+      a.style.opacity = p;
+      a.style.transform = tr;
+    });
+    el.querySelectorAll('img[data-pan]').forEach(function(img){
+      var p = easeIO((lt - 1) / (d - 1.5));
+      img.style.transform = 'scale(' + (1 + .05 * p) + ')';
+      if (img.hasAttribute('data-swap')) img.style.opacity = clamp((lt - d / 2) / .5);
+    });
+  });
+  var bg = document.getElementById('bg');
+  bg.style.setProperty('--gx', (20 + 60 * (t / TOTAL)) + '%');
+  bg.style.setProperty('--gy', (30 + 15 * Math.sin(t / 5)) + '%');
+  document.getElementById('bar').style.width = (100 * t / TOTAL) + '%';
+}
+window.TOTAL = TOTAL;
+window.render = render;
+
+// Lecture en direct dans un navigateur (sans rendu vidéo)
+if (!/render=1/.test(location.search)) {
+  var t0 = performance.now();
+  (function loop(){ render(((performance.now() - t0) / 1000) % TOTAL); requestAnimationFrame(loop); })();
+}
+</script>
+</body>
+</html>
