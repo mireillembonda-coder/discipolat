@@ -94,8 +94,8 @@ function nettoyerFiche_(f) {
   var impact = texte(f.familleImpact), disciples = texte(f.familleDisciples);
   if (impact.length < 2) throw new Error('Indiquez votre famille d\'impact (ou « Non »).');
   if (disciples.length < 2) throw new Error('Indiquez votre famille de disciples (ou « Non »).');
-  var star = texte(f.star);
-  if (star.length < 2) throw new Error('Indiquez si vous êtes STAR et votre département (ou « Non »).');
+  var star = texte(f.star, 300);
+  if (star.length < 2) throw new Error('Indiquez si vous êtes STAR et vos départements (ou « Non »).');
   return {
     Eglise: eglise, Baptise: baptise,
     Formations: formations.length ? formations.join(', ') : 'Aucune',
@@ -103,9 +103,9 @@ function nettoyerFiche_(f) {
   };
 }
 
-/** Fiche complète : église, baptême et familles renseignés (les formations peuvent être « Aucune »). */
+/** Fiche complète : église, baptême, STAR et familles renseignés (les formations peuvent être « Aucune »). */
 function ficheComplete_(d) {
-  return ['Eglise', 'Baptise', 'Formations', 'FamilleImpact', 'FamilleDisciples']
+  return ['Eglise', 'Baptise', 'Formations', 'Star', 'FamilleImpact', 'FamilleDisciples']
     .every(function(k){ return String(d[k] || '').trim() !== ''; });
 }
 

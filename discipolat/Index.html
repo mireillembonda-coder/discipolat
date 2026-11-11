@@ -468,8 +468,11 @@
           <p class="hint">Cochez toutes celles que vous avez terminées. Aucune ? Ne cochez rien.</p></div>
         <div class="field"><label>Êtes-vous STAR (Serviteur Travaillant Activement pour le Royaume) ?</label>
           <div class="choice-grid oui-non" data-champ="star"></div></div>
-        <div class="field" id="regStarWrap" hidden><label for="regStar">Votre département</label>
-          <input id="regStar" maxlength="60" placeholder="Ex : Accueil, Louange, Protocole…"></div>
+        <div class="field" id="regStarWrap" hidden><label>Vos départements</label>
+          <div class="check-list" id="regDeps"></div>
+          <p class="hint">Cochez tous les départements où vous servez.</p>
+          <div class="field" id="regDepAutreWrap" hidden><label for="regDepAutre">Nom de l'autre département</label>
+            <input id="regDepAutre" maxlength="60"></div></div>
         <div class="field"><label>Faites-vous partie d'une famille d'impact ?</label>
           <div class="choice-grid oui-non" data-champ="impact"></div></div>
         <div class="field" id="regImpactWrap" hidden><label for="regImpact">Nom de votre famille d'impact</label>
@@ -961,7 +964,12 @@
     'ICC Mbalmayo', 'ICC Garoua', 'ICC Obala', 'ICC Mbankomo', 'ICC Foulassi', 'ICC Obobogo', 'ICC Okola'];
   var AUTRE_EGLISE = 'Autre église';
   var FORMATIONS = ['Formation 001', 'Formation 101', 'Formation 201'];
-  var fiche = { baptise: '', star: '', impact: '', disciples: '', formations: [] };
+  var DEPARTEMENTS = ['Accueil', 'Audiovisuel', 'Chorale', 'Communication', 'Coordination', 'Entretien', 'Finances',
+    'Impact Junior', 'Impact Nursery', 'Impact Santé', 'Intégration', 'Interprétariat', 'Librairie', 'Logistique',
+    'Ministère de la Prière', 'Modération', 'Photographie', 'Protocole', 'Réels', 'Restauration', 'Sainte Cène',
+    'Secrétariat', 'Sécurité'];
+  var AUTRE_DEP = 'Autre département';
+  var fiche = { baptise: '', star: '', impact: '', disciples: '', formations: [], deps: [] };
   // Programmes de l'église : 'aucune' (église pas choisie), 'chargement', 'existants' (déjà connus) ou 'nouveaux' (à saisir)
   var progEtat = 'aucune', progDemande = 0;
 
@@ -980,6 +988,15 @@
       if (r.dataset.f !== f) return;
       r.classList.toggle('on', on); r.querySelector('.checkbox').textContent = on ? '✓' : ''; r.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
+  }
+  function cocherDep(f, on){
+    fiche.deps = fiche.deps.filter(function(x){ return x !== f; });
+    if (on) fiche.deps.push(f);
+    Array.prototype.forEach.call(el('regDeps').children, function(r){
+      if (r.dataset.f !== f) return;
+      r.classList.toggle('on', on); r.querySelector('.checkbox').textContent = on ? '✓' : ''; r.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    if (f === AUTRE_DEP) el('regDepAutreWrap').hidden = !on;
   }
   function nomEglise(){
     var v = el('regEglise').value;
@@ -1003,6 +1020,12 @@
       r.innerHTML = '<span class="checkbox"></span><span class="row-text">' + esc(f) + '</span>';
       r.addEventListener('click', function(){ cocherFormation(f, !r.classList.contains('on')); });
       el('regFormations').appendChild(r);
+    });
+    DEPARTEMENTS.concat([AUTRE_DEP]).forEach(function(f){
+      var r = document.createElement('button'); r.type = 'button'; r.className = 'check-row'; r.dataset.f = f; r.setAttribute('aria-pressed', 'false');
+      r.innerHTML = '<span class="checkbox"></span><span class="row-text">' + esc(f) + '</span>';
+      r.addEventListener('click', function(){ cocherDep(f, !r.classList.contains('on')); });
+      el('regDeps').appendChild(r);
     });
     el('progEgliseAdd').addEventListener('click', function(){ ajouterLigneProgramme(); });
   })();
@@ -1060,12 +1083,12 @@
   }
 
   function viderFiche(){
-    fiche = { baptise: '', star: '', impact: '', disciples: '', formations: [] };
-    el('regEglise').value = ''; el('regEgliseAutre').value = ''; el('regStar').value = ''; el('regImpact').value = ''; el('regDisciples').value = '';
-    Array.prototype.forEach.call(document.querySelectorAll('#ficheBlock .choice, #regFormations .check-row'), function(x){
+    fiche = { baptise: '', star: '', impact: '', disciples: '', formations: [], deps: [] };
+    el('regEglise').value = ''; el('regEgliseAutre').value = ''; el('regDepAutre').value = ''; el('regImpact').value = ''; el('regDisciples').value = '';
+    Array.prototype.forEach.call(document.querySelectorAll('#ficheBlock .choice, #regFormations .check-row, #regDeps .check-row'), function(x){
       x.classList.remove('on'); x.setAttribute('aria-pressed', 'false'); var c = x.querySelector('.checkbox'); if (c) c.textContent = '';
     });
-    ['regEgliseAutreWrap', 'regStarWrap', 'regImpactWrap', 'regDisciplesWrap', 'progEgliseWrap'].forEach(hide);
+    ['regEgliseAutreWrap', 'regStarWrap', 'regDepAutreWrap', 'regImpactWrap', 'regDisciplesWrap', 'progEgliseWrap'].forEach(hide);
     progEtat = 'aucune'; progDemande++;
   }
   /** Pré-remplit la fiche avec ce qui est enregistré (pour la mettre à jour). */
@@ -1078,11 +1101,20 @@
       chargerProgrammesEglise();
     }
     if (f.baptise === 'Oui' || f.baptise === 'Non') choisirOuiNon('baptise', f.baptise);
+    if (f.star === 'Non') choisirOuiNon('star', 'Non');
+    else if (f.star) {
+      choisirOuiNon('star', 'Oui');
+      var autres = [];
+      String(f.star).split(',').map(function(x){ return x.trim(); }).filter(Boolean).forEach(function(x){
+        if (DEPARTEMENTS.indexOf(x) !== -1) cocherDep(x, true); else autres.push(x);
+      });
+      if (autres.length) { cocherDep(AUTRE_DEP, true); el('regDepAutre').value = autres.join(', '); }
+    }
     String(f.formations || '').split(',').map(function(x){ return x.trim(); }).forEach(function(x){
       if (x === 'Formation 00') x = 'Formation 001';
       if (FORMATIONS.indexOf(x) !== -1) cocherFormation(x, true);
     });
-    [['star', f.star, 'regStar'], ['impact', f.familleImpact, 'regImpact'], ['disciples', f.familleDisciples, 'regDisciples']].forEach(function(t){
+    [['impact', f.familleImpact, 'regImpact'], ['disciples', f.familleDisciples, 'regDisciples']].forEach(function(t){
       if (!t[1]) return;
       if (t[1] === 'Non') choisirOuiNon(t[0], 'Non');
       else { choisirOuiNon(t[0], 'Oui'); el(t[2]).value = t[1]; }
@@ -1105,8 +1137,14 @@
     }
     if (!fiche.baptise) return 'Indiquez si vous êtes baptisé(e).';
     if (!fiche.star) return 'Indiquez si vous êtes STAR.';
-    var star = el('regStar').value.trim();
-    if (fiche.star === 'Oui' && star.length < 2) return 'Indiquez votre département.';
+    var deps = DEPARTEMENTS.filter(function(f){ return fiche.deps.indexOf(f) !== -1; });
+    if (fiche.deps.indexOf(AUTRE_DEP) !== -1) {
+      var autre = el('regDepAutre').value.trim();
+      if (autre.length < 2) return 'Indiquez le nom de l\'autre département.';
+      deps.push(autre.replace(/,/g, ' '));
+    }
+    if (fiche.star === 'Oui' && !deps.length) return 'Cochez au moins un département.';
+    var star = deps.join(', ');
     if (!fiche.impact) return 'Indiquez si vous faites partie d\'une famille d\'impact.';
     var impact = el('regImpact').value.trim();
     if (fiche.impact === 'Oui' && impact.length < 2) return 'Indiquez le nom de votre famille d\'impact.';
@@ -1848,7 +1886,7 @@
   function ficheHtml(f){
     if (!f || !f.eglise) return '';
     var lignes = [['Église', f.eglise], ['Baptisé(e)', f.baptise], ['Formations', f.formations || 'Aucune'],
-      ['STAR (département)', f.star], ['Famille d\'impact', f.familleImpact], ['Famille de disciples', f.familleDisciples]];
+      ['STAR (départements)', f.star], ['Famille d\'impact', f.familleImpact], ['Famille de disciples', f.familleDisciples]];
     return '<div class="detail-grid">' + lignes.map(function(l){
       return '<div class="detail-tile"><span class="dl">' + esc(l[0]) + '</span><span style="font-weight:800;font-size:.9rem;overflow-wrap:anywhere;">' + esc(l[1] || '–') + '</span></div>';
     }).join('') + '</div>';
