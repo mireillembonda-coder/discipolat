@@ -8,3 +8,8 @@ Les captures d'écran (`shots/`) et la vidéo produite (`out/`) ne sont pas dans
 Pour refaire la vidéo, mets les captures recadrées dans `presentation/shots/` : accueil, quotidien, programmes, inscription1, inscription2, sup-semaine, sup-demandes, sup-reglages, sup-criteres.
 
 Pour changer la durée d'une scène, modifie le tableau `SCENES` en bas de `video.html`.
+
+## Musique de fond
+
+`musique.py` crée une musique douce (nappe et piano, en Ré majeur), calculée par le programme, donc sans droits d'auteur :
+`python3 presentation/musique.py musique.wav 131`. Elle est ensuite mixée sous la voix avec ffmpeg : la musique baisse automatiquement quand la voix parle.
