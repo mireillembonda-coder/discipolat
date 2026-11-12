@@ -128,6 +128,7 @@
       '<label>Objectifs de la semaine' + IP.area(W + '.objectifs', '', 2) + '</label></div>';
     h += '<div class="layout"><span class="muted">Colonnes :</span><div class="seg small"><button data-layout="vertical" aria-selected="' + vertical + '">Verticales</button><button data-layout="horizontal" aria-selected="' + !vertical + '">Horizontales</button></div></div>';
     h += weekGrid(mon, vertical);
+    h += '<button class="btn ghost gsend" id="sendWeek"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M12 13v5M9.5 15.5h5"/></svg>Envoyer la semaine vers mon agenda</button>';
     h += IP.block('Les tâches principales de la semaine', IP.area(W + '.taches', '', 3));
     var hab = '<div class="scroll-x"><table class="habits"><thead><tr><th></th>' + ['L', 'M', 'M', 'J', 'V', 'S', 'D'].map(function (x) { return '<th>' + x + '</th>'; }).join('') + '</tr></thead><tbody>' +
       IP.HABITUDES.map(function (x) { return '<tr><th>' + x[1] + '</th>' + [0, 1, 2, 3, 4, 5, 6].map(function (i) { return '<td>' + IP.chk(W + '.hab.' + x[0] + '.' + i, x[1]) + '</td>'; }).join('') + '</tr>'; }).join('') +
@@ -136,6 +137,7 @@
     IP.CARNET.forEach(function (x) { h += IP.block(x[1], IP.area(W + '.carnet.' + x[0], '', 3), { fold: true }); });
     root.innerHTML = h;
     IP.bind(root);
+    root.querySelector('#sendWeek').addEventListener('click', function () { IP.sendIcs(IP.weekEvents(mon), 'infinity-semaine-' + IP.iso(mon) + '.ics'); });
     root.querySelectorAll('[data-layout]').forEach(function (b) { b.addEventListener('click', function () { st.state.profile.weekLayout = b.dataset.layout; st.save(); IP.render(); }); });
     root.querySelectorAll('[data-go]').forEach(function (b) { b.addEventListener('click', function () { IP.cursor = IP.fromIso(b.dataset.go); IP.go('jour'); }); });
   }
@@ -157,13 +159,21 @@
     if (top) h += '<p class="topprio"><span>Top priorité de la semaine</span>' + e(top) + '</p>';
     var rows = IP.HOURS.map(function (hr) {
       var p = D + '.h.' + hr;
-      return '<div class="lrow hour done-able' + (st.get(D + '.d.' + hr) ? ' done' : '') + '"><span class="hh">' + hr + 'h</span>' + IP.inp(p, '') + IP.chk(D + '.d.' + hr, 'Fait') + '</div>';
+      return '<div class="lrow hour done-able' + (st.get(D + '.d.' + hr) ? ' done' : '') + '"><span class="hh">' + hr + 'h</span>' + IP.inp(p, '') + '<a class="gbtn" href="#" target="_blank" rel="noopener" data-gcal="' + hr + '" aria-label="Ajouter le rendez-vous de ' + hr + 'h à Google Agenda" title="Ajouter à Google Agenda"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M12 13v5M9.5 15.5h5"/></svg></a>' + IP.chk(D + '.d.' + hr, 'Fait') + '</div>';
     }).join('');
     h += IP.block('Agenda du jour', '<div class="card list hours">' + rows + '</div>');
     h += IP.block('Merci pour…', IP.numList(D + '.merci', 3, 'Une chose pour laquelle je dis merci'));
     h += IP.block('Notes', '<div class="card pad">' + IP.area(D + '.note', 'Idées, choses à retenir…', 3) + '</div>');
     root.innerHTML = h;
     IP.bind(root);
+    root.querySelectorAll('[data-gcal]').forEach(function (a) {
+      a.addEventListener('click', function (ev) {
+        var hr = a.dataset.gcal, txt = root.querySelector('[data-bind="' + D + '.h.' + hr + '"]').value;
+        var e2 = IP.eventFromCell(k, hr, txt);
+        if (!e2) { ev.preventDefault(); IP.toast('Écrivez d\'abord le rendez-vous de ' + hr + 'h.'); return; }
+        a.href = IP.gcalLink(e2);
+      });
+    });
     root.querySelectorAll('[data-act]').forEach(function (b) {
       b.addEventListener('click', function () {
         if (b.dataset.act === 'verse-edit') { IP._editVerse = k; IP.render(); var t = root.querySelector('textarea'); if (t) t.focus(); }

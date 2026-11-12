@@ -258,7 +258,7 @@ table.habits thead th{background:var(--tint)}
 .vtext{margin:0;font-family:var(--serif);font-style:italic;font-size:1.05rem}
 .topprio{margin:0;display:grid;padding:10px 14px;border:1px solid var(--accent);border-radius:10px}
 .topprio span{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
-.hours .lrow{grid-template-columns:40px minmax(0,1fr) auto;min-height:44px}
+.hours .lrow{grid-template-columns:40px minmax(0,1fr) auto auto;min-height:44px}
 .hh{font-family:var(--serif);font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums}
 
 /* Fenêtres */
@@ -300,3 +300,10 @@ table.habits thead th{background:var(--tint)}
 .micact{display:flex;gap:8px;margin-top:8px}
 .micact button{border:0;border-radius:999px;padding:6px 12px;font-weight:700;font-size:.82rem;cursor:pointer;background:var(--bg);color:var(--ink)}
 .body{padding-bottom:96px!important}
+
+/* Google Agenda */
+.gbtn{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;color:var(--muted);text-decoration:none}
+.gbtn svg{width:20px;height:20px}
+.gbtn:hover,.gbtn:focus-visible{color:var(--accent);background:var(--tint)}
+.gsend{display:flex;align-items:center;justify-content:center;gap:8px}
+.gsend svg{width:20px;height:20px}
