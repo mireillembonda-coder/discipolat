@@ -39,6 +39,10 @@ La v0.2 reprend la structure du **vrai planner** (INFINITY Planner 2027, Part 1 
 - **Commande vocale** (bouton micro, `js/voice.js`, Web Speech API `fr-FR`, nécessite internet) :
   dictée dans la case active, ou ajout rapide « demain à 15 h dentiste » rangé au bon jour / à la bonne heure
   (sans heure → notes du jour), avec « Annuler ». Sans support navigateur : conseil d'utiliser le micro du clavier.
+- **Vers Google Agenda** (sens unique, sans compte, `js/gcal.js`) : bouton 📅 sur chaque heure du jour
+  (lien « Ajouter à Google Agenda » pré-rempli, fuseau horaire du téléphone) ; « Envoyer la semaine » = fichier .ics
+  partagé vers l'appli d'agenda (Web Share) ou téléchargé. Synchro dans les deux sens : prévue avec les comptes
+  (API Google Calendar + vérification OAuth par Google).
 - Réglages : prénom, rose/bleu, verset, colonnes, monnaie, « Cet agenda appartient à », sauvegarde
   (JSON avec les photos), effacement.
 
