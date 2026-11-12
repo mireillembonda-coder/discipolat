@@ -1,6 +1,6 @@
 // Garde Infinity Planner en mémoire pour qu'il fonctionne sans internet.
 // Changer CACHE à chaque mise à jour des fichiers ci-dessous.
-var CACHE = 'infinity-planner-v4';
+var CACHE = 'infinity-planner-v5';
 var FILES = [
   './',
   'index.html',
@@ -13,6 +13,7 @@ var FILES = [
   'js/parcours.js',
   'js/agenda.js',
   'js/app.js',
+  'js/voice.js',
   'vendor/fonts/spectral-latin-500-normal.woff2',
   'vendor/fonts/spectral-latin-600-normal.woff2',
   'vendor/fonts/spectral-latin-400-italic.woff2',

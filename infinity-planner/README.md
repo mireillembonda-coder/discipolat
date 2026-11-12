@@ -36,6 +36,9 @@ La v0.2 reprend la structure du **vrai planner** (INFINITY Planner 2027, Part 1 
 - **Semaine** : citation, top priorité, objectifs, **grille 7 jours × 6h-22h en colonnes verticales**
   (option horizontales), tâches principales, créateur d'habitudes (prière, méditation, exercice, gratitude).
 - **Jour** : verset du jour (LSG 1910) ou pensée, top priorité de la semaine, heures 6h-22h, merci, notes.
+- **Commande vocale** (bouton micro, `js/voice.js`, Web Speech API `fr-FR`, nécessite internet) :
+  dictée dans la case active, ou ajout rapide « demain à 15 h dentiste » rangé au bon jour / à la bonne heure
+  (sans heure → notes du jour), avec « Annuler ». Sans support navigateur : conseil d'utiliser le micro du clavier.
 - Réglages : prénom, rose/bleu, verset, colonnes, monnaie, « Cet agenda appartient à », sauvegarde
   (JSON avec les photos), effacement.
 
