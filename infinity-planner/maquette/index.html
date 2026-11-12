@@ -1,0 +1,328 @@
+<title>Infinity Planner</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&display=swap">
+<style>
+/* Layout: a short brief on top, then the phone app as the centerpiece, then the open questions. */
+:root{
+  --bg:#FBF6F8; --surface:#FFFFFF; --ink:#2B1430; --muted:#86697F; --line:#EBDCE4;
+  --accent:#B0306E; --accent-2:#7B3A9C; --tint:#FBE4EF; --tint-2:#F1E6F8; --on-accent:#FFFFFF;
+  --frame:#2B1430;
+  --display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --body:"Nunito Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#170C17; --surface:#221322; --ink:#F7EAF2; --muted:#B596AA; --line:#3A2539;
+    --accent:#F07AB0; --accent-2:#C79AE8; --tint:#3A1A2D; --tint-2:#2E1C3B; --on-accent:#230B19;
+    --frame:#000000; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#170C17; --surface:#221322; --ink:#F7EAF2; --muted:#B596AA; --line:#3A2539;
+  --accent:#F07AB0; --accent-2:#C79AE8; --tint:#3A1A2D; --tint-2:#2E1C3B; --on-accent:#230B19;
+  --frame:#000000; color-scheme:dark;
+}
+/* Version bleue */
+.app[data-skin="bleu"]{
+  --bg:#F4F7FB; --ink:#10223A; --muted:#62748C; --line:#DCE4EE;
+  --accent:#1F5FA8; --accent-2:#2E8C9A; --tint:#E2EDF9; --tint-2:#E0F2F2;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .app[data-skin="bleu"]{
+    --bg:#0B1420; --surface:#13202F; --ink:#E8F0FA; --muted:#8FA3BB; --line:#24364A;
+    --accent:#6FAEF2; --accent-2:#6CCBD3; --tint:#152C46; --tint-2:#123236; --on-accent:#08182A;
+  }
+}
+:root[data-theme="dark"] .app[data-skin="bleu"]{
+  --bg:#0B1420; --surface:#13202F; --ink:#E8F0FA; --muted:#8FA3BB; --line:#24364A;
+  --accent:#6FAEF2; --accent-2:#6CCBD3; --tint:#152C46; --tint-2:#123236; --on-accent:#08182A;
+}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+.page{max-width:1040px;margin:0 auto;padding-block:28px 48px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));
+  display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:40px;align-items:start}
+@media (max-width:860px){ .page{grid-template-columns:minmax(0,1fr);gap:28px} }
+
+.brief h1{font-family:var(--display);font-weight:700;font-size:clamp(2rem,5vw,3rem);line-height:1.05;margin:0 0 10px;text-wrap:balance;letter-spacing:-.01em}
+.brief h1 span{color:var(--accent)}
+.eyebrow{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:0 0 8px}
+.brief p{max-width:60ch;margin:0 0 14px}
+.brief h2{font-family:var(--display);font-weight:500;font-size:1.25rem;margin:28px 0 10px}
+.map{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.map li{display:grid;grid-template-columns:110px minmax(0,1fr);gap:12px;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.map b{font-family:var(--display);font-weight:700;color:var(--accent)}
+.map small{display:block;color:var(--muted)}
+.qs{margin:0;padding-left:20px;display:grid;gap:8px;max-width:60ch}
+.note{font-size:.85rem;color:var(--muted)}
+
+/* Phone */
+.phone{background:var(--frame);border-radius:36px;padding:10px;box-shadow:0 20px 50px -20px rgba(43,20,48,.45);position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px)}
+@media (max-width:860px){ .phone{position:static;border-radius:28px;padding:6px} }
+.app{background:var(--bg);color:var(--ink);border-radius:28px;overflow:hidden;display:flex;flex-direction:column;height:720px;max-height:calc(100vh - 60px)}
+@media (max-width:860px){ .app{height:640px;border-radius:22px} }
+.top{background:var(--surface);border-bottom:1px solid var(--line);padding:14px 16px 10px;display:flex;flex-direction:column;gap:10px}
+.toprow{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.logo{font-family:var(--display);font-weight:700;font-size:1.2rem;display:flex;align-items:center;gap:6px}
+.logo svg{width:26px;height:14px;color:var(--accent)}
+.skins{display:flex;gap:6px}
+.skin{width:26px;height:26px;border-radius:50%;border:2px solid var(--surface);outline:2px solid transparent;cursor:pointer;padding:0}
+.skin[data-v="rose"]{background:#C93A7E}
+.skin[data-v="bleu"]{background:#2468B4}
+.skin[aria-pressed="true"]{outline-color:var(--ink)}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.nav h2{font-family:var(--display);font-weight:500;font-size:1.05rem;margin:0;text-align:center;flex:1;text-transform:capitalize}
+.iconbtn{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;font-size:1rem;line-height:1}
+.body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:16px}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);background:var(--surface);border-top:1px solid var(--line);padding:6px 8px 8px}
+.tab{background:none;border:0;color:var(--muted);font:inherit;font-weight:700;font-size:.8rem;padding:8px 0;border-radius:10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+.tab svg{width:20px;height:20px}
+.tab[aria-selected="true"]{color:var(--accent);background:var(--tint)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.sec h3{font-family:var(--display);font-weight:500;font-size:.95rem;margin:0 0 8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.chip{font-family:var(--body);font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--tint-2);color:var(--accent-2)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.colhead{display:grid;gap:8px;padding:8px 12px;background:var(--tint);font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.row{display:grid;gap:8px;padding:6px 12px;border-top:1px solid var(--line);align-items:center}
+.c2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.ct{grid-template-columns:24px minmax(0,1fr)}
+.goal{display:grid;min-width:0}
+.goal input.sub{font-size:.8rem;color:var(--muted);padding:0 0 6px}
+.ch{grid-template-columns:84px minmax(0,1fr) 24px}
+input[type=text]{width:100%;min-width:0;border:0;background:transparent;color:var(--ink);font:inherit;font-size:.9rem;padding:6px 0}
+textarea{width:100%;border:0;background:transparent;color:var(--ink);font:inherit;font-size:.9rem;resize:none;padding:0}
+input[type=text]::placeholder,textarea::placeholder{color:var(--muted);opacity:.7}
+input[type=time]{border:0;background:transparent;color:var(--accent);font:inherit;font-weight:700;font-size:.85rem;font-variant-numeric:tabular-nums;width:100%;padding:0}
+input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);margin:0}
+.done input[type=text]{text-decoration:line-through;color:var(--muted)}
+
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal .dow{font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase}
+.cal button{height:38px;border:0;border-radius:10px;background:transparent;color:var(--ink);font:inherit;font-size:.85rem;font-variant-numeric:tabular-nums;cursor:pointer;position:relative}
+.cal button.has::after{content:"";position:absolute;bottom:5px;left:50%;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:var(--accent)}
+.cal button.today{background:var(--accent);color:var(--on-accent);font-weight:700}
+.cal button.today.has::after{background:var(--on-accent)}
+.cal button:hover{background:var(--tint)}
+.cal button.today:hover{background:var(--accent)}
+
+.day{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:grid;gap:2px}
+.day.is-today{border-color:var(--accent)}
+.dayhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.dayhead b{font-family:var(--display);font-weight:700;text-transform:capitalize}
+.dayhead button{border:0;background:none;color:var(--accent);font:inherit;font-size:.8rem;font-weight:700;cursor:pointer;padding:4px 0}
+.field{display:grid;grid-template-columns:92px minmax(0,1fr);align-items:center;gap:8px;border-top:1px dashed var(--line)}
+.field label{font-size:.72rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.verse{background:var(--tint-2);border-radius:14px;padding:12px 14px;font-size:.9rem}
+.verse b{display:block;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-2);margin-bottom:2px}
+.add{border:1px dashed var(--line);background:none;color:var(--accent);font:inherit;font-weight:700;font-size:.85rem;border-radius:12px;padding:8px;cursor:pointer;width:100%}
+.progress{height:6px;border-radius:999px;background:var(--tint);overflow:hidden}
+.progress i{display:block;height:100%;background:var(--accent);border-radius:inherit;transition:width .3s}
+@media (prefers-reduced-motion:reduce){.progress i{transition:none}}
+</style>
+
+<div class="page">
+  <section class="brief">
+    <p class="eyebrow">Maquette n° 1 · à valider</p>
+    <h1>Infinity <span>Planner</span>, version téléphone</h1>
+    <p>Voici votre agenda papier transformé en application. Touchez, écrivez, cochez : tout fonctionne et reste enregistré sur votre téléphone. Les lignes déjà remplies sont des exemples.</p>
+    <p>Les pastilles rose et bleue en haut de l'application changent de version, comme vos deux agendas papier.</p>
+
+    <h2>Les colonnes que je vous propose</h2>
+    <p class="note">Dans votre PDF, les tableaux n'avaient pas de titres de colonnes. Voici ce que j'ai mis dans chacun. Dites-moi ce qu'il faut changer.</p>
+    <ul class="map">
+      <li><b>Mois</b><span>Objectif · Première action · Fait ✓<small>Les 5 objectifs du mois, avec un calendrier du mois.</small></span></li>
+      <li><b>Semaine</b><span>Priorité · Rendez-vous · Note<small>Pour chacun des 7 jours de la semaine.</small></span></li>
+      <li><b>Jour</b><span>Heure · Activité · Fait ✓<small>Plus le verset ou la pensée du jour et le « Merci pour… » (proposés en plus du PDF).</small></span></li>
+    </ul>
+
+    <h2>Questions pour ce soir, avec votre fils</h2>
+    <ol class="qs">
+      <li>Les colonnes ci-dessus vous conviennent-elles ?</li>
+      <li>Le verset et la gratitude du jour : on les garde ?</li>
+      <li>Qu'est-ce qui est gratuit et qu'est-ce qui est payant ?</li>
+      <li>Un prix unique, ou un abonnement par mois ou par an ?</li>
+    </ol>
+  </section>
+
+  <div class="phone">
+    <div class="app" id="app" data-skin="rose">
+      <header class="top">
+        <div class="toprow">
+          <div class="logo"><svg viewBox="0 0 52 28" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" aria-hidden="true"><path d="M26 14c-5-7-10-10-15-10a10 10 0 0 0 0 20c5 0 10-3 15-10s10-10 15-10a10 10 0 0 1 0 20c-5 0-10-3-15-10z"/></svg>Infinity</div>
+          <div class="skins" role="group" aria-label="Version de l'agenda">
+            <button class="skin" data-v="rose" aria-pressed="true" aria-label="Version rose" title="Version rose"></button>
+            <button class="skin" data-v="bleu" aria-pressed="false" aria-label="Version bleue" title="Version bleue"></button>
+          </div>
+        </div>
+        <div class="nav">
+          <button class="iconbtn" id="prev" aria-label="Précédent">‹</button>
+          <h2 id="navtitle"></h2>
+          <button class="iconbtn" id="next" aria-label="Suivant">›</button>
+        </div>
+      </header>
+      <main class="body" id="view"></main>
+      <nav class="tabs" role="tablist">
+        <button class="tab" role="tab" data-view="mois"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Mois</button>
+        <button class="tab" role="tab" data-view="semaine"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>Semaine</button>
+        <button class="tab" role="tab" data-view="jour"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Jour</button>
+      </nav>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var KEY = 'infinity-maquette-v1';
+  var TODAY = new Date(); TODAY.setHours(0,0,0,0);
+  var fmtMonth = new Intl.DateTimeFormat('fr-FR',{month:'long',year:'numeric'});
+  var fmtDay = new Intl.DateTimeFormat('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+  var fmtShort = new Intl.DateTimeFormat('fr-FR',{weekday:'short',day:'numeric'});
+  var fmtDM = new Intl.DateTimeFormat('fr-FR',{day:'numeric',month:'short'});
+
+  function iso(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function mkey(d){ return iso(d).slice(0,7); }
+  function monday(d){ var x=new Date(d); var k=(x.getDay()+6)%7; x.setDate(x.getDate()-k); return x; }
+  function addDays(d,n){ var x=new Date(d); x.setDate(x.getDate()+n); return x; }
+
+  function sample(){
+    var m = mkey(TODAY), t = iso(TODAY), mon = monday(TODAY);
+    var s = {skin:'rose', view:'jour', months:{}, weeks:{}, days:{}};
+    s.months[m] = {goals:[
+      {o:'Lire 1 chapitre de Proverbes par jour', a:'Mettre le réveil à 6 h', d:true},
+      {o:'Lancer la version appli du planner', a:'Valider la maquette avec mon fils', d:false},
+      {o:'Marcher 3 fois par semaine', a:'Choisir les 3 jours', d:false},
+      {o:'',a:'',d:false},{o:'',a:'',d:false}]};
+    var wk = iso(mon); s.weeks[wk] = {};
+    s.weeks[wk][iso(addDays(mon,0))] = {p:'Réunion équipe',r:'10 h – Banque',n:''};
+    s.weeks[wk][iso(addDays(mon,2))] = {p:'Préparer les colis',r:'',n:'Appeler maman'};
+    s.weeks[wk][t] = s.weeks[wk][t] || {p:'Maquette Infinity',r:'19 h – Fils',n:'Questions prix'};
+    s.days[t] = {
+      verse:'« Recommande à l’Éternel tes œuvres, et tes projets réussiront. » Proverbes 16:3',
+      merci:'Une bonne nuit de sommeil',
+      slots:[{h:'06:00',t:'Prière et lecture',d:true},{h:'09:00',t:'Répondre aux clientes',d:true},
+             {h:'14:00',t:'Préparer les visuels de Noël',d:false},{h:'19:00',t:'Appel avec mon fils : l’appli',d:false},
+             {h:'',t:'',d:false}]};
+    return s;
+  }
+  var S;
+  try { S = JSON.parse(localStorage.getItem(KEY)) || sample(); } catch(e){ S = sample(); }
+  function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+
+  var cursor = new Date(TODAY);
+  var app = document.getElementById('app'), view = document.getElementById('view'), title = document.getElementById('navtitle');
+
+  function el(html){ var t=document.createElement('template'); t.innerHTML=html.trim(); return t.content.firstChild; }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+
+  function monthData(d){ var k=mkey(d); if(!S.months[k]) S.months[k]={goals:[0,1,2,3,4].map(function(){return {o:'',a:'',d:false};})}; return S.months[k]; }
+  function weekData(d){ var k=iso(monday(d)); if(!S.weeks[k]) S.weeks[k]={}; return S.weeks[k]; }
+  function dayData(d){ var k=iso(d); if(!S.days[k]) S.days[k]={verse:'',merci:'',slots:[0,1,2,3,4].map(function(){return {h:'',t:'',d:false};})}; return S.days[k]; }
+  function dayHasContent(k){
+    var x=S.days[k]; if(x && x.slots.some(function(s){return s.t;})) return true;
+    for (var w in S.weeks){ var e=S.weeks[w][k]; if(e && (e.p||e.r||e.n)) return true; }
+    return false;
+  }
+
+  function bind(root){
+    root.querySelectorAll('[data-bind]').forEach(function(inp){
+      var path = inp.getAttribute('data-bind').split('.');
+      var ev = inp.type==='checkbox' ? 'change' : 'input';
+      inp.addEventListener(ev, function(){
+        var o=S; for(var i=0;i<path.length-1;i++){ if(o[path[i]]==null) o[path[i]]={}; o=o[path[i]]; }
+        o[path[path.length-1]] = inp.type==='checkbox' ? inp.checked : inp.value;
+        if(inp.type==='checkbox'){ var r=inp.closest('.row'); if(r) r.classList.toggle('done',inp.checked); if(S.view==='mois') renderProgress(); }
+        save();
+      });
+    });
+  }
+
+  function renderProgress(){
+    var g=monthData(cursor).goals.filter(function(x){return x.o;}); var n=g.filter(function(x){return x.d;}).length;
+    var bar=document.getElementById('prog'), lab=document.getElementById('proglab');
+    if(bar){ bar.style.width = (g.length? Math.round(n/g.length*100):0)+'%'; lab.textContent = n+' sur '+g.length+' objectifs atteints'; }
+  }
+
+  function renderMois(){
+    title.textContent = fmtMonth.format(cursor);
+    var k=mkey(cursor), md=monthData(cursor);
+    var rows = md.goals.map(function(g,i){
+      return '<div class="row ct'+(g.d?' done':'')+'"><input type="checkbox" aria-label="Objectif atteint" data-bind="months.'+k+'.goals.'+i+'.d"'+(g.d?' checked':'')+'>'+
+        '<span class="goal"><input type="text" id="mo-'+i+'" placeholder="Objectif '+(i+1)+'" value="'+esc(g.o)+'" data-bind="months.'+k+'.goals.'+i+'.o">'+
+        '<input type="text" class="sub" id="ma-'+i+'" placeholder="Première action" value="'+esc(g.a)+'" data-bind="months.'+k+'.goals.'+i+'.a"></span></div>';
+    }).join('');
+    var first=new Date(cursor.getFullYear(),cursor.getMonth(),1), lead=(first.getDay()+6)%7, days=new Date(cursor.getFullYear(),cursor.getMonth()+1,0).getDate();
+    var cal=['L','M','M','J','V','S','D'].map(function(x){return '<span class="dow">'+x+'</span>';}).join('');
+    for(var i=0;i<lead;i++) cal+='<span></span>';
+    for(var dnum=1; dnum<=days; dnum++){
+      var dd=new Date(cursor.getFullYear(),cursor.getMonth(),dnum), dk=iso(dd);
+      cal+='<button data-go="'+dk+'" class="'+(dk===iso(TODAY)?'today ':'')+(dayHasContent(dk)?'has':'')+'" aria-label="'+fmtDay.format(dd)+'">'+dnum+'</button>';
+    }
+    view.innerHTML='';
+    view.appendChild(el('<section class="sec"><h3>Objectifs du mois</h3><div class="card"><div class="colhead ct"><span>✓</span><span>Objectif · première action</span></div>'+rows+'</div></section>'));
+    view.appendChild(el('<section class="sec" style="display:grid;gap:6px"><div class="progress"><i id="prog"></i></div><span class="note" id="proglab"></span></section>'));
+    view.appendChild(el('<section class="sec"><h3>Calendrier</h3><div class="cal">'+cal+'</div></section>'));
+    view.querySelectorAll('[data-go]').forEach(function(b){ b.addEventListener('click',function(){ var p=b.getAttribute('data-go').split('-'); cursor=new Date(+p[0],+p[1]-1,+p[2]); setView('jour'); }); });
+    renderProgress();
+  }
+
+  function renderSemaine(){
+    var mon=monday(cursor), wk=iso(mon), wd=weekData(cursor);
+    title.textContent = 'Semaine du '+fmtDM.format(mon);
+    view.innerHTML='';
+    var sec=el('<section class="sec" style="display:grid;gap:10px"><h3>Vue hebdomadaire</h3></section>');
+    for(var i=0;i<7;i++){
+      var d=addDays(mon,i), k=iso(d), e=wd[k]||{p:'',r:'',n:''};
+      var f=function(key,label,ph){ return '<div class="field"><label for="w-'+k+'-'+key+'">'+label+'</label><input type="text" id="w-'+k+'-'+key+'" placeholder="'+ph+'" value="'+esc(e[key])+'" data-bind="weeks.'+wk+'.'+k+'.'+key+'"></div>'; };
+      sec.appendChild(el('<div class="day'+(k===iso(TODAY)?' is-today':'')+'"><div class="dayhead"><b>'+fmtShort.format(d)+'</b><button data-go="'+k+'">Ouvrir le jour ›</button></div>'+
+        f('p','Priorité','La chose importante')+f('r','Rendez-vous','Heure et lieu')+f('n','Note','…')+'</div>'));
+    }
+    view.appendChild(sec);
+    view.querySelectorAll('[data-go]').forEach(function(b){ b.addEventListener('click',function(){ var p=b.getAttribute('data-go').split('-'); cursor=new Date(+p[0],+p[1]-1,+p[2]); setView('jour'); }); });
+  }
+
+  function renderJour(){
+    var k=iso(cursor), dd=dayData(cursor);
+    title.textContent = fmtDay.format(cursor);
+    var rows=dd.slots.map(function(s,i){
+      return '<div class="row ch'+(s.d?' done':'')+'"><input type="time" id="jh-'+i+'" aria-label="Heure" value="'+esc(s.h)+'" data-bind="days.'+k+'.slots.'+i+'.h">'+
+        '<input type="text" id="jt-'+i+'" placeholder="Activité" value="'+esc(s.t)+'" data-bind="days.'+k+'.slots.'+i+'.t">'+
+        '<input type="checkbox" aria-label="Fait" data-bind="days.'+k+'.slots.'+i+'.d"'+(s.d?' checked':'')+'></div>';
+    }).join('');
+    view.innerHTML='';
+    view.appendChild(el('<section class="sec"><h3>Pensée du jour <span class="chip">en plus</span></h3><div class="verse"><b>Verset</b><textarea id="jv" rows="2" placeholder="Écrire un verset ou une pensée" data-bind="days.'+k+'.verse">'+esc(dd.verse)+'</textarea></div></section>'));
+    view.appendChild(el('<section class="sec"><h3>Agenda du jour</h3><div class="card"><div class="colhead ch"><span>Heure</span><span>Activité</span><span>✓</span></div>'+rows+'</div></section>'));
+    var add=el('<button class="add" id="addslot">+ Ajouter une ligne</button>');
+    add.addEventListener('click',function(){ dd.slots.push({h:'',t:'',d:false}); save(); renderJour(); var last=view.querySelector('#jt-'+(dd.slots.length-1)); if(last) last.focus(); });
+    view.querySelector('.card').parentNode.appendChild(add);
+    view.appendChild(el('<section class="sec"><h3>Merci pour… <span class="chip">en plus</span></h3><div class="card"><div class="row c2" style="grid-template-columns:1fr;border-top:0"><input type="text" id="jm" placeholder="Une chose pour laquelle je dis merci" value="'+esc(dd.merci)+'" data-bind="days.'+k+'.merci"></div></div></section>'));
+  }
+
+  function setView(v){
+    S.view=v; save();
+    document.querySelectorAll('.tab').forEach(function(t){ t.setAttribute('aria-selected', t.getAttribute('data-view')===v ? 'true':'false'); });
+    ({mois:renderMois, semaine:renderSemaine, jour:renderJour})[v]();
+    bind(view); view.scrollTop=0;
+  }
+  function step(n){
+    if(S.view==='mois') cursor=new Date(cursor.getFullYear(),cursor.getMonth()+n,1);
+    else if(S.view==='semaine') cursor=addDays(cursor,7*n);
+    else cursor=addDays(cursor,n);
+    setView(S.view);
+  }
+  function setSkin(v){
+    S.skin=v; app.setAttribute('data-skin',v); save();
+    document.querySelectorAll('.skin').forEach(function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-v')===v?'true':'false'); });
+  }
+
+  document.getElementById('prev').addEventListener('click',function(){step(-1);});
+  document.getElementById('next').addEventListener('click',function(){step(1);});
+  document.querySelectorAll('.tab').forEach(function(t){ t.addEventListener('click',function(){ setView(t.getAttribute('data-view')); }); });
+  document.querySelectorAll('.skin').forEach(function(b){ b.addEventListener('click',function(){ setSkin(b.getAttribute('data-v')); }); });
+
+  setSkin(S.skin||'rose');
+  setView(S.view||'jour');
+})();
+</script>
