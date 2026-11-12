@@ -12,29 +12,41 @@ L'agenda papier/PDF « Infinity » (≈ 200 clients, dont ~175 femmes) devient u
 - Langue : français.
 - Ton : organisation personnelle et professionnelle, avec une touche de foi optionnelle (verset/pensée du jour).
 
-## État actuel — version 0.1 (application web installable)
+## État actuel — version 0.2 (application web installable)
 
-Méthode de travail retenue : Mireille et Claude construisent l'application **en application web installable (PWA)**,
+Méthode de travail : Mireille et Claude construisent l'application **en application web installable (PWA)**,
 comme le Skin Analyzer ; le développeur relit ensuite et prépare la publication Play Store
-(une PWA se publie sur le Play Store via une *Trusted Web Activity*, par ex. avec Bubblewrap ou PWABuilder).
+(une PWA se publie via une *Trusted Web Activity*, par ex. avec Bubblewrap ou PWABuilder).
 
-Fichiers :
-- `index.html` — toute l'application (HTML + CSS + JS, sans dépendance)
-- `versets.js` — 31 versets du jour (Louis Segond 1910, domaine public)
-- `manifest.webmanifest`, `sw.js` — installation et fonctionnement hors ligne
-- `icons/`, `vendor/fonts/` (Bricolage Grotesque + Nunito Sans, licence OFL)
-- `maquette/` — première maquette, gardée pour mémoire
+La v0.2 reprend la structure du **vrai planner** (INFINITY Planner 2027, Part 1 et Part 2) :
 
-Fonctionnalités v0.1 :
-- Bienvenue à la 1re ouverture (prénom + version rose ou bleue)
-- **Jour** : salutation, verset du jour (ou « ma pensée »), lignes Heure · Activité · Fait (rangées par heure, ajout illimité), « Merci pour… » ×3, notes
-- **Semaine** : 7 cartes Priorité · Rendez-vous · Note, nombre d'activités, lien vers le jour
-- **Mois** : objectifs (Objectif + première action + fait), barre de progression, calendrier (point = jour rempli)
-- Navigation ‹ ›, bouton « Aujourd'hui », glisser gauche/droite
-- Réglages : prénom, version, verset on/off, sauvegarde/restauration (fichier JSON), effacer tout
-- Mode sombre automatique, données en `localStorage` (clé `infinity-planner-v1`)
+- **Parcours** (la boucle ∞ et ses 8 étapes, avec checklist de progression) :
+  1. Bilan de l'année (8 domaines de vie + réalisations, défis, leçons, gratitude, à améliorer)
+  2. Conscience et découverte de soi (10 questions, minuteur 90 s)
+  3. Mission et vision (déclaration de vie, déclaration de mission, « Je suis si reconnaissant(e) que… »)
+  4. Grands objectifs (Mon parcours ; fixation par domaine ; notation **Cœur · Levier · Échéance** /30 ;
+     top 5 automatique ; liste « À éviter à tout prix » ; récompenses ; affirmations ; distractions)
+  5. Vision board (photos + citations, stockées dans IndexedDB) + relecture de la déclaration de vie
+  6. Stratégie (compétences, habitudes, entourage, partenaires de responsabilité)
+  7. Passer à l'action (liens vers mois / semaine / jour)
+  8. Récompensez et célébrez-vous (récompenses + réalisations de l'année rassemblées)
+- **Mois** : objectifs (intention de bien-être, compétences/habitudes, 3 objectifs avec pourquoi /
+  récompense / 4 tâches, actions) · calendrier + Idées/Gratitude/Victoires/Notes/Organigramme/Rappels ·
+  « Évaluez votre mois » (10 réalisations, tracker 0-10, 5 grandes questions…) · finances perso et pro.
+- **Semaine** : citation, top priorité, objectifs, **grille 7 jours × 6h-22h en colonnes verticales**
+  (option horizontales), tâches principales, créateur d'habitudes (prière, méditation, exercice, gratitude).
+- **Jour** : verset du jour (LSG 1910) ou pensée, top priorité de la semaine, heures 6h-22h, merci, notes.
+- Réglages : prénom, rose/bleu, verset, colonnes, monnaie, « Cet agenda appartient à », sauvegarde
+  (JSON avec les photos), effacement.
 
-Aperçu en ligne : https://claude.ai/artifact/3LXKtNYZLmNQXDCGsZGh4c
+Fichiers : `index.html`, `css/app.css`, `js/` (`data.js` textes du planner, `store.js` données,
+`ui.js` outils, `parcours.js` les 8 étapes, `agenda.js` mois/semaine/jour, `app.js` navigation),
+`sw.js` (hors ligne), `vendor/fonts/` (Spectral, Great Vibes, Nunito Sans — licence OFL).
+Données : `localStorage` clé `infinity-planner-v1` (format v2, migration automatique depuis la v0.1).
+
+**Textes encore à recopier depuis le planner** : question 7 de l'étape 2, étape 3 de l'énoncé de
+mission, la page sur la signification de la boucle, les pages 20 et 226-230, le libellé exact de la
+dernière ligne du bilan (« …ioration pour l'année »).
 
 ## 2. Les écrans (reprennent les 3 pages du PDF)
 

@@ -1,13 +1,22 @@
 // Garde Infinity Planner en mémoire pour qu'il fonctionne sans internet.
 // Changer CACHE à chaque mise à jour des fichiers ci-dessous.
-var CACHE = 'infinity-planner-v1';
+var CACHE = 'infinity-planner-v2';
 var FILES = [
   './',
   'index.html',
   'manifest.webmanifest',
-  'versets.js',
-  'vendor/fonts/bricolage-grotesque-latin-500-normal.woff2',
-  'vendor/fonts/bricolage-grotesque-latin-700-normal.woff2',
+  'css/app.css',
+  'js/versets.js',
+  'js/data.js',
+  'js/store.js',
+  'js/ui.js',
+  'js/parcours.js',
+  'js/agenda.js',
+  'js/app.js',
+  'vendor/fonts/spectral-latin-500-normal.woff2',
+  'vendor/fonts/spectral-latin-600-normal.woff2',
+  'vendor/fonts/spectral-latin-400-italic.woff2',
+  'vendor/fonts/great-vibes-latin-400-normal.woff2',
   'vendor/fonts/nunito-sans-latin-400-normal.woff2',
   'vendor/fonts/nunito-sans-latin-600-normal.woff2',
   'vendor/fonts/nunito-sans-latin-700-normal.woff2',
