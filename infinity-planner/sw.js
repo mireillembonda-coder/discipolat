@@ -1,6 +1,6 @@
 // Garde Infinity Planner en mémoire pour qu'il fonctionne sans internet.
 // Changer CACHE à chaque mise à jour des fichiers ci-dessous.
-var CACHE = 'infinity-planner-v2';
+var CACHE = 'infinity-planner-v3';
 var FILES = [
   './',
   'index.html',

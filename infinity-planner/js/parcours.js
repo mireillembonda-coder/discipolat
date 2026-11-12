@@ -37,6 +37,13 @@
       '<p class="muted center">Checklist de progression : ' + done + ' étape' + (done > 1 ? 's' : '') + ' sur 8</p>' +
       '<div class="mantras"><span>Se sentir bien, être dans un état positif</span><span>Laisser prise et lâcher prise</span><span>Profitez du voyage</span></div>' +
       '</section>';
+    // « Inscrivez votre énoncé de vision au début de votre agenda » (page 4 du planner)
+    var v = yd();
+    if (v.vision || v.mission) {
+      html += '<section class="card pad readback">' +
+        (v.vision ? '<p class="script mid">Ma Déclaration de vie</p><p>' + e(v.vision) + '</p>' : '') +
+        (v.mission ? '<p class="script mid">Ma déclaration de Mission</p><p>' + e(v.mission) + '</p>' : '') + '</section>';
+    }
     html += '<section class="sec"><h3 class="bhead"><span>Itinéraire d\'utilisation</span></h3><ol class="steps">' +
       IP.ETAPES.map(function (x) {
         return '<li><button class="stepcard' + (stepDone(x.n) ? ' done' : '') + '" data-step="' + x.n + '"><span class="pin">' + (stepDone(x.n) ? '✓' : x.n) + '</span>' +
