@@ -1,6 +1,6 @@
 // Garde la coquille de Discipolat en mémoire pour qu'elle s'ouvre vite.
 // Les données, elles, viennent toujours d'Apps Script (en ligne).
-var CACHE = 'discipolat-v3';
+var CACHE = 'discipolat-v4';
 var FILES = [
   './',
   'index.html',
@@ -17,7 +17,9 @@ self.addEventListener('install', function(event) {
 
 self.addEventListener('activate', function(event) {
   event.waitUntil(caches.keys().then(function(keys) {
-    return Promise.all(keys.filter(function(k) { return k !== CACHE; })
+    // Ne supprimer que les anciennes mémoires de Discipolat (pas celles
+    // d'Infinity Planner ou du Skin Analyzer, qui sont sur le même site).
+    return Promise.all(keys.filter(function(k) { return k.indexOf('discipolat-') === 0 && k !== CACHE; })
       .map(function(k) { return caches.delete(k); }));
   }));
   self.clients.claim();
@@ -27,7 +29,12 @@ self.addEventListener('activate', function(event) {
 // même si github.io répond mal (données mobiles). La version en ligne est
 // récupérée en arrière-plan et servira à la prochaine ouverture.
 self.addEventListener('fetch', function(event) {
-  if (event.request.method !== 'GET' || new URL(event.request.url).origin !== location.origin) return;
+  var url = new URL(event.request.url);
+  if (event.request.method !== 'GET' || url.origin !== location.origin) return;
+  // Seulement la coquille Discipolat elle-même : les autres applications du site
+  // (infinity-planner/, skin-analyzer/…) ont leurs propres fichiers et leur propre mémoire.
+  var chemin = url.pathname.slice(new URL(self.registration.scope).pathname.length);
+  if (chemin.indexOf('/') !== -1 && chemin.indexOf('icons/') !== 0) return;
   var page = event.request.mode === 'navigate';
   event.respondWith(caches.open(CACHE).then(function(cache) {
     var cle = page ? 'index.html' : event.request;
