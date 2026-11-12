@@ -12,7 +12,29 @@ L'agenda papier/PDF « Infinity » (≈ 200 clients, dont ~175 femmes) devient u
 - Langue : français.
 - Ton : organisation personnelle et professionnelle, avec une touche de foi optionnelle (verset/pensée du jour).
 
-Maquette cliquable (V1) : `maquette/index.html`, publiée ici : https://claude.ai/artifact/3LXKtNYZLmNQXDCGsZGh4c
+## État actuel — version 0.1 (application web installable)
+
+Méthode de travail retenue : Mireille et Claude construisent l'application **en application web installable (PWA)**,
+comme le Skin Analyzer ; le développeur relit ensuite et prépare la publication Play Store
+(une PWA se publie sur le Play Store via une *Trusted Web Activity*, par ex. avec Bubblewrap ou PWABuilder).
+
+Fichiers :
+- `index.html` — toute l'application (HTML + CSS + JS, sans dépendance)
+- `versets.js` — 31 versets du jour (Louis Segond 1910, domaine public)
+- `manifest.webmanifest`, `sw.js` — installation et fonctionnement hors ligne
+- `icons/`, `vendor/fonts/` (Bricolage Grotesque + Nunito Sans, licence OFL)
+- `maquette/` — première maquette, gardée pour mémoire
+
+Fonctionnalités v0.1 :
+- Bienvenue à la 1re ouverture (prénom + version rose ou bleue)
+- **Jour** : salutation, verset du jour (ou « ma pensée »), lignes Heure · Activité · Fait (rangées par heure, ajout illimité), « Merci pour… » ×3, notes
+- **Semaine** : 7 cartes Priorité · Rendez-vous · Note, nombre d'activités, lien vers le jour
+- **Mois** : objectifs (Objectif + première action + fait), barre de progression, calendrier (point = jour rempli)
+- Navigation ‹ ›, bouton « Aujourd'hui », glisser gauche/droite
+- Réglages : prénom, version, verset on/off, sauvegarde/restauration (fichier JSON), effacer tout
+- Mode sombre automatique, données en `localStorage` (clé `infinity-planner-v1`)
+
+Aperçu en ligne : https://claude.ai/artifact/3LXKtNYZLmNQXDCGsZGh4c
 
 ## 2. Les écrans (reprennent les 3 pages du PDF)
 
@@ -64,7 +86,7 @@ Toutes les tables : RLS `user_id = auth.uid()`, champs `updated_at` pour la sync
 
 ## 6. À DÉCIDER
 
-1. Valider les colonnes des 3 écrans (et garder ou non verset + gratitude).
+1. ~~Colonnes validées, verset gardé.~~
 2. Modèle de vente : achat unique / abonnement mensuel / annuel / essai gratuit ? Que contient la version gratuite ?
 3. Prix.
 4. Choix final de la technologie (développeur).
