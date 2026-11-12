@@ -103,7 +103,7 @@ details.fold[open]{display:flex;flex-direction:column}
 .num{font-family:var(--serif);font-weight:600;color:var(--accent);text-align:center}
 .pair{display:grid;min-width:0;padding:4px 0}
 .gt{font-weight:600;padding:4px 0}
-.twohead{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:8px 12px;background:var(--tint);font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line)}
+.twohead{display:grid;grid-template-columns:1fr 1fr;text-align:center;gap:10px;padding:8px 12px;background:var(--tint);font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line)}
 input[type=text],input[type=date],textarea,select{width:100%;min-width:0;border:0;background:transparent;color:var(--ink);font:inherit;font-size:.95rem;padding:7px 0}
 textarea{resize:none;line-height:1.5;display:block;border-bottom:1px dotted var(--line)}
 input.sub{font-size:.85rem;color:var(--muted);padding:0 0 6px}
@@ -122,6 +122,13 @@ input[type=checkbox]{width:22px;height:22px;accent-color:var(--accent);margin:0;
 .btnrow .btn{flex:1 1 160px}
 .pin{width:30px;height:30px;border-radius:50%;background:var(--ribbon);color:var(--on-ribbon);display:grid;place-items:center;font-weight:700;font-size:.9rem;flex:none}
 .pin.sm{width:24px;height:24px;font-size:.78rem;background:var(--blush);color:var(--ink)}
+
+.tworow{display:grid;grid-template-columns:22px minmax(0,1fr) 10px minmax(0,1fr);gap:6px;align-items:center;padding:0 10px;border-top:1px solid var(--line);min-height:46px}
+.twohead+.tworow{border-top:0}
+.tworow input{border-bottom:1px solid var(--line)!important;font-size:.9rem}
+.tworow .sq{width:8px;height:8px;border-radius:2px;background:var(--muted);opacity:.6}
+.two{position:relative}
+.two::after{content:"";position:absolute;top:0;bottom:0;left:calc(50% + 6px);border-left:1px solid var(--line)}
 
 /* Accueil : la boucle */
 .hero{display:grid;gap:10px;text-align:center}
@@ -234,7 +241,7 @@ table.week th button{border:0;background:none;font-weight:700;cursor:pointer;tex
 table.week th.today{background:var(--accent)}
 table.week th.today button{color:var(--on-accent)}
 table.week .hcol{position:sticky;left:0;z-index:1;background:var(--blush);font-family:var(--serif);text-align:center}
-table.week.vert td{min-width:132px;width:132px}
+table.week.vert td{min-width:112px;width:112px}
 table.week.horiz td{min-width:110px;width:110px}
 table.week input.cell{padding:9px 6px;font-size:.85rem}
 table.habits{border-collapse:collapse;width:100%;min-width:320px;background:var(--surface)}

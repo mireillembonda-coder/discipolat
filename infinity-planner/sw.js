@@ -1,6 +1,6 @@
 // Garde Infinity Planner en mémoire pour qu'il fonctionne sans internet.
 // Changer CACHE à chaque mise à jour des fichiers ci-dessous.
-var CACHE = 'infinity-planner-v3';
+var CACHE = 'infinity-planner-v4';
 var FILES = [
   './',
   'index.html',
@@ -39,20 +39,21 @@ self.addEventListener('activate', function(event) {
   self.clients.claim();
 });
 
-// Mémoire d'abord : l'agenda s'ouvre tout de suite, même sans réseau.
-// La version en ligne est récupérée en arrière-plan pour la prochaine ouverture.
+// Réseau d'abord (3 secondes au plus) pour toujours afficher la dernière version ;
+// si le réseau est absent ou trop lent, on ouvre la copie gardée sur le téléphone.
 self.addEventListener('fetch', function(event) {
   if (event.request.method !== 'GET' || new URL(event.request.url).origin !== location.origin) return;
   var page = event.request.mode === 'navigate';
+  var cle = page ? 'index.html' : event.request;
   event.respondWith(caches.open(CACHE).then(function(cache) {
-    var cle = page ? 'index.html' : event.request;
-    return cache.match(cle, { ignoreSearch: true }).then(function(hit) {
-      var reseau = fetch(event.request).then(function(response) {
-        if (response && response.ok) cache.put(cle, response.clone());
-        return response;
-      });
-      if (hit) { event.waitUntil(reseau.catch(function() {})); return hit; }
-      return reseau.catch(function() { return cache.match('index.html'); });
+    var reseau = fetch(event.request, { cache: 'no-cache' }).then(function(response) {
+      if (response && response.ok) cache.put(cle, response.clone());
+      return response;
     });
+    var delai = new Promise(function(ok) { setTimeout(ok, 3000); }).then(function() {
+      return cache.match(cle, { ignoreSearch: true });
+    });
+    return Promise.race([reseau.catch(function() { return cache.match(cle, { ignoreSearch: true }); }), delai.then(function(hit) { return hit || reseau; })])
+      .then(function(r) { return r || cache.match('index.html'); });
   }));
 });

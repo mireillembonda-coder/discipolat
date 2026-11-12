@@ -45,11 +45,11 @@
     return out + '</div>';
   };
   // Deux colonnes du planner (ex. « Compétences » / « Comment et de qui ») : sur téléphone, l'une sous l'autre.
+  // Deux colonnes du planner côte à côte (ex. « Compétences » | « Comment et de qui »), comme sur le papier.
   IP.twoCol = function (baseA, baseB, n, la, lb) {
     var out = '<div class="card two"><div class="twohead"><span>' + e(la) + '</span><span>' + e(lb) + '</span></div>';
     for (var i = 0; i < n; i++) {
-      out += '<div class="lrow"><span class="num">' + (i + 1) + '</span><div class="pair">' +
-        IP.inp(baseA + '.' + i, la) + IP.inp(baseB + '.' + i, lb, 'sub') + '</div></div>';
+      out += '<div class="tworow"><span class="num">' + (i + 1) + '</span>' + IP.inp(baseA + '.' + i, '') + '<span class="sq" aria-hidden="true"></span>' + IP.inp(baseB + '.' + i, '') + '</div>';
     }
     return out + '</div>';
   };
