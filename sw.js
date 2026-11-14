@@ -1,9 +1,9 @@
-// Garde la coquille de Discipolat en mémoire pour qu'elle s'ouvre vite.
+// Garde la page de Discipolat en mémoire pour qu'elle s'ouvre tout de suite.
 // Les données, elles, viennent toujours d'Apps Script (en ligne).
-var CACHE = 'discipolat-v4';
+var CACHE = 'discipolat-v5';
 var FILES = [
-  './',
   'index.html',
+  'classique.html',
   'manifest.webmanifest',
   'icons/icon-192.png',
   'icons/icon-512.png',
@@ -35,9 +35,9 @@ self.addEventListener('fetch', function(event) {
   // (infinity-planner/, skin-analyzer/…) ont leurs propres fichiers et leur propre mémoire.
   var chemin = url.pathname.slice(new URL(self.registration.scope).pathname.length);
   if (chemin.indexOf('/') !== -1 && chemin.indexOf('icons/') !== 0) return;
-  var page = event.request.mode === 'navigate';
+  // Page d'accueil (« / », « /?espace=… ») = index.html ; classique.html reste classique.html.
+  var cle = chemin === '' ? 'index.html' : (event.request.mode === 'navigate' ? chemin : event.request);
   event.respondWith(caches.open(CACHE).then(function(cache) {
-    var cle = page ? 'index.html' : event.request;
     return cache.match(cle, { ignoreSearch: true }).then(function(hit) {
       var reseau = fetch(event.request).then(function(response) {
         if (response && response.ok) cache.put(cle, response.clone());
