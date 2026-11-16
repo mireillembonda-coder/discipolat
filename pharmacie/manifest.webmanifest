@@ -1,0 +1,17 @@
+{
+  "name": "Pharmacie — personnel et caisses",
+  "short_name": "Pharmacie",
+  "description": "Recettes, versements, dépenses, congés, permissions, retards et absences de la pharmacie.",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F2F6F4",
+  "theme_color": "#0B7A55",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

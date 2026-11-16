@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pharmacie</title>
+<meta name="description" content="Gestion du personnel et des caisses de la pharmacie : recettes, versements, dépenses, congés, permissions, retards et absences.">
+<meta name="theme-color" content="#0B7A55">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<header class="entete">
+  <div class="logo" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z" fill="currentColor"/></svg></div>
+  <h1 id="titre">Pharmacie</h1>
+  <span id="sync" class="sync"></span>
+</header>
+<main id="ecran" class="ecran"></main>
+<nav id="onglets" class="onglets" hidden></nav>
+<div id="feuille" class="feuille" hidden></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
