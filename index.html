@@ -36,25 +36,13 @@
     </div>
   </div>
 <script>
-  // Adresse de l'application Apps Script (le lien partagé)
-  var APP_URL = 'https://script.google.com/macros/s/AKfycbyNXdW6FmBmK3yr0oQWpCBfAk-rrKkz0bv8WBuYwyqLxZ48hFlXCiCqFenPh23TQhwQ/exec';
-
-  var splash = document.getElementById('splash');
+  // Discipolat a déménagé : l'icône installée ouvre directement la nouvelle application.
+  var NOUVELLE_APP = 'https://discipolat-psi.vercel.app/';
   if (!navigator.onLine) {
     document.getElementById('loading').style.display = 'none';
     document.getElementById('offline').style.display = 'block';
   } else {
-    var frame = document.getElementById('app');
-    frame.addEventListener('load', function(){ splash.classList.add('hidden'); });
-    // Lien superviseur (…/?espace=CLÉ) : la clé est transmise à l'application
-    // et gardée sur l'appareil, pour que l'icône installée garde l'accès superviseur.
-    var espace = '';
-    var m = /[?&]espace=([^&#]+)/.exec(location.search);
-    try {
-      if (m) localStorage.setItem('discipolat_espace', decodeURIComponent(m[1]));
-      espace = localStorage.getItem('discipolat_espace') || '';
-    } catch (e) { espace = m ? decodeURIComponent(m[1]) : ''; }
-    frame.src = espace ? APP_URL + '?espace=' + encodeURIComponent(espace) : APP_URL;
+    location.replace(NOUVELLE_APP);
   }
 
   if ('serviceWorker' in navigator) {
