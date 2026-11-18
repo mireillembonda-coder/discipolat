@@ -1,6 +1,6 @@
 // Garde la page de Discipolat en mémoire pour qu'elle s'ouvre tout de suite.
 // Les données, elles, viennent toujours d'Apps Script (en ligne).
-var CACHE = 'discipolat-v5';
+var CACHE = 'discipolat-v6';
 var FILES = [
   'index.html',
   'classique.html',

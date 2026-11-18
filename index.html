@@ -17,6 +17,10 @@
   // on y va tout de suite, sans afficher la page directe.
   (function(){
     if (window.google && google.script) return;
+    // Discipolat a déménagé sur Vercel (github.io est bloqué chez certains opérateurs) :
+    // l'ancienne adresse et les icônes installées depuis github.io y mènent directement.
+    // (Seulement depuis github.io : sur Vercel, la page s'affiche, sans boucle.)
+    if (/\.github\.io$/.test(location.hostname)) { location.replace('https://discipolat-psi.vercel.app/' + location.search); return; }
     try {
       var t = Number(localStorage.getItem('discipolat_classique') || 0);
       if (t && Date.now() - t < 6 * 3600 * 1000) location.replace('classique.html' + location.search);
