@@ -66,6 +66,56 @@ function cloturerSemaines_() {
   return aFaire.length;
 }
 
+/**
+ * À lancer UNE fois depuis l'éditeur Apps Script (▶ Exécuter) : recalcule le score
+ * de toutes les semaines enregistrées avec les règles actuelles.
+ * Utile après la correction des programmes par église : les semaines calculées
+ * quand les programmes de toutes les églises étaient mélangés comptaient des
+ * programmes d'autres églises comme « manqués ».
+ * Ne change ni les cases cochées, ni les validations, ni les commentaires.
+ */
+function recalculerTousLesScores() {
+  reserveProprietaire_();
+  var verrou = LockService.getScriptLock();
+  verrou.waitLock(30000);
+  try {
+    assurerColonneFin_(ONGLETS.SUIVI, 'Cloture');
+    var sh = feuille_(ONGLETS.SUIVI);
+    var ent = entetes_(sh);
+    var cScore = ent.indexOf('Score'), cDetail = ent.indexOf('DetailScore'), cClot = ent.indexOf('Cloture');
+    var criteres = lireCriteres_(true);
+    var pre = { suivi: lire_(ONGLETS.SUIVI), presences: lire_(ONGLETS.PRESENCES),
+                absences: lire_(ONGLETS.ABSENCES), programmes: lire_(ONGLETS.PROGRAMMES) };
+    var disciples = {};
+    lire_(ONGLETS.DISCIPLES).forEach(function(d){ disciples[String(d.Id)] = d; });
+    if (!pre.suivi.length) { Logger.log('Aucune semaine à recalculer.'); return; }
+    var n = pre.suivi.length;
+    // Seules les colonnes du score sont réécrites (la colonne Semaine, en texte, n'est pas touchée).
+    var cols = [cScore, cDetail, cClot].filter(function(c){ return c !== -1; });
+    var valeurs = {};
+    cols.forEach(function(c){ valeurs[c] = sh.getRange(2, c + 1, n, 1).getValues(); });
+    var changes = 0, journal = [];
+    pre.suivi.forEach(function(l, i){
+      var d = disciples[String(l.DiscipleId)];
+      if (!l.Cle || !d) return;
+      var semaine = semaineDe_(l);
+      var ctx = chargerSemaine_(d, semaine, pre);
+      if (!ctx.ligne) return;
+      var res = calculerScore_(ctx, criteres);
+      var ancien = Number(l.Score) || 0;
+      valeurs[cScore][i][0] = res.score;
+      if (cDetail !== -1) valeurs[cDetail][i][0] = detailTexte_(res.detail);
+      if (cClot !== -1) valeurs[cClot][i][0] = !ctx.enCours;
+      if (ancien !== res.score) {
+        changes++;
+        journal.push(semaine + ' · ' + (d.Prenom || d.Id) + ' : ' + ancien + ' % → ' + res.score + ' %');
+      }
+    });
+    cols.forEach(function(c){ sh.getRange(2, c + 1, n, 1).setValues(valeurs[c]); });
+    Logger.log(changes + ' score(s) corrigé(s) sur ' + pre.suivi.length + ' semaine(s).\n' + journal.join('\n'));
+  } finally { verrou.releaseLock(); }
+}
+
 /* =====================================================================
  * Chargement des données d'une semaine
  * ===================================================================== */
