@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Pharmacie — Gestion</title>
+  <meta name="theme-color" content="#0B7A55">
+  <meta name="description" content="Caisse du matin et du soir, sorties fournisseurs, demandes de permission et remplacements.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="app.css?v=1.0">
+</head>
+<body>
+  <div id="bandeauEssai" class="bandeau-essai" hidden>Mode essai : les données restent sur ce téléphone et ne sont pas partagées.</div>
+  <div id="occupe" class="barre-occupe" hidden></div>
+  <div id="racine"></div>
+  <div id="toastHote" class="toast-hote"></div>
+
+  <script src="config.js?v=1.0"></script>
+  <script src="logique.js?v=1.0"></script>
+  <script src="app.js?v=1.0"></script>
+</body>
+</html>
