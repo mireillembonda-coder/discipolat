@@ -53,7 +53,9 @@ var JOURS_LONGS = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Diman
 /*
  * Églises. Chaque église a sa propre liste de programmes (onglet Programmes, colonne Eglise),
  * remplie par le premier disciple de l'église qui s'inscrit, puis corrigeable par le superviseur.
- * Les programmes de départ (sans église) sont ceux d'EGLISE_DEFAUT.
+ * Un programme régulier sans église (anciens programmes de départ) n'est montré à personne :
+ * il ne doit pas s'ajouter aux vrais programmes d'une église.
+ * EGLISE_DEFAUT ne sert qu'aux disciples inscrits avant la fiche de renseignement.
  */
 var EGLISE_DEFAUT = 'ICC Centre-Ville';
 var EGLISES = ['ICC Yaoundé - Eglise Principale', 'ICC Odza Borne 10', 'ICC Biyem-Assi', 'ICC Soa', 'ICC Oyom-Abang', 'ICC Bafoussam',
@@ -63,10 +65,12 @@ var EGLISES = ['ICC Yaoundé - Eglise Principale', 'ICC Odza Borne 10', 'ICC Biy
 /** Église d'un disciple (EGLISE_DEFAUT pour les inscrits d'avant la fiche). */
 function egliseDe_(d) { return String(d && d.Eglise || '').trim() || EGLISE_DEFAUT; }
 
-/** Église d'un programme ('' = toutes les églises, pour un programme optionnel). */
+/**
+ * Église d'un programme. '' = toutes les églises pour un programme optionnel ;
+ * pour un programme régulier, '' = rattaché à aucune église (ignoré partout).
+ */
 function egliseProgramme_(p) {
-  var e = String(p.Eglise || '').trim();
-  return e || (String(p.Type) === 'fixe' ? EGLISE_DEFAUT : '');
+  return String(p.Eglise || '').trim();
 }
 
 var ENTETES = {};
@@ -77,7 +81,7 @@ ENTETES[ONGLETS.DISCIPLES] = ['Id','Prenom','Nom','Telephone','Statut','DateInsc
 ENTETES[ONGLETS.SUIVI] = ['Cle','Semaine','DiscipleId','Prenom','Score','DetailScore','Validation','DateValidation',
   'CommentaireSuperviseur','DerniereMaj'];
 ENTETES[ONGLETS.PRESENCES] = ['Cle','Semaine','DiscipleId','Prenom','ProgrammeId','Present','AlHeure','DerniereMaj'];
-// Eglise : église du programme. Programme fixe sans église = EGLISE_DEFAUT ; optionnel sans église = toutes.
+// Eglise : église du programme. Programme fixe sans église = ignoré ; optionnel sans église = toutes.
 ENTETES[ONGLETS.PROGRAMMES] = ['Id','Nom','Type','Horaire','Date','Semaine','Actif','Ordre','Eglise'];
 ENTETES[ONGLETS.PARAMETRES] = ['Id','Libelle','Type','Elements','JoursPrevus','Poids','Actif','Ordre'];
 ENTETES[ONGLETS.REGLAGES] = ['Cle','Valeur'];
@@ -102,12 +106,6 @@ var CRITERES_DEPART = [
   ['jeune', "Jeûne d'un jour", 'semaine', "Jeûne d'un jour dans la semaine", '', 1, true, 5],
   ['programmes', "Programmes de l'église", 'programmes', '', '', 1, true, 6],
   ['ponctualite', 'Ponctualité', 'ponctualite', '', '', 1, true, 7]
-];
-var PROGRAMMES_DEPART = [
-  ['etude_biblique', 'Étude biblique', 'fixe', 'Mercredi 18h00', '', '', true, 1],
-  ['adp',            'ADP',            'fixe', 'Vendredi 18h00', '', '', true, 2],
-  ['culte_1',        'Culte 1',        'fixe', 'Dimanche 08h00', '', '', true, 3],
-  ['culte_2',        'Culte 2',        'fixe', 'Dimanche 11h00', '', '', true, 4]
 ];
 var REGLAGES_DEPART = [
   ['SeuilActif', 75],
@@ -166,7 +164,7 @@ function installer() {
 
   // 4. Données de départ
   remplirSiVide_(ONGLETS.PARAMETRES, CRITERES_DEPART, journal, 'Critères de départ ajoutés');
-  remplirSiVide_(ONGLETS.PROGRAMMES, PROGRAMMES_DEPART, journal, 'Programmes fixes ajoutés');
+  // Pas de programmes de départ : chaque église a les siens (saisis à l'inscription ou par le superviseur).
   REGLAGES_DEPART.forEach(function(r){ definirReglageSiAbsent_(r[0], r[1]); });
   if (adminPin) {
     definirReglageSiAbsent_('AdminPinHash', adminPin.hash);

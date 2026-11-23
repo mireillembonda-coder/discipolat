@@ -349,7 +349,7 @@ function getProgrammes(token) {
   sessionAdmin_(token);
   var depuis = semaineId_(-4);
   return lire_(ONGLETS.PROGRAMMES).filter(function(p){ return p.Id && estVrai_(p.Actif); })
-    .filter(function(p){ return String(p.Type) === 'fixe' || texteSemaine_(p.Semaine) >= depuis; })
+    .filter(function(p){ return String(p.Type) === 'fixe' ? !!egliseProgramme_(p) : texteSemaine_(p.Semaine) >= depuis; })
     .map(function(p){
       return { id: String(p.Id), nom: String(p.Nom), type: String(p.Type), horaire: String(p.Horaire || ''),
                date: fmtDate_(p.Date).slice(0, 10), semaine: texteSemaine_(p.Semaine), eglise: egliseProgramme_(p),
