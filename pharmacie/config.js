@@ -5,5 +5,5 @@
  * dans le téléphone (pratique pour découvrir, mais rien n'est partagé).
  */
 var PHARMACIE_CONFIG = {
-  serveur: ''
+  serveur: 'https://script.google.com/macros/s/AKfycby1mWwrMJSvIGKDTwzL_cx1h8pX6YxIbfAUjuUIBzBSl4pPsnvjvjueY2KHQGFkOXVB/exec'
 };
