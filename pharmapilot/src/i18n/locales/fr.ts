@@ -92,6 +92,7 @@ const fr = {
       "Supabase n'est pas encore configuré (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY). La connexion et l'inscription sont indisponibles ; le mode démonstration reste accessible.",
     checkEmail: "Compte créé. Vérifiez votre boîte e-mail pour confirmer votre adresse, puis connectez-vous.",
     invalid: "Identifiants incorrects ou compte non confirmé.",
+    network: "Impossible de joindre le serveur. Vérifiez votre connexion Internet puis réessayez.",
     pitch1: "Analyse des ventes et des marges",
     pitch2: "Stocks optimisés, ruptures anticipées",
     pitch3: "Propositions de commandes argumentées",

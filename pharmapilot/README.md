@@ -22,11 +22,17 @@ npm run build               # vérification des types + build de production
 
 Sans variables Supabase, l'application fonctionne en **mode démonstration** uniquement ; connexion et inscription affichent un avertissement.
 
-### Brancher Supabase
+### Supabase
 
-1. Créer un projet Supabase et renseigner `VITE_SUPABASE_URL` et `VITE_SUPABASE_ANON_KEY` dans `.env`.
-2. Appliquer `supabase/migrations/20261124000000_init.sql` (profils, organisations, adhésions, officines, journal d'imports, politiques RLS, trigger d'inscription).
-3. L'inscription crée automatiquement le profil, l'organisation, la première officine et le rôle « titulaire ».
+Projet **pharmapilot** (région Paris, eu-west-3), déjà configuré dans `.env.production` (URL + clé publiable, conçue pour être publique ; la sécurité repose sur les politiques RLS). Ne jamais y mettre la clé secrète.
+
+Migrations appliquées :
+1. `20261124000000_init.sql` — profils, organisations, adhésions, officines, journal d'imports, politiques RLS, trigger d'inscription.
+2. `20261124000100_harden.sql` — fonctions sensibles déplacées dans un schéma privé `app_private`, politiques réservées aux utilisateurs connectés, index.
+
+Vérifié : contrôle de sécurité Supabase sans avertissement ; un utilisateur ne voit que sa propre officine ; un visiteur non connecté ne voit rien.
+
+À régler dans le tableau de bord Supabase (Authentication → URL Configuration) : **Site URL** = adresse publique de l'application, sinon le lien de confirmation d'e-mail renvoie vers `localhost`.
 
 ### Déploiement
 

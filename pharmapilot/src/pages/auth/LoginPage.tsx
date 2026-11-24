@@ -30,8 +30,10 @@ export function LoginPage() {
     try {
       await signIn(email, password);
       navigate("/app/overview");
-    } catch {
-      setError(t("auth.invalid"));
+    } catch (err) {
+      const e = err as { name?: string; status?: number };
+      const network = e.name === "AuthRetryableFetchError" || e.status === 0 || !navigator.onLine;
+      setError(t(network ? "auth.network" : "auth.invalid"));
     } finally {
       setBusy(false);
     }

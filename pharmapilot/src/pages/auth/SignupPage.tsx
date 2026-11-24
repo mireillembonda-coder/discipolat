@@ -33,7 +33,8 @@ export function SignupPage() {
       if (needsConfirmation) setConfirmSent(true);
       else navigate("/app/overview");
     } catch (err) {
-      setError((err as Error).message);
+      const e = err as { name?: string; status?: number; message: string };
+      setError(e.name === "AuthRetryableFetchError" || e.status === 0 ? t("auth.network") : e.message);
     } finally {
       setBusy(false);
     }
