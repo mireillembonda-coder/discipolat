@@ -9,7 +9,7 @@
  * Pour changer une liste (catégories de sorties, modes de paiement…), c'est ici.
  */
 
-var PH_VERSION = '1.1';
+var PH_VERSION = '1.2';
 
 /* ------------------------------------------------------------------ */
 /* Rôles et droits                                                     */
@@ -17,36 +17,57 @@ var PH_VERSION = '1.1';
 var PH_ROLES = {
   admin: {
     nom: 'Gérant(e)',
-    droits: ['recettes', 'mouvements', 'fournisseurs', 'journee', 'bilan', 'valider', 'equipe', 'journal', 'demandes']
+    droits: ['recettes', 'mouvements', 'fournisseurs', 'journee', 'bilan', 'valider', 'equipe', 'journal', 'demandes',
+      'verser', 'tresorerie', 'banque'],
+    comptesVus: ['caisse', 'principale', 'om', 'momo', 'gerante', 'banque'],
+    comptesSortie: ['caisse', 'principale', 'om', 'momo', 'gerante', 'banque']
   },
   principale: {
     nom: 'Caissière principale',
-    droits: ['recettes', 'mouvements', 'fournisseurs', 'journee', 'demandes']
+    droits: ['recettes', 'mouvements', 'fournisseurs', 'journee', 'demandes', 'verser', 'tresorerie'],
+    comptesVus: ['caisse', 'principale', 'om', 'momo'],
+    comptesSortie: ['caisse', 'principale', 'om', 'momo', 'banque']
   },
   caissiere: {
     nom: 'Caissière',
-    droits: ['recettes', 'mouvements', 'journee', 'demandes']
+    droits: ['recettes', 'mouvements', 'journee', 'demandes', 'verser'],
+    comptesVus: ['caisse'],
+    comptesSortie: ['caisse']
   },
   employe: {
     nom: 'Employé(e)',
-    droits: ['demandes']
+    droits: ['demandes'],
+    comptesVus: [],
+    comptesSortie: []
   }
 };
 
-var PH_SESSIONS_CAISSE = ['Matin', 'Soir'];
-
-// Colonnes d'encaissement d'une caisse (dans l'ordre d'affichage)
-var PH_ENCAISSEMENTS = [
-  { cle: 'especes',     nom: 'Espèces' },
-  { cle: 'orangeMoney', nom: 'Orange Money' },
-  { cle: 'mtnMomo',     nom: 'MTN MoMo' },
-  { cle: 'carte',       nom: 'Carte bancaire' },
-  { cle: 'cheque',      nom: 'Chèques' },
-  { cle: 'assurance',   nom: 'Assurances / tiers payant' },
-  { cle: 'credit',      nom: 'Crédit clients' }
+/*
+ * Les « comptes » : chaque endroit où se trouve l'argent de la pharmacie.
+ * mode = comment on paie quand une sortie part de ce compte.
+ */
+var PH_COMPTES = [
+  { cle: 'caisse',     nom: 'Caisse (tiroir)',          court: 'Caisse',            mode: 'Espèces' },
+  { cle: 'principale', nom: 'Caissière principale',     court: 'Caisse principale', mode: 'Espèces' },
+  { cle: 'om',         nom: 'Orange Money',             court: 'Orange Money',      mode: 'Mobile Money' },
+  { cle: 'momo',       nom: 'MTN MoMo',                 court: 'MTN MoMo',          mode: 'Mobile Money' },
+  { cle: 'gerante',    nom: 'Espèces chez la gérante',  court: 'Gérante',           mode: 'Espèces' },
+  { cle: 'banque',     nom: 'Banque',                   court: 'Banque',            mode: 'Chèque' }
 ];
 
-// Sorties. charge:false = ce n'est pas une dépense (l'argent change seulement de place).
+var PH_SESSIONS_CAISSE = ['Matin', 'Soir'];
+
+// Colonnes d'encaissement d'une caisse (dans l'ordre d'affichage) et le compte qu'elles alimentent
+var PH_ENCAISSEMENTS = [
+  { cle: 'especes',     nom: 'Espèces',        compte: 'caisse' },
+  { cle: 'orangeMoney', nom: 'Orange Money',   compte: 'om' },
+  { cle: 'mtnMomo',     nom: 'MTN MoMo',       compte: 'momo' },
+  { cle: 'cheque',      nom: 'Chèques',        compte: 'banque' },
+  { cle: 'credit',      nom: 'Crédit clients' }   // vendu mais pas encore payé : n'entre dans aucun compte
+];
+
+// Sorties (dépenses). Les mouvements d'argent entre comptes (versements, dépôts en banque,
+// retraits Orange Money…) ne sont PAS des sorties : ce sont des transferts (onglet Comptes).
 var PH_CATEGORIES_SORTIE = [
   { nom: 'Fournisseur (achats)', fournisseur: true },
   { nom: 'Électricité (ENEO)' },
@@ -57,21 +78,20 @@ var PH_CATEGORIES_SORTIE = [
   { nom: 'Avance sur salaire' },
   { nom: 'CNPS / charges sociales' },
   { nom: 'Impôts et taxes' },
+  { nom: 'Comptable' },
+  { nom: 'Sécurité / gardiennage' },
   { nom: 'Transport / courses' },
   { nom: 'Entretien / ménage' },
   { nom: 'Fournitures de bureau' },
   { nom: 'Réparations / maintenance' },
-  { nom: 'Sécurité / gardiennage' },
   { nom: 'Frais bancaires' },
-  { nom: 'Versement en banque', charge: false },
   { nom: 'Autre sortie' }
 ];
+var PH_CATEGORIE_FRAIS = 'Frais de retrait / transfert';
 
 var PH_CATEGORIES_ENTREE = [
   { nom: 'Fond de caisse' },
   { nom: 'Règlement crédit client' },
-  { nom: 'Remboursement assurance' },
-  { nom: 'Retrait banque' },
   { nom: 'Apport du gérant' },
   { nom: 'Autre entrée' }
 ];
@@ -89,6 +109,8 @@ var PH_STATUTS = {
   ANNULEE: 'Annulée'
 };
 
+var PH_T = { ATTENTE: 'En attente', CONFIRME: 'Confirmé', REFUSE: 'Refusé', ANNULE: 'Annulé' };
+
 /* ------------------------------------------------------------------ */
 /* Tableaux (onglets du Google Sheet) et leurs colonnes                */
 /* ------------------------------------------------------------------ */
@@ -98,7 +120,12 @@ var PH_TABLES = {
   Recettes:     ['id', 'date', 'session', 'especes', 'orangeMoney', 'mtnMomo', 'carte', 'cheque', 'assurance', 'credit',
                  'total', 'logiciel', 'ecart', 'observation', 'saisiParId', 'saisiPar', 'saisiLe', 'modifiePar', 'modifieLe'],
   Mouvements:   ['id', 'date', 'sens', 'categorie', 'fournisseurId', 'fournisseur', 'reference', 'libelle', 'montant', 'mode',
-                 'saisiParId', 'saisiPar', 'saisiLe', 'modifiePar', 'modifieLe'],
+                 'saisiParId', 'saisiPar', 'saisiLe', 'modifiePar', 'modifieLe', 'compte', 'rapproche', 'rapprocheLe'],
+  // argent qui passe d'un compte à un autre (versements, retraits Orange Money, dépôts en banque…)
+  Transferts:   ['id', 'date', 'de', 'vers', 'montant', 'frais', 'montantRecu', 'ecart', 'reference', 'note', 'statut',
+                 'saisiParId', 'saisiPar', 'saisiLe', 'confirmePar', 'confirmeLe', 'rapproche', 'rapprocheLe'],
+  // soldes de départ et contrôles (recoupages) : solde réel constaté contre solde calculé
+  Soldes:       ['id', 'date', 'compte', 'type', 'montant', 'calcule', 'ecart', 'note', 'saisiPar', 'saisiLe'],
   Fournisseurs: ['id', 'nom', 'principal', 'telephone', 'contact', 'notes', 'actif'],
   Demandes:     ['id', 'userId', 'demandeur', 'type', 'du', 'au', 'creneau', 'heures', 'motif', 'remplacantId', 'remplacant',
                  'statut', 'reponseRemplacant', 'valideur', 'commentaire', 'creeLe', 'traiteLe'],
@@ -107,7 +134,7 @@ var PH_TABLES = {
 };
 // Colonnes qui contiennent des nombres (les autres sont du texte)
 var PH_NUMERIQUES = ['especes', 'orangeMoney', 'mtnMomo', 'carte', 'cheque', 'assurance', 'credit', 'total', 'logiciel',
-  'ecart', 'montant', 'essais'];
+  'ecart', 'montant', 'essais', 'frais', 'montantRecu', 'calcule'];
 
 var PH_PROFILS_DEPART = [
   ['Gérant(e)', 'admin'],
@@ -296,6 +323,7 @@ function creerPharmacie(store, outils) {
       listes: {
         sessions: PH_SESSIONS_CAISSE, encaissements: PH_ENCAISSEMENTS, sorties: PH_CATEGORIES_SORTIE,
         entrees: PH_CATEGORIES_ENTREE, modes: PH_MODES, typesDemande: PH_TYPES_DEMANDE, creneaux: PH_CRENEAUX,
+        comptes: PH_COMPTES, comptesVus: role(u).comptesVus, comptesSortie: role(u).comptesSortie,
         roles: Object.keys(PH_ROLES).map(function (k) { return { cle: k, nom: PH_ROLES[k].nom }; })
       },
       equipe: equipe,
@@ -306,6 +334,7 @@ function creerPharmacie(store, outils) {
     };
     if (peut(u, 'valider')) res.aValider = demandes.filter(function (d) { return d.statut === PH_STATUTS.ATTENTE || d.statut === PH_STATUTS.REMPLACANT; }).sort(parDateCreation);
     if (peut(u, 'mouvements') || peut(u, 'fournisseurs')) res.fournisseurs = listeFournisseurs(peut(u, 'fournisseurs'));
+    if (peut(u, 'verser')) res.aConfirmer = store.lire('Transferts').filter(function (t) { return t.statut === PH_T.ATTENTE && peutConfirmer(u, t); });
     return res;
   };
   function parDateCreation(a, b) { return a.creeLe < b.creeLe ? 1 : -1; }
@@ -434,10 +463,13 @@ function creerPharmacie(store, outils) {
     var cat = cats.filter(function (c) { return c.nom === m.categorie; })[0];
     if (!cat) erreur('Choisissez une catégorie.');
     var ligne = { date: d, sens: sens, categorie: cat.nom, fournisseurId: '', fournisseur: '',
-      reference: txt(m.reference, 80), libelle: txt(m.libelle, 300), montant: montant(m.montant), mode: '' };
+      reference: txt(m.reference, 80), libelle: txt(m.libelle, 300), montant: montant(m.montant), mode: '', compte: '' };
     if (ligne.montant <= 0) erreur('Saisissez le montant.');
-    if (PH_MODES.indexOf(m.mode) === -1) erreur('Choisissez le mode de paiement.');
-    ligne.mode = m.mode;
+    var comptesPermis = (PH_ROLES[u.role] || PH_ROLES.employe).comptesSortie;
+    if (comptesPermis.indexOf(m.compte) === -1) erreur(sens === 'Sortie' ? 'Choisissez d\'où part l\'argent.' : 'Choisissez où arrive l\'argent.');
+    ligne.compte = m.compte;
+    ligne.mode = compteDef(m.compte).mode;
+    if (m.compte === 'banque') ligne.mode = m.mode === 'Virement' ? 'Virement' : 'Chèque';
     if (cat.fournisseur) {
       var f = store.lire('Fournisseurs').filter(function (x) { return x.id === m.fournisseurId; })[0];
       if (!f) erreur('Choisissez le fournisseur.');
@@ -449,6 +481,7 @@ function creerPharmacie(store, outils) {
       var ex = store.lire('Mouvements').filter(function (x) { return x.id === m.id; })[0];
       if (!ex) erreur('Opération introuvable.');
       if (!modifiable(u, ex, aujourdhui)) erreur('Cette opération ne peut plus être modifiée. Demandez au gérant.');
+      if (oui(ex.rapproche) && (ex.montant !== ligne.montant || ex.compte !== ligne.compte)) erreur('Cette opération est déjà pointée sur le relevé bancaire : dépointez-la d\'abord.');
       ligne.modifiePar = u.nom; ligne.modifieLe = outils.maintenant();
       store.maj('Mouvements', 'id', ex.id, ligne);
       journaliser(u, sens + ' modifiée', ex.date + ' ' + ex.categorie + ' : ' + ex.montant + ' → ' + ligne.montant);
@@ -456,7 +489,7 @@ function creerPharmacie(store, outils) {
     }
     ligne.id = id('M');
     ligne.saisiParId = u.id; ligne.saisiPar = u.nom; ligne.saisiLe = outils.maintenant();
-    ligne.modifiePar = ''; ligne.modifieLe = '';
+    ligne.modifiePar = ''; ligne.modifieLe = ''; ligne.rapproche = ''; ligne.rapprocheLe = '';
     store.ajouter('Mouvements', ligne);
     journaliser(u, sens + ' saisie', d + ' ' + cat.nom + (ligne.fournisseur ? ' / ' + ligne.fournisseur : '') + ' : ' + ligne.montant);
     return { id: ligne.id };
@@ -469,6 +502,7 @@ function creerPharmacie(store, outils) {
     var ex = store.lire('Mouvements').filter(function (x) { return x.id === mid; })[0];
     if (!ex) erreur('Opération introuvable.');
     if (!supprimable(u, ex, outils.aujourdhui())) erreur("Vous n'avez pas le droit de supprimer cette opération.");
+    if (oui(ex.rapproche)) erreur('Cette opération est pointée sur le relevé bancaire : dépointez-la d\'abord.');
     store.suppr('Mouvements', 'id', mid);
     journaliser(u, ex.sens + ' supprimée', ex.date + ' ' + ex.categorie + (ex.fournisseur ? ' / ' + ex.fournisseur : '') + ' : ' + ex.montant);
     return true;
@@ -598,6 +632,264 @@ function creerPharmacie(store, outils) {
     return store.lire('Demandes').filter(function (d) { return !m || d.du.slice(0, 7) === m || d.au.slice(0, 7) === m; }).sort(parDateCreation);
   };
 
+  /* ================================================================== */
+  /* Trésorerie : où est l'argent de la pharmacie                         */
+  /* ================================================================== */
+  function role(u) { return PH_ROLES[u.role] || PH_ROLES.employe; }
+  function compteDef(cle) { return PH_COMPTES.filter(function (c) { return c.cle === cle; })[0] || { cle: cle, nom: cle, court: cle, mode: 'Autre' }; }
+  function nomCompte(cle) { return compteDef(cle).nom; }
+  function transfertsValides() { return store.lire('Transferts').filter(function (t) { return t.statut === PH_T.CONFIRME; }); }
+  /** Ancien enregistrement sans compte : on le devine d'après le mode de paiement. */
+  function compteMouvement(m) {
+    if (m.compte) return m.compte;
+    if (m.mode === 'Espèces') return 'caisse';
+    if (m.mode === 'Mobile Money') return 'om';
+    if (m.mode === 'Chèque' || m.mode === 'Virement') return 'banque';
+    return '';
+  }
+  function libelleTransfert(t) {
+    var k = t.de + '>' + t.vers;
+    var noms = {
+      'caisse>principale': 'Versement à la caissière principale',
+      'om>principale': 'Retrait Orange Money', 'momo>principale': 'Retrait MTN MoMo',
+      'principale>gerante': 'Versement à la gérante',
+      'gerante>banque': 'Dépôt en banque', 'principale>banque': 'Dépôt en banque', 'caisse>banque': 'Dépôt en banque',
+      'banque>gerante': 'Retrait à la banque', 'om>banque': 'Orange Money vers la banque', 'momo>banque': 'MTN MoMo vers la banque'
+    };
+    return noms[k] || (compteDef(t.de).court + ' → ' + compteDef(t.vers).court);
+  }
+  /** Qui doit confirmer qu'il a bien reçu l'argent (sinon : confirmé tout de suite). */
+  function confirmationPar(t) {
+    if (t.vers === 'principale' && t.de === 'caisse') return 'tresorerie';
+    if (t.vers === 'gerante' && t.de === 'principale') return 'banque';
+    return '';
+  }
+  function peutConfirmer(u, t) { var c = confirmationPar(t); return !!c && peut(u, c); }
+  function transfertPermis(u, de, vers) {
+    if (peut(u, 'banque')) return true;
+    var k = de + '>' + vers;
+    if (peut(u, 'tresorerie') && ['caisse>principale', 'om>principale', 'momo>principale', 'principale>gerante', 'principale>banque'].indexOf(k) !== -1) return true;
+    return peut(u, 'verser') && k === 'caisse>principale';
+  }
+
+  /** Solde de chaque compte à une date (comprise), à partir du dernier solde de départ. */
+  function calculerSoldes(jusqua) {
+    var departs = {};
+    store.lire('Soldes').forEach(function (x) {
+      if (x.type !== 'Départ' || x.date > jusqua) return;
+      if (!departs[x.compte] || x.date >= departs[x.compte].date) departs[x.compte] = x;
+    });
+    var s = {};
+    PH_COMPTES.forEach(function (c) { s[c.cle] = departs[c.cle] ? Number(departs[c.cle].montant || 0) : 0; });
+    function ajouter(cle, d, v) {
+      if (!cle || !(cle in s) || d > jusqua) return;
+      if (departs[cle] && d < departs[cle].date) return;
+      s[cle] += v;
+    }
+    store.lire('Recettes').forEach(function (r) {
+      PH_ENCAISSEMENTS.forEach(function (e) { if (e.compte) ajouter(e.compte, r.date, Number(r[e.cle] || 0)); });
+    });
+    store.lire('Mouvements').forEach(function (m) {
+      ajouter(compteMouvement(m), m.date, (m.sens === 'Entrée' ? 1 : -1) * Number(m.montant || 0));
+    });
+    transfertsValides().forEach(function (t) {
+      ajouter(t.de, t.date, -(Number(t.montant || 0) + Number(t.frais || 0)));
+      ajouter(t.vers, t.date, Number(t.montantRecu === '' ? t.montant : t.montantRecu));
+    });
+    return { soldes: s, departs: departs };
+  }
+
+  api.tresorerie = function (jeton) {
+    var u = session(jeton);
+    exiger(u, 'verser');
+    var aujourdhui = outils.aujourdhui();
+    var vus = role(u).comptesVus;
+    var calc = calculerSoldes(aujourdhui);
+    var controles = store.lire('Soldes').filter(function (x) { return x.type !== 'Départ'; });
+    var tous = store.lire('Transferts');
+    var enAttente = tous.filter(function (t) { return t.statut === PH_T.ATTENTE; });
+    function concerne(t) {
+      if (peut(u, 'banque') || t.saisiParId === u.id) return true;
+      return peut(u, 'tresorerie') && (vus.indexOf(t.de) !== -1 || vus.indexOf(t.vers) !== -1);
+    }
+    return {
+      date: aujourdhui,
+      comptes: vus.map(function (cle) {
+        var dernier = controles.filter(function (x) { return x.compte === cle; }).sort(function (a, b) { return a.saisiLe < b.saisiLe ? 1 : -1; })[0] || null;
+        var dep = calc.departs[cle];
+        return {
+          cle: cle, nom: nomCompte(cle), solde: calc.soldes[cle], dernierControle: dernier,
+          depart: dep ? { date: dep.date, montant: Number(dep.montant || 0) } : null,
+          sortant: enAttente.filter(function (t) { return t.de === cle; }).reduce(function (a, t) { return a + Number(t.montant || 0); }, 0)
+        };
+      }),
+      aConfirmer: enAttente.filter(function (t) { return peutConfirmer(u, t); }).map(decorer),
+      transferts: tous.filter(function (t) { return joursEntre(t.date, aujourdhui) <= 45 && concerne(t); })
+        .sort(function (a, b) { return a.saisiLe < b.saisiLe ? 1 : -1; }).slice(0, 80).map(function (t) {
+          var x = decorer(t);
+          x.annulable = (t.statut === PH_T.ATTENTE && t.saisiParId === u.id) || (peut(u, 'banque') && t.statut !== PH_T.ANNULE && !oui(t.rapproche));
+          return x;
+        }),
+      possibles: {
+        versement: transfertPermis(u, 'caisse', 'principale'),
+        retraitMobile: transfertPermis(u, 'om', 'principale'),
+        versementGerante: transfertPermis(u, 'principale', 'gerante'),
+        banque: peut(u, 'banque')
+      }
+    };
+  };
+  function decorer(t) {
+    var x = Object.assign({}, t);
+    x.libelle = libelleTransfert(t); x.deNom = nomCompte(t.de); x.versNom = nomCompte(t.vers);
+    return x;
+  }
+
+  api.nouveauTransfert = function (jeton, t) {
+    var u = session(jeton);
+    exiger(u, 'verser');
+    t = t || {};
+    var aujourdhui = outils.aujourdhui();
+    var d = date(t.date || aujourdhui);
+    if (d > aujourdhui) erreur('La date ne peut pas être dans le futur.');
+    if (!peut(u, 'banque') && joursEntre(d, aujourdhui) > 2) erreur('Pour une date de plus de 2 jours, demandez à la gérante.');
+    var de = txt(t.de, 20), vers = txt(t.vers, 20);
+    if (!PH_COMPTES.some(function (c) { return c.cle === de; }) || !PH_COMPTES.some(function (c) { return c.cle === vers; }) || de === vers) erreur('Choisissez d\'où part l\'argent et où il arrive.');
+    if (!transfertPermis(u, de, vers)) erreur("Vous n'avez pas le droit de faire ce mouvement.");
+    var ligne = { id: id('T'), date: d, de: de, vers: vers, montant: montant(t.montant), frais: montant(t.frais, 'frais'), montantRecu: '', ecart: '',
+      reference: txt(t.reference, 80), note: txt(t.note, 300), statut: PH_T.ATTENTE, saisiParId: u.id, saisiPar: u.nom,
+      saisiLe: outils.maintenant(), confirmePar: '', confirmeLe: '', rapproche: '', rapprocheLe: '' };
+    if (ligne.montant <= 0) erreur('Saisissez le montant.');
+    if (!confirmationPar(ligne) || peutConfirmer(u, ligne)) {
+      ligne.statut = PH_T.CONFIRME; ligne.montantRecu = ligne.montant; ligne.ecart = 0;
+      ligne.confirmePar = u.nom; ligne.confirmeLe = ligne.saisiLe;
+    }
+    store.ajouter('Transferts', ligne);
+    journaliser(u, libelleTransfert(ligne), d + ' : ' + ligne.montant + (ligne.frais ? ' (frais ' + ligne.frais + ')' : '') +
+      (ligne.statut === PH_T.ATTENTE ? ' — en attente de confirmation' : ''));
+    return decorer(ligne);
+  };
+
+  api.confirmerTransfert = function (jeton, tid, accepte, recu, note) {
+    var u = session(jeton);
+    var t = store.lire('Transferts').filter(function (x) { return x.id === tid; })[0];
+    if (!t) erreur('Mouvement introuvable.');
+    if (t.statut !== PH_T.ATTENTE) erreur('Ce mouvement a déjà été traité.');
+    if (!peutConfirmer(u, t)) erreur("Ce n'est pas à vous de confirmer ce versement.");
+    var champs = { confirmePar: u.nom, confirmeLe: outils.maintenant() };
+    if (accepte) {
+      var r = recu === '' || recu == null ? Number(t.montant) : montant(recu, 'montant reçu');
+      champs.statut = PH_T.CONFIRME; champs.montantRecu = r; champs.ecart = r - Number(t.montant);
+    } else champs.statut = PH_T.REFUSE;
+    if (note) champs.note = txt((t.note ? t.note + ' / ' : '') + note, 300);
+    store.maj('Transferts', 'id', tid, champs);
+    journaliser(u, accepte ? 'Versement reçu' : 'Versement refusé', libelleTransfert(t) + ' de ' + t.saisiPar + ' : ' + t.montant +
+      (accepte && champs.ecart ? ' — reçu ' + champs.montantRecu + ' (écart ' + champs.ecart + ')' : ''));
+    return true;
+  };
+
+  api.annulerTransfert = function (jeton, tid) {
+    var u = session(jeton);
+    var t = store.lire('Transferts').filter(function (x) { return x.id === tid; })[0];
+    if (!t) erreur('Mouvement introuvable.');
+    var ok = (t.statut === PH_T.ATTENTE && t.saisiParId === u.id) || (peut(u, 'banque') && t.statut !== PH_T.ANNULE);
+    if (!ok) erreur("Vous ne pouvez pas annuler ce mouvement.");
+    if (oui(t.rapproche)) erreur('Ce mouvement est pointé sur le relevé bancaire : dépointez-le d\'abord.');
+    store.maj('Transferts', 'id', tid, { statut: PH_T.ANNULE });
+    journaliser(u, 'Mouvement annulé', libelleTransfert(t) + ' du ' + t.date + ' : ' + t.montant);
+    return true;
+  };
+
+  /** Recoupage : on compte l'argent réel (ou on lit le solde Orange Money / le relevé) et on compare. */
+  api.controlerSolde = function (jeton, cle, reel, note) {
+    var u = session(jeton);
+    exiger(u, 'verser');
+    if (role(u).comptesVus.indexOf(cle) === -1) erreur("Vous n'avez pas accès à ce compte.");
+    if (reel === '' || reel == null) erreur('Saisissez le montant constaté.');
+    var r = montant(reel, 'montant constaté');
+    var calc = calculerSoldes(outils.aujourdhui()).soldes[cle];
+    var ligne = { id: id('S'), date: outils.aujourdhui(), compte: cle, type: 'Contrôle', montant: r, calcule: calc, ecart: r - calc,
+      note: txt(note, 300), saisiPar: u.nom, saisiLe: outils.maintenant() };
+    store.ajouter('Soldes', ligne);
+    journaliser(u, 'Contrôle ' + nomCompte(cle), 'constaté ' + r + ', calculé ' + calc + ', écart ' + (r - calc));
+    return ligne;
+  };
+
+  api.definirSoldeDepart = function (jeton, cle, jour, valeur) {
+    var u = session(jeton);
+    exiger(u, 'banque');
+    if (!PH_COMPTES.some(function (c) { return c.cle === cle; })) erreur('Compte inconnu.');
+    var d = date(jour);
+    var v = montant(valeur, 'solde de départ');
+    var ex = store.lire('Soldes').filter(function (x) { return x.type === 'Départ' && x.compte === cle && x.date === d; })[0];
+    if (ex) store.maj('Soldes', 'id', ex.id, { montant: v, saisiPar: u.nom, saisiLe: outils.maintenant() });
+    else store.ajouter('Soldes', { id: id('S'), date: d, compte: cle, type: 'Départ', montant: v, calcule: '', ecart: '', note: '', saisiPar: u.nom, saisiLe: outils.maintenant() });
+    journaliser(u, 'Solde de départ', nomCompte(cle) + ' au ' + d + ' : ' + v);
+    return true;
+  };
+
+  /** Rapprochement bancaire : opérations de la banque, pointées ou non sur le relevé. */
+  api.banque = function (jeton, mois) {
+    var u = session(jeton);
+    exiger(u, 'banque');
+    var m = txt(mois, 7);
+    if (!/^\d{4}-\d{2}$/.test(m)) erreur('Mois invalide.');
+    var aujourdhui = outils.aujourdhui();
+    var dep = calculerSoldes(aujourdhui).departs.banque;
+    function apresDepart(d) { return !dep || d >= dep.date; }
+    var ops = [];
+    store.lire('Mouvements').forEach(function (x) {
+      if (compteMouvement(x) !== 'banque' || !apresDepart(x.date)) return;
+      ops.push({ type: 'M', id: x.id, date: x.date, montant: (x.sens === 'Entrée' ? 1 : -1) * Number(x.montant || 0),
+        libelle: (x.fournisseur || x.categorie) + (x.libelle ? ' — ' + x.libelle : ''), reference: x.reference, mode: x.mode,
+        rapproche: oui(x.rapproche), rapprocheLe: x.rapprocheLe, par: x.saisiPar });
+    });
+    store.lire('Recettes').forEach(function (r) {
+      if (Number(r.cheque) > 0 && apresDepart(r.date)) ops.push({ type: 'R', id: r.id, date: r.date, montant: Number(r.cheque),
+        libelle: 'Chèques clients — caisse du ' + r.session.toLowerCase(), reference: '', mode: 'Chèque', rapproche: true, par: r.saisiPar });
+    });
+    transfertsValides().forEach(function (t) {
+      if ((t.de !== 'banque' && t.vers !== 'banque') || !apresDepart(t.date)) return;
+      var v = t.vers === 'banque' ? Number(t.montantRecu === '' ? t.montant : t.montantRecu) : -(Number(t.montant) + Number(t.frais || 0));
+      ops.push({ type: 'T', id: t.id, date: t.date, montant: v, libelle: libelleTransfert(t) + (t.note ? ' — ' + t.note : ''),
+        reference: t.reference, mode: '', rapproche: oui(t.rapproche), rapprocheLe: t.rapprocheLe, par: t.saisiPar });
+    });
+    var solde = calculerSoldes(aujourdhui).soldes.banque;
+    var nonPointes = ops.filter(function (o) { return !o.rapproche; });
+    var debitsEnAttente = nonPointes.filter(function (o) { return o.montant < 0; }).reduce(function (a, o) { return a - o.montant; }, 0);
+    var creditsEnAttente = nonPointes.filter(function (o) { return o.montant > 0; }).reduce(function (a, o) { return a + o.montant; }, 0);
+    var releves = store.lire('Soldes').filter(function (x) { return x.compte === 'banque' && x.type === 'Relevé'; })
+      .sort(function (a, b) { return a.saisiLe < b.saisiLe ? 1 : -1; });
+    return {
+      mois: m, solde: solde, debitsEnAttente: debitsEnAttente, creditsEnAttente: creditsEnAttente,
+      attenduReleve: solde + debitsEnAttente - creditsEnAttente,
+      operations: ops.filter(function (o) { return !o.rapproche || o.date.slice(0, 7) === m; })
+        .sort(function (a, b) { return a.date < b.date ? 1 : -1; }),
+      dernierReleve: releves[0] || null
+    };
+  };
+
+  api.pointer = function (jeton, type, oid, pointe) {
+    var u = session(jeton);
+    exiger(u, 'banque');
+    var table = type === 'T' ? 'Transferts' : type === 'M' ? 'Mouvements' : erreur('Opération inconnue.');
+    var x = store.lire(table).filter(function (y) { return y.id === oid; })[0];
+    if (!x) erreur('Opération introuvable.');
+    store.maj(table, 'id', oid, { rapproche: pointe ? 'oui' : '', rapprocheLe: pointe ? outils.maintenant() : '' });
+    return true;
+  };
+
+  api.enregistrerReleve = function (jeton, valeur, note) {
+    var u = session(jeton);
+    exiger(u, 'banque');
+    var r = montant(valeur, 'solde du relevé');
+    var b = api.banque(jeton, outils.aujourdhui().slice(0, 7));
+    var ligne = { id: id('S'), date: outils.aujourdhui(), compte: 'banque', type: 'Relevé', montant: r, calcule: b.attenduReleve,
+      ecart: r - b.attenduReleve, note: txt(note, 300), saisiPar: u.nom, saisiLe: outils.maintenant() };
+    store.ajouter('Soldes', ligne);
+    journaliser(u, 'Rapprochement bancaire', 'relevé ' + r + ', attendu ' + b.attenduReleve + ', écart ' + ligne.ecart);
+    return ligne;
+  };
+
   /* ---------- Bilan du mois (gérant) ---------- */
   api.bilan = function (jeton, mois) {
     var u = session(jeton);
@@ -606,6 +898,10 @@ function creerPharmacie(store, outils) {
     if (!/^\d{4}-\d{2}$/.test(m)) erreur('Mois invalide.');
     var recettes = store.lire('Recettes').filter(function (r) { return r.date.slice(0, 7) === m; });
     var mouvements = store.lire('Mouvements').filter(function (x) { return x.date.slice(0, 7) === m; });
+    transfertsValides().filter(function (t) { return t.date.slice(0, 7) === m && Number(t.frais) > 0; }).forEach(function (t) {
+      mouvements.push({ id: t.id, date: t.date, sens: 'Sortie', categorie: PH_CATEGORIE_FRAIS, montant: Number(t.frais),
+        compte: t.de, mode: compteDef(t.de).mode, libelle: libelleTransfert(t), saisiPar: t.saisiPar, fournisseur: '', reference: t.reference });
+    });
     var parJour = {};
     function jour(d) { return parJour[d] || (parJour[d] = { date: d, matin: 0, soir: 0, recettes: 0, ecart: 0, entrees: 0, sorties: 0 }); }
     recettes.forEach(function (r) {
@@ -700,4 +996,6 @@ function creerPharmacie(store, outils) {
 var PH_FONCTIONS = ['profils', 'connexion', 'deconnexion', 'changerPin', 'charger', 'journee', 'enregistrerRecette',
   'supprimerRecette', 'enregistrerMouvement', 'supprimerMouvement', 'enregistrerFournisseur', 'importerFournisseurs',
   'nouvelleDemande', 'repondreRemplacement', 'traiterDemande', 'annulerDemande', 'historiqueDemandes', 'bilan',
-  'equipe', 'enregistrerUtilisateur', 'reinitialiserPin', 'renommerPharmacie', 'journal'];
+  'equipe', 'enregistrerUtilisateur', 'reinitialiserPin', 'renommerPharmacie', 'journal',
+  'tresorerie', 'nouveauTransfert', 'confirmerTransfert', 'annulerTransfert', 'controlerSolde', 'definirSoldeDepart',
+  'banque', 'pointer', 'enregistrerReleve'];

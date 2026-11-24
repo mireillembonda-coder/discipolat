@@ -31,8 +31,7 @@ Le gérant les renomme dans **Plus › Équipe et accès** (et peut en ajouter).
 
 ## Règles de saisie
 
-- **Caisse** : date, caisse du matin ou du soir, montants par mode (espèces, Orange Money, MTN MoMo, carte, chèques,
-  assurances / tiers payant, crédit clients). Si on tape le chiffre du **logiciel / ticket Z**, le manque ou
+- **Caisse** : date, caisse du matin ou du soir, montants par mode (espèces, Orange Money, MTN MoMo, chèques, crédit clients). Si on tape le chiffre du **logiciel / ticket Z**, le manque ou
   l'excédent est calculé tout seul.
 - Une caissière peut corriger ou supprimer **sa propre** saisie **le jour même**. Après, seul le gérant peut.
 - On ne peut pas saisir une date future, ni (sauf le gérant) une date de plus de 2 jours.
@@ -40,6 +39,29 @@ Le gérant les renomme dans **Plus › Équipe et accès** (et peut en ajouter).
   « Versement en banque » est une sortie de caisse mais pas une dépense : le bilan le sépare.
 - **Solde espèces du jour** = espèces des caisses + entrées en espèces − sorties payées en espèces.
 - Tout est noté dans le **journal d'activité** (qui a saisi, modifié ou supprimé quoi, et quand).
+
+## Comptes : où est l'argent (onglet « Comptes »)
+
+Six comptes, avec leur solde calculé en permanence :
+**Caisse (tiroir)** · **Caissière principale** · **Orange Money** · **MTN MoMo** · **Espèces chez la gérante** · **Banque**.
+
+- Une caisse saisie alimente : les espèces → Caisse (tiroir), Orange Money → Orange Money, MTN → MTN MoMo, chèques → Banque.
+  Le crédit client n'entre dans aucun compte (pas encore payé).
+- Chaque **sortie** indique d'où part l'argent : une caissière paie depuis la caisse (petit fournisseur en espèces…) ;
+  la principale aussi depuis sa caisse, Orange Money, MTN ou la **banque** (chèque / virement : Ubipharm, Laborex, gardien,
+  comptable, impôts, gros salaires).
+- **Versement caissière → caissière principale** : la caissière déclare le montant, la principale **confirme ce qu'elle a reçu**
+  (l'écart éventuel est noté).
+- **Retrait Orange Money / MTN** (déstockage) par la principale, avec les frais (comptés comme dépense).
+- **Versement à la gérante** : la principale envoie, **la gérante confirme** la réception.
+- **Dépôt en banque / retrait à la banque** : la gérante.
+- **Contrôler** (sur chaque compte) : on compte l'argent réel ou on lit le solde Orange Money → l'écart s'affiche et est gardé.
+- **Rapprochement bancaire** (gérante) : cocher ce qui est passé sur le relevé ; l'application calcule ce que le relevé
+  devrait afficher (solde − chèques pas encore passés + …) et l'écart.
+- **Soldes de départ** (gérante) : l'argent présent dans chaque compte au 1er décembre.
+
+Qui voit quoi : la caissière voit la Caisse ; la principale voit Caisse, sa caisse, Orange Money et MTN ;
+la gérante voit tout, dont la banque.
 
 ## Demandes
 
