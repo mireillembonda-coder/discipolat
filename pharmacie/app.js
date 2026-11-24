@@ -94,6 +94,10 @@
     return (p[0].charAt(0) + (/^\d+$/.test(der) ? der : der.charAt(0))).toUpperCase();
   }
   function avatar(u, cls) { return '<span class="avatar ' + esc(u.role) + ' ' + (cls || '') + '">' + esc(initiales(u.nom)) + '</span>'; }
+  function nomCompte(cle) {
+    var c = S.d && S.d.listes.comptes.filter(function (x) { return x.cle === cle; })[0];
+    return c ? c.nom : cle;
+  }
   function lireMontant(v) { return String(v || '').replace(/[^\d]/g, ''); }
   function formatSaisie(v) { var n = lireMontant(v); return n ? Number(n).toLocaleString('fr-FR').replace(/ | /g, ' ') : ''; }
 
@@ -108,6 +112,8 @@
     accueil: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
     caisse: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M7 7V4h10v3"/><path d="M3 12h18"/><circle cx="12" cy="16" r="1.5"/>',
     operations: '<path d="M7 4v16"/><path d="M3 8l4-4 4 4"/><path d="M17 20V4"/><path d="M13 16l4 4 4-4"/>',
+    comptes: '<path d="M3 7h15a3 3 0 0 1 3 3v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M3 7l12-4 2 4"/><circle cx="16.5" cy="14" r="1.4"/>',
+    banque: '<path d="M3 10l9-6 9 6"/><path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 21h18"/>',
     demandes: '<rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/><path d="M9 15l2 2 4-4"/>',
     bilan: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
     plus: '<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>',
@@ -276,6 +282,7 @@
     var o = [{ id: 'accueil', nom: 'Accueil' }];
     if (peut('recettes')) o.push({ id: 'caisse', nom: 'Caisse' });
     if (peut('mouvements')) o.push({ id: 'operations', nom: 'Sorties' });
+    if (peut('verser')) o.push({ id: 'comptes', nom: 'Comptes', pastille: (S.d.aConfirmer || []).length });
     o.push({ id: 'demandes', nom: 'Demandes', pastille: (S.d.aRemplacer.length + (S.d.aValider ? S.d.aValider.length : 0)) });
     if (peut('bilan')) o.push({ id: 'bilan', nom: 'Bilan' });
     o.push({ id: 'plus', nom: 'Plus' });
@@ -322,6 +329,11 @@
     var h = new Date().getHours();
     var html = '<div class="salut"><h1>' + (h < 18 ? 'Bonjour' : 'Bonsoir') + ' ' + esc(u.nom.split(' ')[0]) + '</h1><p>' + esc(dateLongue(d.aujourdhui)) + '</p></div>';
     html += blocRemplacements();
+    if (d.aConfirmer && d.aConfirmer.length) {
+      html += '<div class="carte" style="border-color:#BFD5F0;background:var(--bleu-clair)"><div class="carte-titre"><h2>' + d.aConfirmer.length +
+        ' versement' + (d.aConfirmer.length > 1 ? 's' : '') + ' à confirmer</h2><button class="btn petit" data-act="aller" data-onglet="comptes">Voir</button></div>' +
+        '<div class="petit doux">' + d.aConfirmer.slice(0, 3).map(function (x) { return esc(x.saisiPar) + ' — ' + F(x.montant); }).join('<br>') + '</div></div>';
+    }
     if (d.aValider && d.aValider.length) {
       html += '<div class="carte" style="border-color:#F1D9AE;background:var(--orange-clair)"><div class="carte-titre"><h2>' + d.aValider.length +
         ' demande' + (d.aValider.length > 1 ? 's' : '') + ' à traiter</h2><button class="btn petit" data-act="aller" data-onglet="demandes">Voir</button></div>' +
@@ -547,7 +559,8 @@
     if (!l.length) return '<p class="vide-msg">' + vide + '</p>';
     return '<ul class="liste">' + l.map(function (x) {
       return '<li><div class="corps"><div class="ligne1"><span>' + esc(x.fournisseur || x.categorie) + '</span><span class="num">' + F(x.montant) + '</span></div>' +
-        '<div class="ligne2">' + (x.fournisseur ? esc(x.categorie) + ' · ' : '') + esc(x.mode) + (x.reference ? ' · N° ' + esc(x.reference) : '') +
+        '<div class="ligne2">' + (x.fournisseur ? esc(x.categorie) + ' · ' : '') + esc(x.compte ? nomCompte(x.compte) + (x.compte === 'banque' ? ' (' + x.mode.toLowerCase() + ')' : '') : x.mode) +
+        (x.reference ? ' · N° ' + esc(x.reference) : '') + (x.rapproche === 'oui' ? ' · <span class="puce">Passé en banque</span>' : '') +
         (x.libelle ? '<br>' + esc(x.libelle) : '') + '<br>Par ' + esc(x.saisiPar) + ' à ' + esc(heure(x.saisiLe)) +
         (x.modifiePar ? ' · modifiée par ' + esc(x.modifiePar) : '') + '</div>' +
         (x.modifiable ? '<div class="actions"><button class="btn petit contour" data-act="modifierMouvement" data-id="' + esc(x.id) + '">Modifier</button>' +
@@ -577,6 +590,9 @@
     var sens = m.sens || 'Sortie';
     var date = m.date || (S.onglet === 'operations' ? S.dateOps : S.d.aujourdhui);
     function cats() { return sens === 'Entrée' ? L.entrees : L.sorties; }
+    var parRole = { caissiere: 'caisse', principale: 'principale', admin: 'banque' };
+    var compteDefaut = m.compte || (L.comptesSortie.indexOf(parRole[S.d.user.role]) !== -1 ? parRole[S.d.user.role] : L.comptesSortie[0]);
+    var modeBanque = m.mode === 'Virement' ? 'Virement' : 'Chèque';
     var html = '<form id="fMvt" autocomplete="off">' +
       (m.id ? '' : '<div class="champ"><div class="segment" id="segSens"><button type="button" data-v="Sortie">Sortie (paiement)</button><button type="button" data-v="Entrée">Entrée d\'argent</button></div></div>') +
       '<div class="champ"><label for="oDate">Date</label><input type="date" id="oDate" value="' + date + '" max="' + S.d.aujourdhui + '" required></div>' +
@@ -584,10 +600,11 @@
       '<div class="champ" id="zFour"><label for="oFour">Fournisseur</label><select id="oFour">' + optionsFournisseurs(m.fournisseurId) + '</select>' +
       '<input id="oFourNouveau" placeholder="Nom du nouveau fournisseur" style="margin-top:8px" hidden></div>' +
       '<div class="champ"><label for="oMontant">Montant (F CFA)</label><input id="oMontant" inputmode="numeric" required placeholder="0" value="' + (m.montant ? formatSaisie(m.montant) : '') + '" style="font-size:1.2rem;font-weight:700"></div>' +
-      '<div class="deux"><div class="champ"><label for="oMode">Payé par</label><select id="oMode">' + L.modes.map(function (x) {
-        return '<option' + (x === (m.mode || 'Espèces') ? ' selected' : '') + '>' + esc(x) + '</option>';
+      '<div class="champ"><label for="oCompte" id="lCompte">L\'argent sort de</label><select id="oCompte">' + L.comptesSortie.map(function (c) {
+        return '<option value="' + c + '"' + (c === compteDefaut ? ' selected' : '') + '>' + esc(nomCompte(c)) + '</option>';
       }).join('') + '</select></div>' +
-      '<div class="champ" id="zRef"><label for="oRef">N° facture / BL</label><input id="oRef" value="' + esc(m.reference || '') + '" placeholder="Facultatif"></div></div>' +
+      '<div class="champ" id="zBanque"><label for="oMode">Payé par</label><div class="segment" id="segMode"><button type="button" data-v="Chèque">Chèque</button><button type="button" data-v="Virement">Virement</button></div></div>' +
+      '<div class="champ" id="zRef"><label for="oRef" id="lRef">N° facture / BL</label><input id="oRef" value="' + esc(m.reference || '') + '" placeholder="Facultatif"></div>' +
       '<div class="champ"><label for="oLib">Détail</label><input id="oLib" value="' + esc(m.libelle || '') + '" placeholder="Ex. : facture de novembre, achat de sachets…"></div>' +
       '<button class="btn bloc" type="submit">' + (m.id ? 'Enregistrer les modifications' : 'Enregistrer') + '</button></form>';
     ouvrirFeuille(m.id ? 'Modifier l\'opération' : 'Nouvelle opération', html, function (v) {
@@ -598,12 +615,20 @@
         }).join('');
         majFour();
       }
+      var selCompte = v.querySelector('#oCompte');
       function majFour() {
         var c = cats().filter(function (x) { return x.nom === selCat.value; })[0];
         v.querySelector('#zFour').hidden = !(c && c.fournisseur);
-        v.querySelector('#zRef').style.visibility = sens === 'Sortie' ? '' : 'hidden';
         nouveau.hidden = selFour.value !== '__nouveau';
+        var banque = selCompte.value === 'banque';
+        v.querySelector('#zBanque').hidden = !banque;
+        v.querySelector('#zRef').hidden = sens !== 'Sortie' && !banque;
+        v.querySelector('#lRef').textContent = banque ? (modeBanque === 'Chèque' ? 'N° du chèque' : 'Référence du virement') : 'N° facture / BL';
+        v.querySelector('#lCompte').textContent = sens === 'Sortie' ? 'L\'argent sort de' : 'L\'argent arrive dans';
+        v.querySelectorAll('#segMode button').forEach(function (b) { b.classList.toggle('actif', b.dataset.v === modeBanque); });
       }
+      selCompte.onchange = majFour;
+      v.querySelectorAll('#segMode button').forEach(function (b) { b.onclick = function () { modeBanque = b.dataset.v; majFour(); }; });
       function majSens() {
         v.querySelectorAll('#segSens button').forEach(function (b) { b.classList.toggle('actif', b.dataset.v === sens); });
         v.querySelector('.feuille-entete h2').textContent = m.id ? 'Modifier l\'opération' : (sens === 'Sortie' ? 'Nouvelle sortie' : 'Nouvelle entrée');
@@ -619,7 +644,8 @@
       f.onsubmit = function (ev) {
         ev.preventDefault();
         var o = { id: m.id || '', sens: sens, date: v.querySelector('#oDate').value, categorie: selCat.value, fournisseurId: selFour.value,
-          montant: lireMontant(mt.value), mode: v.querySelector('#oMode').value, reference: sens === 'Sortie' ? v.querySelector('#oRef').value : '',
+          montant: lireMontant(mt.value), compte: selCompte.value, mode: modeBanque,
+          reference: !v.querySelector('#zRef').hidden ? v.querySelector('#oRef').value : '',
           libelle: v.querySelector('#oLib').value };
         var c = cats().filter(function (x) { return x.nom === o.categorie; })[0];
         if (!c || !c.fournisseur) o.fournisseurId = '';
@@ -719,6 +745,210 @@
     }).catch(erreur);
   }
 
+  /* ---------------------------- Comptes (trésorerie) ---------------------------- */
+  var T = null; // dernière trésorerie chargée
+
+  function puceTransfert(st) {
+    var cls = st === 'Confirmé' ? '' : st === 'En attente' ? 'attente' : st === 'Refusé' ? 'refus' : 'neutre';
+    return '<span class="puce ' + cls + '">' + esc(st) + '</span>';
+  }
+
+  VUES.comptes = function () {
+    el('vue').innerHTML = '<div id="tresoCorps"><p class="vide-msg">Chargement…</p></div>';
+    appel('tresorerie', jeton()).then(function (t) {
+      T = t;
+      if (S.onglet !== 'comptes') return;
+      var html = '';
+      // soldes
+      html += '<div class="carte"><h2>Où est l\'argent</h2><div class="chiffres">' + t.comptes.map(function (c) {
+        var ctrl = c.dernierControle;
+        return '<div class="chiffre' + (c.solde < 0 ? ' rouge' : '') + '"><div class="l">' + esc(c.nom) + '</div><div class="v num">' + F(c.solde) + '</div>' +
+          (c.sortant ? '<div class="petit doux">dont ' + F(c.sortant) + ' en cours de versement</div>' : '') +
+          (ctrl ? '<div class="petit ' + (Number(ctrl.ecart) ? '' : 'doux') + '" style="' + (Number(ctrl.ecart) ? 'color:var(--rouge)' : '') + '">Contrôlé le ' + esc(dateCourte(ctrl.date)) +
+            (Number(ctrl.ecart) ? ' : écart ' + Fsigne(ctrl.ecart) : ' ✓') + '</div>' : '') +
+          '<button class="lien" style="padding:6px 0 0" data-act="controler" data-cle="' + c.cle + '">Contrôler</button></div>';
+      }).join('') + '</div>' +
+        (t.comptes.length > 1 ? '<p class="petit doux" style="margin:10px 0 0">Total : <b class="num">' + F(t.comptes.reduce(function (a, c) { return a + c.solde; }, 0)) + '</b>' +
+          (t.possibles.banque ? '' : ' (sur les comptes que vous gérez)') + '</p>' : '') + '</div>';
+      // à confirmer
+      if (t.aConfirmer.length) {
+        html += '<div class="section-titre">À confirmer : avez-vous bien reçu ?</div><div class="carte" style="border-color:#BFD5F0"><ul class="liste">' + t.aConfirmer.map(function (x) {
+          return '<li><div class="corps"><div class="ligne1"><span>' + esc(x.libelle) + '</span><span class="num">' + F(x.montant) + '</span></div>' +
+            '<div class="ligne2">De ' + esc(x.saisiPar) + ' · ' + esc(dateCourte(x.date)) + ' à ' + esc(heure(x.saisiLe)) + (x.note ? '<br>« ' + esc(x.note) + ' »' : '') + '</div>' +
+            '<div class="montant-ligne"><label for="recu_' + esc(x.id) + '">Montant reçu</label><input id="recu_' + esc(x.id) + '" data-recu="' + esc(x.id) + '" inputmode="numeric" value="' + formatSaisie(x.montant) + '"></div>' +
+            '<div class="actions"><button class="btn petit" data-act="confirmerT" data-id="' + esc(x.id) + '" data-oui="1">Confirmer la réception</button>' +
+            '<button class="btn petit danger" data-act="confirmerT" data-id="' + esc(x.id) + '">Refuser</button></div></div></li>';
+        }).join('') + '</ul></div>';
+      }
+      // actions
+      var act = [];
+      if (t.possibles.versement) act.push('<button class="btn" data-act="transfert" data-de="caisse" data-vers="principale">Verser à la caissière principale</button>');
+      if (t.possibles.retraitMobile) act.push('<button class="btn secondaire" data-act="transfert" data-de="om" data-vers="principale">Retrait Orange Money / MTN</button>');
+      if (t.possibles.versementGerante) act.push('<button class="btn secondaire" data-act="transfert" data-de="principale" data-vers="gerante">Verser à la gérante</button>');
+      if (t.possibles.banque) {
+        act.push('<button class="btn secondaire" data-act="transfert" data-de="gerante" data-vers="banque">Dépôt en banque</button>');
+        act.push('<button class="btn contour" data-act="transfert" data-de="banque" data-vers="gerante">Retrait à la banque</button>');
+        act.push('<button class="btn contour" data-act="transfert" data-de="" data-vers="">Autre mouvement</button>');
+      }
+      html += '<div class="section-titre">Déplacer de l\'argent</div><div class="actions-rapides" style="grid-template-columns:1fr">' + act.join('') + '</div>';
+      if (t.possibles.banque) {
+        html += '<div class="section-titre">Banque et départ</div><div class="carte menu-liste" style="padding:4px 14px">' +
+          '<button data-act="rapprochement">' + icone('banque') + '<span>Rapprochement bancaire<br><span class="petit doux">Cocher ce qui est passé sur le relevé</span></span><span class="fleche">›</span></button>' +
+          '<button data-act="soldesDepart">' + icone('comptes') + '<span>Soldes de départ<br><span class="petit doux">L\'argent présent au démarrage (1er décembre)</span></span><span class="fleche">›</span></button></div>';
+      }
+      // historique
+      html += '<div class="section-titre">Derniers mouvements entre comptes</div><div class="carte">' + (t.transferts.length ? '<ul class="liste">' + t.transferts.map(function (x) {
+        var recu = x.statut === 'Confirmé' && Number(x.ecart) ? '<br><b style="color:var(--rouge)">Reçu ' + F(x.montantRecu) + ' (écart ' + Fsigne(x.ecart) + ')</b>' : '';
+        return '<li><div class="corps"><div class="ligne1"><span>' + esc(x.libelle) + '</span><span class="num">' + F(x.montant) + '</span></div>' +
+          '<div class="ligne2">' + esc(dateCourte(x.date)) + ' · ' + esc(x.deNom) + ' → ' + esc(x.versNom) + (Number(x.frais) ? ' · frais ' + F(x.frais) : '') +
+          (x.reference ? ' · N° ' + esc(x.reference) : '') + '<br>Par ' + esc(x.saisiPar) + (x.confirmePar && x.confirmePar !== x.saisiPar ? ' · reçu par ' + esc(x.confirmePar) : '') +
+          (x.note ? '<br>« ' + esc(x.note) + ' »' : '') + recu + '</div><div class="actions">' + puceTransfert(x.statut) +
+          (x.rapproche === 'oui' ? ' <span class="puce">Passé en banque</span>' : '') +
+          (x.annulable ? ' <button class="btn petit contour" data-act="annulerT" data-id="' + esc(x.id) + '">Annuler</button>' : '') + '</div></div></li>';
+      }).join('') + '</ul>' : '<p class="vide-msg">Aucun mouvement pour l\'instant.</p>') + '</div>';
+      el('tresoCorps').innerHTML = html;
+      lierActions(el('tresoCorps'));
+      el('tresoCorps').querySelectorAll('[data-recu]').forEach(function (i) { i.addEventListener('input', function () { i.value = formatSaisie(i.value); }); });
+    }).catch(erreur);
+  };
+
+  function formTransfert(de, vers) {
+    var L = S.d.listes, admin = T && T.possibles.banque;
+    var mobile = de === 'om' || de === 'momo';
+    var titres = { 'caisse>principale': 'Verser à la caissière principale', 'principale>gerante': 'Verser à la gérante',
+      'gerante>banque': 'Dépôt en banque', 'banque>gerante': 'Retrait à la banque' };
+    var titre = mobile ? 'Retrait Orange Money / MTN' : (titres[de + '>' + vers] || 'Mouvement entre comptes');
+    var solde = function (cle) { var c = T && T.comptes.filter(function (x) { return x.cle === cle; })[0]; return c ? c.solde : null; };
+    function opts(sel, liste) { return liste.map(function (c) { return '<option value="' + c.cle + '"' + (c.cle === sel ? ' selected' : '') + '>' + esc(c.nom) + '</option>'; }).join(''); }
+    var libre = admin && (!de || !vers);
+    var html = '<form id="fT" autocomplete="off">' +
+      (mobile ? '<div class="champ"><label>Depuis</label><div class="segment" id="segMob"><button type="button" data-v="om">Orange Money</button><button type="button" data-v="momo">MTN MoMo</button></div></div>' : '') +
+      (libre ? '<div class="deux"><div class="champ"><label for="tDe">De</label><select id="tDe">' + opts(de || 'gerante', L.comptes) + '</select></div>' +
+        '<div class="champ"><label for="tVers">Vers</label><select id="tVers">' + opts(vers || 'banque', L.comptes) + '</select></div></div>' : '') +
+      '<div class="carte" style="padding:12px 14px" id="tInfo"></div>' +
+      '<div class="champ"><label for="tMontant">' + (mobile ? 'Montant retiré (reçu en espèces)' : 'Montant') + '</label><input id="tMontant" inputmode="numeric" required placeholder="0" style="font-size:1.2rem;font-weight:700"></div>' +
+      '<div class="champ" id="zFrais"' + (mobile || libre ? '' : ' hidden') + '><label for="tFrais">Frais de retrait / transfert</label><input id="tFrais" inputmode="numeric" placeholder="0"><div class="aide">Prélevés en plus sur le compte de départ, et comptés comme dépense.</div></div>' +
+      '<div class="champ"><label for="tDate">Date</label><input type="date" id="tDate" value="' + S.d.aujourdhui + '" max="' + S.d.aujourdhui + '"></div>' +
+      '<div class="champ"><label for="tRef">Référence</label><input id="tRef" placeholder="' + (vers === 'banque' || de === 'banque' ? 'N° du bordereau / du chèque' : 'Facultatif') + '"></div>' +
+      '<div class="champ"><label for="tNote">Note</label><input id="tNote" placeholder="Facultatif"></div>' +
+      '<button class="btn bloc" type="submit">Enregistrer</button></form>';
+    ouvrirFeuille(titre, html, function (v) {
+      var src = de;
+      function courant() { return { de: libre ? v.querySelector('#tDe').value : src, vers: libre ? v.querySelector('#tVers').value : vers }; }
+      function info() {
+        var c = courant(), sd = solde(c.de);
+        var attente = (c.de === 'caisse' && c.vers === 'principale') ? 'La caissière principale devra confirmer qu\'elle a bien reçu l\'argent.' :
+          (c.de === 'principale' && c.vers === 'gerante') ? 'La gérante devra confirmer qu\'elle a bien reçu l\'argent.' : '';
+        v.querySelector('#tInfo').innerHTML = '<div class="petit"><b>' + esc(nomCompte(c.de)) + '</b> → <b>' + esc(nomCompte(c.vers)) + '</b>' +
+          (sd != null ? '<br>Solde actuel de « ' + esc(nomCompte(c.de)) + ' » : <b class="num">' + F(sd) + '</b>' : '') + (attente ? '<br>' + attente : '') + '</div>';
+        v.querySelectorAll('#segMob button').forEach(function (b) { b.classList.toggle('actif', b.dataset.v === src); });
+      }
+      v.querySelectorAll('#segMob button').forEach(function (b) { b.onclick = function () { src = b.dataset.v; info(); }; });
+      if (libre) { v.querySelector('#tDe').onchange = info; v.querySelector('#tVers').onchange = info; }
+      ['#tMontant', '#tFrais'].forEach(function (q) { var i = v.querySelector(q); i.addEventListener('input', function () { i.value = formatSaisie(i.value); }); });
+      info();
+      v.querySelector('#fT').onsubmit = function (ev) {
+        ev.preventDefault();
+        var c = courant(), btn = this.querySelector('[type=submit]'); btn.disabled = true;
+        appel('nouveauTransfert', jeton(), { de: c.de, vers: c.vers, montant: lireMontant(v.querySelector('#tMontant').value), frais: lireMontant(v.querySelector('#tFrais').value),
+          date: v.querySelector('#tDate').value, reference: v.querySelector('#tRef').value, note: v.querySelector('#tNote').value }).then(function (r) {
+          fermerFeuille(); toast(r.statut === 'En attente' ? 'Envoyé ✓ En attente de confirmation' : 'Enregistré ✓'); rafraichir();
+        }, function (e) { btn.disabled = false; erreur(e); });
+      };
+    });
+  }
+
+  function formControle(cle) {
+    var c = T.comptes.filter(function (x) { return x.cle === cle; })[0];
+    var aide = { caisse: 'Comptez les espèces présentes dans le tiroir.', principale: 'Comptez les espèces que détient la caissière principale.',
+      om: 'Regardez le solde du compte Orange Money sur le téléphone.', momo: 'Regardez le solde du compte MTN MoMo sur le téléphone.',
+      gerante: 'Comptez les espèces que vous détenez pour la pharmacie.', banque: 'Pour la banque, utilisez plutôt le rapprochement bancaire.' }[cle];
+    var html = '<form id="fCtl"><p class="doux" style="margin-top:0">' + esc(aide) + '</p>' +
+      '<div class="chiffres" style="margin-bottom:12px"><div class="chiffre"><div class="l">Selon l\'application</div><div class="v num">' + F(c.solde) + '</div></div>' +
+      '<div class="chiffre" id="ctlEcart"><div class="l">Écart</div><div class="v num">—</div></div></div>' +
+      '<div class="champ"><label for="ctlReel">Montant constaté</label><input id="ctlReel" inputmode="numeric" required style="font-size:1.2rem;font-weight:700"></div>' +
+      '<div class="champ"><label for="ctlNote">Explication (si écart)</label><input id="ctlNote" placeholder="Facultatif"></div>' +
+      '<button class="btn bloc" type="submit">Enregistrer le contrôle</button></form>';
+    ouvrirFeuille('Contrôler : ' + c.nom, html, function (v) {
+      var i = v.querySelector('#ctlReel');
+      i.addEventListener('input', function () {
+        i.value = formatSaisie(i.value);
+        var n = lireMontant(i.value), box = v.querySelector('#ctlEcart');
+        if (n === '') { box.querySelector('.v').textContent = '—'; box.className = 'chiffre'; return; }
+        var e = Number(n) - c.solde;
+        box.querySelector('.v').textContent = e === 0 ? 'Juste ✓' : Fsigne(e);
+        box.className = 'chiffre' + (e < 0 ? ' rouge' : '');
+      });
+      v.querySelector('#fCtl').onsubmit = function (ev) {
+        ev.preventDefault();
+        appel('controlerSolde', jeton(), cle, lireMontant(i.value), v.querySelector('#ctlNote').value).then(function (r) {
+          fermerFeuille(); toast(Number(r.ecart) ? 'Contrôle enregistré — écart ' + Fsigne(r.ecart) : 'Contrôle enregistré — c\'est juste ✓', !!Number(r.ecart)); afficher('comptes');
+        }, erreur);
+      };
+    });
+  }
+
+  function feuilleRapprochement(mois) {
+    mois = mois || S.d.aujourdhui.slice(0, 7);
+    appel('banque', jeton(), mois).then(function (b) {
+      function ch(l, v, cls) { return '<div class="chiffre ' + (cls || '') + '"><div class="l">' + l + '</div><div class="v num">' + v + '</div></div>'; }
+      var dr = b.dernierReleve;
+      var html = '<p class="doux" style="margin-top:0">Prenez le relevé de la banque et cochez chaque opération qui y figure. L\'application calcule le solde que le relevé devrait afficher.</p>' +
+        '<div class="carte"><div class="chiffres">' + ch('Solde selon l\'application', F(b.solde), 'fort') + ch('Chèques / virements pas encore passés', F(b.debitsEnAttente)) +
+        ch('Dépôts pas encore crédités', F(b.creditsEnAttente)) + ch('Le relevé devrait afficher', F(b.attenduReleve)) + '</div>' +
+        '<div class="champ" style="margin:12px 0 8px"><label for="relSolde">Solde affiché sur le relevé</label><input id="relSolde" inputmode="numeric" placeholder="0"></div>' +
+        '<div id="relEcart"></div><button class="btn bloc" id="relOk">Enregistrer le rapprochement</button>' +
+        (dr ? '<p class="petit doux" style="margin:10px 0 0">Dernier rapprochement le ' + esc(dateCourte(dr.date)) + ' : relevé ' + F(dr.montant) + (Number(dr.ecart) ? ', écart ' + Fsigne(dr.ecart) : ', juste ✓') + '</p>' : '') + '</div>' +
+        '<div class="nav-date"><button data-m="-1" aria-label="Mois précédent">‹</button><input type="month" id="relMois" value="' + mois + '"><button data-m="1" aria-label="Mois suivant">›</button></div>' +
+        '<p class="petit doux" style="margin:-6px 2px 10px">Opérations pas encore cochées (tous les mois) et opérations cochées en ' + esc(moisLong(mois)) + '.</p>' +
+        '<div class="carte">' + (b.operations.length ? '<ul class="liste">' + b.operations.map(function (o) {
+          return '<li><label class="case" style="padding:0;align-items:flex-start;width:100%">' +
+            (o.type === 'R' ? '<input type="checkbox" checked disabled>' : '<input type="checkbox" data-pt="' + o.type + '" data-id="' + esc(o.id) + '"' + (o.rapproche ? ' checked' : '') + '>') +
+            '<span class="corps"><span class="ligne1"><span>' + esc(o.libelle) + '</span><span class="num" style="color:' + (o.montant < 0 ? 'var(--rouge)' : 'var(--vert-fonce)') + '">' + Fsigne(o.montant) + '</span></span>' +
+            '<span class="ligne2" style="display:block">' + esc(dateCourte(o.date)) + (o.mode ? ' · ' + esc(o.mode) : '') + (o.reference ? ' · N° ' + esc(o.reference) : '') + ' · ' + esc(o.par) + '</span></span></label></li>';
+        }).join('') + '</ul>' : '<p class="vide-msg">Aucune opération bancaire.</p>') + '</div>';
+      ouvrirFeuille('Rapprochement bancaire', html, function (v) {
+        var inp = v.querySelector('#relSolde');
+        inp.addEventListener('input', function () {
+          inp.value = formatSaisie(inp.value);
+          var n = lireMontant(inp.value);
+          if (n === '') { v.querySelector('#relEcart').innerHTML = ''; return; }
+          var e = Number(n) - b.attenduReleve;
+          v.querySelector('#relEcart').innerHTML = '<div class="ecart ' + (e === 0 ? 'ok' : 'ko') + '">' + (e === 0 ? 'Tout concorde ✓' : 'Écart : <b class="num">' + Fsigne(e) + '</b> — une opération manque ou n\'est pas cochée.') + '</div>';
+        });
+        v.querySelector('#relOk').onclick = function () {
+          if (lireMontant(inp.value) === '') return erreur('Saisissez le solde du relevé.');
+          appel('enregistrerReleve', jeton(), lireMontant(inp.value), '').then(function (r) { toast(Number(r.ecart) ? 'Enregistré — écart ' + Fsigne(r.ecart) : 'Rapprochement juste ✓', !!Number(r.ecart)); feuilleRapprochement(mois); }, erreur);
+        };
+        v.querySelectorAll('[data-pt]').forEach(function (c) {
+          c.onchange = function () { appel('pointer', jeton(), c.dataset.pt, c.dataset.id, c.checked).then(function () { feuilleRapprochement(mois); }, erreur); };
+        });
+        v.querySelectorAll('[data-m]').forEach(function (bt) { bt.onclick = function () { feuilleRapprochement(decalerMois(mois, Number(bt.dataset.m))); }; });
+        v.querySelector('#relMois').onchange = function () { if (this.value) feuilleRapprochement(this.value); };
+      });
+    }).catch(erreur);
+  }
+
+  function feuilleSoldesDepart() {
+    var html = '<p class="doux" style="margin-top:0">L\'argent présent dans chaque compte au démarrage. Les calculs partent de ces montants à cette date (les opérations d\'avant sont ignorées).</p>' +
+      '<form id="fDep"><div class="champ"><label for="depDate">Date de départ</label><input type="date" id="depDate" value="' + (S.d.aujourdhui < '2026-12-01' ? '2026-12-01' : S.d.aujourdhui) + '"></div>' +
+      '<div class="carte" style="padding:8px 14px">' + T.comptes.map(function (c) {
+        return '<div class="montant-ligne"><label for="dep_' + c.cle + '">' + esc(c.nom) + (c.depart ? '<br><span class="petit doux">actuel : ' + F(c.depart.montant) + ' au ' + esc(dateCourte(c.depart.date)) + '</span>' : '') +
+          '</label><input id="dep_' + c.cle + '" data-dep="' + c.cle + '" inputmode="numeric" placeholder="—"></div>';
+      }).join('') + '</div><p class="petit doux">Laissez vide un compte que vous ne voulez pas changer.</p><button class="btn bloc" type="submit">Enregistrer</button></form>';
+    ouvrirFeuille('Soldes de départ', html, function (v) {
+      v.querySelectorAll('[data-dep]').forEach(function (i) { i.addEventListener('input', function () { i.value = formatSaisie(i.value); }); });
+      v.querySelector('#fDep').onsubmit = function (ev) {
+        ev.preventDefault();
+        var d = v.querySelector('#depDate').value, envois = [];
+        v.querySelectorAll('[data-dep]').forEach(function (i) { if (lireMontant(i.value) !== '') envois.push([i.dataset.dep, lireMontant(i.value)]); });
+        if (!envois.length) return erreur('Saisissez au moins un montant.');
+        envois.reduce(function (p, e) { return p.then(function () { return appel('definirSoldeDepart', jeton(), e[0], d, e[1]); }); }, Promise.resolve())
+          .then(function () { fermerFeuille(); toast('Soldes de départ enregistrés ✓'); afficher('comptes'); }, erreur);
+      };
+    });
+  }
+
   /* ---------------------------- Bilan ---------------------------- */
   VUES.bilan = function () {
     var m = S.mois;
@@ -774,8 +1004,8 @@
         lignes.push([r.date, r.session].concat(L.encaissements.map(function (e) { return r[e.cle]; }), [r.total, r.logiciel, r.ecart, r.saisiPar, r.observation]));
       });
     } else {
-      lignes = [['Date', 'Sens', 'Catégorie', 'Fournisseur', 'N° facture/BL', 'Détail', 'Mode', 'Montant', 'Saisie par']];
-      b.mouvements.forEach(function (x) { lignes.push([x.date, x.sens, x.categorie, x.fournisseur, x.reference, x.libelle, x.mode, x.montant, x.saisiPar]); });
+      lignes = [['Date', 'Sens', 'Catégorie', 'Fournisseur', 'N° facture/chèque', 'Détail', 'Compte', 'Mode', 'Montant', 'Saisie par']];
+      b.mouvements.forEach(function (x) { lignes.push([x.date, x.sens, x.categorie, x.fournisseur, x.reference, x.libelle, x.compte ? nomCompte(x.compte) : '', x.mode, x.montant, x.saisiPar]); });
     }
     var csv = '﻿' + lignes.map(function (l) {
       return l.map(function (v) { v = v == null ? '' : String(v); return /[;"\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(';');
@@ -861,8 +1091,9 @@
         return '<li style="cursor:pointer;align-items:center" data-uid="' + esc(u.id) + '">' + avatar(u) + '<div class="corps"><div class="ligne1"><span>' + esc(u.nom) + '</span>' +
           (!u.actif ? '<span class="puce neutre">Désactivé</span>' : u.pinAChanger ? '<span class="puce attente">Code 0000</span>' : '') + '</div><div class="ligne2">' + esc(u.roleNom) + '</div></div><span class="doux">›</span></li>';
       }).join('') + '</ul></div><p class="petit doux">Un nouveau profil (ou un code réinitialisé) se connecte avec le code <b>0000</b>, puis choisit son propre code.</p>' +
-        '<div class="carte petit"><b>Qui peut faire quoi</b><br><br><b>Gérant(e)</b> : tout (bilan, validation des demandes, équipe, journal).<br>' +
-        '<b>Caissière principale</b> : caisses, sorties et entrées, fournisseurs, résumé du jour.<br><b>Caissière</b> : saisie des caisses du matin et du soir.<br>' +
+        '<div class="carte petit"><b>Qui peut faire quoi</b><br><br><b>Gérant(e)</b> : tout (bilan, comptes et banque, rapprochement, validation des demandes, équipe, journal).<br>' +
+        '<b>Caissière principale</b> : caisses, sorties et entrées (y compris chèques), fournisseurs, reçoit les versements des caissières, retraits Orange Money / MTN, verse à la gérante.<br>' +
+        '<b>Caissière</b> : caisses, sorties et entrées payées depuis la caisse, versements à la caissière principale.<br>' +
         '<b>Employé(e)</b> : demandes de permission et remplacements.<br><br>Tout le monde peut faire des demandes.</div>';
       ouvrirFeuille('Équipe et accès', html, function (v) {
         v.querySelector('[data-e=ajouter]').onclick = function () { formUtilisateur({ role: 'employe', actif: true }); };
@@ -974,6 +1205,19 @@
       appel('annulerDemande', jeton(), b.dataset.id).then(function () { toast('Demande annulée'); rafraichir(); }, erreur);
     },
     historique: function () { historique(); },
+    transfert: function (b) { formTransfert(b.dataset.de, b.dataset.vers); },
+    controler: function (b) { formControle(b.dataset.cle); },
+    rapprochement: function () { feuilleRapprochement(); },
+    soldesDepart: feuilleSoldesDepart,
+    confirmerT: function (b) {
+      var oui = !!b.dataset.oui, i = document.querySelector('[data-recu="' + b.dataset.id + '"]');
+      if (!oui && !confirm('Refuser ce versement ? L\'argent restera compté au départ.')) return;
+      appel('confirmerTransfert', jeton(), b.dataset.id, oui, i ? lireMontant(i.value) : '', '').then(function () { toast(oui ? 'Réception confirmée ✓' : 'Versement refusé'); rafraichir(); }, erreur);
+    },
+    annulerT: function (b) {
+      if (!confirm('Annuler ce mouvement ?')) return;
+      appel('annulerTransfert', jeton(), b.dataset.id).then(function () { toast('Mouvement annulé'); rafraichir(); }, erreur);
+    },
     fournisseurs: function () { feuilleFournisseurs(); },
     equipe: feuilleEquipe,
     journal: feuilleJournal,

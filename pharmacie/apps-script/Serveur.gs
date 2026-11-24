@@ -38,11 +38,27 @@ function onglet_(nom) {
     sh.getRange(1, 1, 1, colonnes.length).setValues([colonnes]).setFontWeight('bold').setBackground('#E3F4EC');
     sh.setFrozenRows(1);
     // tout en texte sauf les montants, pour que Google ne transforme pas les dates
-    colonnes.forEach(function (c, i) {
-      sh.getRange(2, i + 1, sh.getMaxRows() - 1, 1).setNumberFormat(PH_NUMERIQUES.indexOf(c) !== -1 ? '#,##0' : '@');
-    });
+    formater_(sh, colonnes, 0);
+  } else if (!verifies_[nom]) {
+    // mise à jour : un onglet créé par une ancienne version reçoit les nouvelles colonnes (à droite)
+    var n = Math.max(sh.getLastColumn(), 1);
+    var entete = sh.getRange(1, 1, 1, n).getValues()[0];
+    var dejaLa = entete.filter(function (x) { return x !== ''; }).length;
+    if (dejaLa < colonnes.length) {
+      sh.getRange(1, 1, 1, colonnes.length).setValues([colonnes]).setFontWeight('bold').setBackground('#E3F4EC');
+      formater_(sh, colonnes, dejaLa);
+    }
   }
+  verifies_[nom] = true;
   return sh;
+}
+var verifies_ = {};
+
+function formater_(sh, colonnes, depuis) {
+  colonnes.forEach(function (c, i) {
+    if (i < depuis) return;
+    sh.getRange(2, i + 1, sh.getMaxRows() - 1, 1).setNumberFormat(PH_NUMERIQUES.indexOf(c) !== -1 ? '#,##0' : '@');
+  });
 }
 
 function valeurTexte_(v) {

@@ -1,6 +1,6 @@
 // Garde la coquille de l'application en mémoire (ouverture rapide).
 // Les données, elles, viennent toujours du serveur (en ligne).
-var CACHE = 'pharmacie-v1.1';
+var CACHE = 'pharmacie-v1.3';
 var FILES = ['./', 'index.html', 'app.css', 'app.js', 'logique.js', 'config.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/maskable-512.png', 'icons/apple-touch-icon.png'];
 
