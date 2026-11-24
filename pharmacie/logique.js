@@ -9,7 +9,7 @@
  * Pour changer une liste (catégories de sorties, modes de paiement…), c'est ici.
  */
 
-var PH_VERSION = '1.2';
+var PH_VERSION = '1.3';
 
 /* ------------------------------------------------------------------ */
 /* Rôles et droits                                                     */
@@ -118,9 +118,12 @@ var PH_TABLES = {
   Utilisateurs: ['id', 'nom', 'role', 'pinHash', 'pinAChanger', 'actif', 'essais', 'bloqueJusqua', 'creeLe'],
   Sessions:     ['jeton', 'userId', 'expire'],
   Recettes:     ['id', 'date', 'session', 'especes', 'orangeMoney', 'mtnMomo', 'carte', 'cheque', 'assurance', 'credit',
-                 'total', 'logiciel', 'ecart', 'observation', 'saisiParId', 'saisiPar', 'saisiLe', 'modifiePar', 'modifieLe'],
+                 'total', 'logiciel', 'ecart', 'observation', 'saisiParId', 'saisiPar', 'saisiLe', 'modifiePar', 'modifieLe',
+                 // especesComptees = ce qui reste dans le tiroir ; sortiesCaisse = payé avec l'argent de cette caisse ;
+                 // especes = especesComptees + sortiesCaisse (les vraies ventes en espèces) ; annules = tickets annulés
+                 'especesComptees', 'sortiesCaisse', 'annules'],
   Mouvements:   ['id', 'date', 'sens', 'categorie', 'fournisseurId', 'fournisseur', 'reference', 'libelle', 'montant', 'mode',
-                 'saisiParId', 'saisiPar', 'saisiLe', 'modifiePar', 'modifieLe', 'compte', 'rapproche', 'rapprocheLe'],
+                 'saisiParId', 'saisiPar', 'saisiLe', 'modifiePar', 'modifieLe', 'compte', 'rapproche', 'rapprocheLe', 'session'],
   // argent qui passe d'un compte à un autre (versements, retraits Orange Money, dépôts en banque…)
   Transferts:   ['id', 'date', 'de', 'vers', 'montant', 'frais', 'montantRecu', 'ecart', 'reference', 'note', 'statut',
                  'saisiParId', 'saisiPar', 'saisiLe', 'confirmePar', 'confirmeLe', 'rapproche', 'rapprocheLe'],
@@ -134,7 +137,7 @@ var PH_TABLES = {
 };
 // Colonnes qui contiennent des nombres (les autres sont du texte)
 var PH_NUMERIQUES = ['especes', 'orangeMoney', 'mtnMomo', 'carte', 'cheque', 'assurance', 'credit', 'total', 'logiciel',
-  'ecart', 'montant', 'essais', 'frais', 'montantRecu', 'calcule'];
+  'ecart', 'montant', 'essais', 'frais', 'montantRecu', 'calcule', 'especesComptees', 'sortiesCaisse', 'annules'];
 
 var PH_PROFILS_DEPART = [
   ['Gérant(e)', 'admin'],
@@ -379,12 +382,13 @@ function creerPharmacie(store, outils) {
   function supprimable(u, ligne, aujourdhui) { return modifiable(u, ligne, aujourdhui); }
 
   function totaux(recettes, mouvements) {
-    var t = { recettes: 0, parMode: {}, parSession: {}, ecart: 0, entrees: 0, sorties: 0, charges: 0,
+    var t = { recettes: 0, annules: 0, parMode: {}, parSession: {}, ecart: 0, entrees: 0, sorties: 0, charges: 0,
       especesRecettes: 0, especesEntrees: 0, especesSorties: 0 };
     PH_ENCAISSEMENTS.forEach(function (e) { t.parMode[e.cle] = 0; });
     recettes.forEach(function (r) {
       t.recettes += Number(r.total || 0);
       t.ecart += Number(r.ecart || 0);
+      t.annules += Number(r.annules || 0);
       t.parSession[r.session] = (t.parSession[r.session] || 0) + Number(r.total || 0);
       PH_ENCAISSEMENTS.forEach(function (e) { t.parMode[e.cle] += Number(r[e.cle] || 0); });
     });
@@ -404,6 +408,48 @@ function creerPharmacie(store, outils) {
   }
 
   /* ---------- Recettes (caisse du matin / du soir) ---------- */
+  /** Total des sorties payées avec l'argent du tiroir pour une date et une caisse (matin / soir). */
+  function totalSortiesCaisse(d, s) {
+    return store.lire('Mouvements').filter(function (m) { return m.date === d && m.session === s && m.sens === 'Sortie' && compteMouvement(m) === 'caisse'; })
+      .reduce(function (a, m) { return a + Number(m.montant || 0); }, 0);
+  }
+  /**
+   * Les sorties de caisse d'une session sont rattachées à la PREMIÈRE caisse saisie pour cette session
+   * (s'il y en a deux, la seconde n'en reçoit pas). rid = la caisse qu'on enregistre.
+   */
+  function sortiesDeCaisse(d, s, rid) {
+    var autres = store.lire('Recettes').filter(function (x) { return x.date === d && x.session === s; })
+      .sort(function (a, b) { return a.saisiLe < b.saisiLe ? -1 : 1; });
+    if (autres.length && (!rid || autres[0].id !== rid)) return 0;
+    return totalSortiesCaisse(d, s);
+  }
+  function calculerLigneRecette(l) {
+    var comptees = l.especesComptees === '' || l.especesComptees == null ? Number(l.especes || 0) - Number(l.sortiesCaisse || 0) : Number(l.especesComptees);
+    l.especesComptees = comptees;
+    l.especes = comptees + Number(l.sortiesCaisse || 0);
+    l.total = 0;
+    PH_ENCAISSEMENTS.forEach(function (e) { l.total += Number(l[e.cle] || 0); });
+    var attendu = l.logiciel === '' || l.logiciel == null ? '' : Number(l.logiciel) - Number(l.annules || 0);
+    l.ecart = attendu === '' ? '' : l.total - attendu;
+    return l;
+  }
+  /** Après l'ajout / la modification d'une sortie de caisse : on remet à jour la caisse concernée. */
+  function recalculerCaisses(d, s) {
+    if (!d || !s) return;
+    var liste = store.lire('Recettes').filter(function (x) { return x.date === d && x.session === s; })
+      .sort(function (a, b) { return a.saisiLe < b.saisiLe ? -1 : 1; });
+    liste.forEach(function (r, i) {
+      var l = { especes: r.especes, especesComptees: r.especesComptees, sortiesCaisse: r.sortiesCaisse, logiciel: r.logiciel, annules: r.annules };
+      PH_ENCAISSEMENTS.forEach(function (e) { l[e.cle] = r[e.cle]; });
+      calculerLigneRecette(l);                       // fixe d'abord les espèces comptées
+      l.sortiesCaisse = i === 0 ? totalSortiesCaisse(d, s) : 0;
+      calculerLigneRecette(l);
+      if (l.especes !== Number(r.especes) || l.total !== Number(r.total) || String(l.ecart) !== String(r.ecart) || l.sortiesCaisse !== Number(r.sortiesCaisse || 0) || r.especesComptees === '') {
+        store.maj('Recettes', 'id', r.id, { especes: l.especes, especesComptees: l.especesComptees, sortiesCaisse: l.sortiesCaisse, total: l.total, ecart: l.ecart });
+      }
+    });
+  }
+
   api.enregistrerRecette = function (jeton, r) {
     var u = session(jeton);
     exiger(u, 'recettes');
@@ -415,12 +461,17 @@ function creerPharmacie(store, outils) {
     var s = txt(r.session, 10);
     if (PH_SESSIONS_CAISSE.indexOf(s) === -1) erreur('Choisissez la caisse du matin ou du soir.');
     var ligne = { date: d, session: s, observation: txt(r.observation, 500) };
-    var total = 0;
-    PH_ENCAISSEMENTS.forEach(function (e) { ligne[e.cle] = montant(r[e.cle], e.nom); total += ligne[e.cle]; });
-    if (total <= 0) erreur('Saisissez au moins un montant.');
-    ligne.total = total;
+    PH_ENCAISSEMENTS.forEach(function (e) { ligne[e.cle] = montant(r[e.cle], e.nom); });
+    // « Espèces » saisies = ce qui est réellement dans le tiroir
+    ligne.especesComptees = ligne.especes;
+    ligne.annules = montant(r.annules, 'tickets annulés');
     ligne.logiciel = r.logiciel === '' || r.logiciel == null ? '' : montant(r.logiciel, 'logiciel');
-    ligne.ecart = ligne.logiciel === '' ? '' : total - ligne.logiciel;
+    if (ligne.annules && ligne.logiciel !== '' && ligne.annules > ligne.logiciel) erreur('Les tickets annulés dépassent le chiffre du logiciel.');
+    var sorties = sortiesDeCaisse(d, s, r.id || '');
+    ligne.sortiesCaisse = sorties;
+    calculerLigneRecette(ligne);
+    if (ligne.total <= 0) erreur('Saisissez au moins un montant.');
+    var total = ligne.total;
 
     if (r.id) {
       var ex = store.lire('Recettes').filter(function (x) { return x.id === r.id; })[0];
@@ -428,6 +479,7 @@ function creerPharmacie(store, outils) {
       if (!modifiable(u, ex, aujourdhui)) erreur('Cette caisse ne peut plus être modifiée. Demandez au gérant.');
       ligne.modifiePar = u.nom; ligne.modifieLe = outils.maintenant();
       store.maj('Recettes', 'id', ex.id, ligne);
+      if (ex.date !== d || ex.session !== s) recalculerCaisses(ex.date, ex.session);
       journaliser(u, 'Caisse modifiée', ex.date + ' ' + ex.session + ' : ' + ex.total + ' → ' + total);
       return { id: ex.id };
     }
@@ -435,7 +487,8 @@ function creerPharmacie(store, outils) {
     ligne.saisiParId = u.id; ligne.saisiPar = u.nom; ligne.saisiLe = outils.maintenant();
     ligne.modifiePar = ''; ligne.modifieLe = '';
     store.ajouter('Recettes', ligne);
-    journaliser(u, 'Caisse saisie', d + ' ' + s + ' : ' + total);
+    recalculerCaisses(d, s);
+    journaliser(u, 'Caisse saisie', d + ' ' + s + ' : ' + total + (sorties ? ' (dont ' + sorties + ' de sorties payées en caisse)' : ''));
     return { id: ligne.id };
   };
 
@@ -445,6 +498,7 @@ function creerPharmacie(store, outils) {
     if (!ex) erreur('Caisse introuvable.');
     if (!supprimable(u, ex, outils.aujourdhui())) erreur("Vous n'avez pas le droit de supprimer cette caisse.");
     store.suppr('Recettes', 'id', rid);
+    recalculerCaisses(ex.date, ex.session);
     journaliser(u, 'Caisse supprimée', ex.date + ' ' + ex.session + ' (' + ex.saisiPar + ') : ' + ex.total);
     return true;
   };
@@ -469,6 +523,10 @@ function creerPharmacie(store, outils) {
     if (comptesPermis.indexOf(m.compte) === -1) erreur(sens === 'Sortie' ? 'Choisissez d\'où part l\'argent.' : 'Choisissez où arrive l\'argent.');
     ligne.compte = m.compte;
     ligne.mode = compteDef(m.compte).mode;
+    ligne.session = '';
+    if (m.compte === 'caisse' && sens === 'Sortie') {
+      ligne.session = PH_SESSIONS_CAISSE.indexOf(m.session) !== -1 ? m.session : erreur('Précisez : caisse du matin ou du soir ?');
+    }
     if (m.compte === 'banque') ligne.mode = m.mode === 'Virement' ? 'Virement' : 'Chèque';
     if (cat.fournisseur) {
       var f = store.lire('Fournisseurs').filter(function (x) { return x.id === m.fournisseurId; })[0];
@@ -484,6 +542,7 @@ function creerPharmacie(store, outils) {
       if (oui(ex.rapproche) && (ex.montant !== ligne.montant || ex.compte !== ligne.compte)) erreur('Cette opération est déjà pointée sur le relevé bancaire : dépointez-la d\'abord.');
       ligne.modifiePar = u.nom; ligne.modifieLe = outils.maintenant();
       store.maj('Mouvements', 'id', ex.id, ligne);
+      recalculerCaisses(ex.date, ex.session); recalculerCaisses(ligne.date, ligne.session);
       journaliser(u, sens + ' modifiée', ex.date + ' ' + ex.categorie + ' : ' + ex.montant + ' → ' + ligne.montant);
       return { id: ex.id };
     }
@@ -491,6 +550,7 @@ function creerPharmacie(store, outils) {
     ligne.saisiParId = u.id; ligne.saisiPar = u.nom; ligne.saisiLe = outils.maintenant();
     ligne.modifiePar = ''; ligne.modifieLe = ''; ligne.rapproche = ''; ligne.rapprocheLe = '';
     store.ajouter('Mouvements', ligne);
+    recalculerCaisses(ligne.date, ligne.session);
     journaliser(u, sens + ' saisie', d + ' ' + cat.nom + (ligne.fournisseur ? ' / ' + ligne.fournisseur : '') + ' : ' + ligne.montant);
     return { id: ligne.id };
   };
@@ -504,6 +564,7 @@ function creerPharmacie(store, outils) {
     if (!supprimable(u, ex, outils.aujourdhui())) erreur("Vous n'avez pas le droit de supprimer cette opération.");
     if (oui(ex.rapproche)) erreur('Cette opération est pointée sur le relevé bancaire : dépointez-la d\'abord.');
     store.suppr('Mouvements', 'id', mid);
+    recalculerCaisses(ex.date, ex.session);
     journaliser(u, ex.sens + ' supprimée', ex.date + ' ' + ex.categorie + (ex.fournisseur ? ' / ' + ex.fournisseur : '') + ' : ' + ex.montant);
     return true;
   };

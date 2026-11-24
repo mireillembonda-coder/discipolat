@@ -31,8 +31,14 @@ Le gérant les renomme dans **Plus › Équipe et accès** (et peut en ajouter).
 
 ## Règles de saisie
 
-- **Caisse** : date, caisse du matin ou du soir, montants par mode (espèces, Orange Money, MTN MoMo, chèques, crédit clients). Si on tape le chiffre du **logiciel / ticket Z**, le manque ou
-  l'excédent est calculé tout seul.
+- **Caisse** : date, caisse du matin ou du soir, puis :
+  - **Espèces dans le tiroir** : ce que la caissière a réellement compté ;
+  - les **sorties payées avec l'argent de la caisse** (enregistrées dans « Sorties », compte Caisse, matin ou soir)
+    sont **ajoutées automatiquement** aux ventes de cette caisse, même si on les saisit après : la caisse ne paraît pas en manque ;
+  - Orange Money, MTN MoMo, chèques, crédit clients ;
+  - **chiffre du logiciel / ticket Z** et **tickets annulés** (ticket émis mais client parti sans payer) :
+    attendu = logiciel − tickets annulés ; l'écart (manque / excédent) est calculé tout seul.
+  - Le montant **à verser à la caissière principale** = les espèces du tiroir.
 - Une caissière peut corriger ou supprimer **sa propre** saisie **le jour même**. Après, seul le gérant peut.
 - On ne peut pas saisir une date future, ni (sauf le gérant) une date de plus de 2 jours.
 - **Sorties** : catégorie, fournisseur (les 2 principaux en tête de liste), montant, mode de paiement, N° de facture / BL.
