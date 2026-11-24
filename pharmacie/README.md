@@ -1,4 +1,4 @@
-# Pharmacie : gestion de caisse et du personnel
+# Pharmacie Jireh : gestion de caisse et du personnel
 
 Une application installable sur téléphone, comme Discipolat. Les données sont rangées dans un **Google Sheet**
 qui appartient au gérant (consultable et imprimable à tout moment).
@@ -58,7 +58,7 @@ fournisseurs principaux pour cocher « Fournisseur principal ». On peut aussi e
 
 ## Installation du serveur (une seule fois, environ 10 minutes)
 
-1. Sur le compte Google de la pharmacie, créez un **Google Sheet** vide nommé « Pharmacie — Gestion ».
+1. Sur le compte Google de la pharmacie, créez un **Google Sheet** vide nommé « Pharmacie Jireh — Gestion ».
 2. Dans ce Sheet : menu **Extensions › Apps Script**.
 3. Dans l'éditeur :
    - remplacez tout le contenu de `Code.gs` par le contenu de [`apps-script/Serveur.gs`](apps-script/Serveur.gs) ;

@@ -21,7 +21,7 @@ function classeur_() {
   var props = PropertiesService.getScriptProperties();
   var sid = props.getProperty('SHEET_ID');
   if (sid) return SpreadsheetApp.openById(sid);
-  var nouveau = SpreadsheetApp.create('Pharmacie — Gestion');
+  var nouveau = SpreadsheetApp.create('Pharmacie Jireh — Gestion');
   props.setProperty('SHEET_ID', nouveau.getId());
   return nouveau;
 }

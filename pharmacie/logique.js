@@ -220,7 +220,7 @@ function creerPharmacie(store, outils) {
       store.ajouter('Utilisateurs', { id: uid, nom: p[0], role: p[1], pinHash: hashPin(uid, PH_PIN_DEPART), pinAChanger: 'oui',
         actif: 'oui', essais: 0, bloqueJusqua: '', creeLe: outils.maintenant() });
     });
-    store.ajouter('Parametres', { cle: 'nomPharmacie', valeur: 'Ma Pharmacie' });
+    store.ajouter('Parametres', { cle: 'nomPharmacie', valeur: 'Pharmacie Jireh' });
     journaliser(null, 'Installation', PH_PROFILS_DEPART.length + ' profils créés (code de départ ' + PH_PIN_DEPART + ')');
     return 'Installation terminée : ' + PH_PROFILS_DEPART.length + ' profils créés.';
   }
@@ -232,7 +232,7 @@ function creerPharmacie(store, outils) {
 
   api.profils = function () {
     return {
-      nomPharmacie: parametre('nomPharmacie', 'Ma Pharmacie'),
+      nomPharmacie: parametre('nomPharmacie', 'Pharmacie Jireh'),
       profils: utilisateurs().filter(function (u) { return oui(u.actif); }).map(publicUser)
     };
   };
@@ -289,7 +289,7 @@ function creerPharmacie(store, outils) {
     var res = {
       version: PH_VERSION,
       aujourdhui: aujourdhui,
-      nomPharmacie: parametre('nomPharmacie', 'Ma Pharmacie'),
+      nomPharmacie: parametre('nomPharmacie', 'Pharmacie Jireh'),
       user: publicUser(u),
       pinAChanger: oui(u.pinAChanger),
       droits: droits(u),
