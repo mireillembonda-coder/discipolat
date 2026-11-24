@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 33% 98%;
+    --foreground: 216 50% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 216 50% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 216 50% 12%;
+
+    /* Vert émeraude profond */
+    --primary: 163 94% 24%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 25% 95%;
+    --secondary-foreground: 216 50% 14%;
+    --muted: 210 25% 95%;
+    --muted-foreground: 215 16% 42%;
+    --accent: 156 50% 94%;
+    --accent-foreground: 163 94% 18%;
+
+    --destructive: 0 70% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --warning: 35 92% 40%;
+    --warning-foreground: 0 0% 100%;
+    --success: 158 64% 32%;
+    --success-foreground: 0 0% 100%;
+
+    --border: 214 24% 90%;
+    --input: 214 24% 87%;
+    --ring: 163 94% 24%;
+
+    /* Bleu nuit (navigation) */
+    --night: 216 58% 13%;
+    --night-foreground: 210 30% 96%;
+    --night-muted: 216 40% 20%;
+
+    /* Séries de graphiques — validées (contraste, daltonisme) sur fond clair */
+    --chart-1: 161 94% 30%; /* #059669 */
+    --chart-2: 228 69% 55%; /* #3b5bdb */
+
+    --radius: 0.625rem;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+  .tabular { font-variant-numeric: tabular-nums; }
+}
