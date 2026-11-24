@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Palette PharmaPilot : vert émeraude profond, blanc, gris clair, bleu nuit */
+    --background: 210 20% 98%;
+    --foreground: 218 45% 13%;
+    --card: 0 0% 100%;
+    --card-foreground: 218 45% 13%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 218 45% 13%;
+    --primary: 163 88% 20%;          /* émeraude profond ~#065f46 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 20% 95%;
+    --secondary-foreground: 218 45% 16%;
+    --muted: 210 20% 95%;
+    --muted-foreground: 215 16% 42%;
+    --accent: 158 45% 94%;
+    --accent-foreground: 163 88% 18%;
+    --destructive: 0 72% 46%;
+    --destructive-foreground: 0 0% 100%;
+    --warning: 35 92% 42%;
+    --warning-foreground: 0 0% 100%;
+    --border: 214 20% 89%;
+    --input: 214 20% 86%;
+    --ring: 163 88% 24%;
+    --navy: 218 58% 12%;              /* bleu nuit ~#0d1b33 */
+    --navy-foreground: 210 30% 96%;
+    --navy-muted: 217 30% 70%;
+    --radius: 0.625rem;
+
+    /* Séries de graphiques */
+    --chart-1: 163 88% 24%;
+    --chart-2: 218 58% 30%;
+    --chart-3: 160 60% 55%;
+    --chart-4: 215 16% 65%;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+  }
+  .tabular { font-variant-numeric: tabular-nums; }
+}

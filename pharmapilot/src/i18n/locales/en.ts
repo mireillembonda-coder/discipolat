@@ -1,0 +1,78 @@
+import type { PartialMessages } from './fr'
+
+/**
+ * English — partial translation. Missing keys fall back to French (fallbackLng).
+ * Complete this file to fully localise the interface.
+ */
+const en: PartialMessages = {
+  brand: { name: 'PharmaPilot AI', tagline: 'Your pharmacy. Your data. Better decisions.' },
+  nav: {
+    groups: { steering: 'Steering', data: 'Data', admin: 'Administration' },
+    overview: 'Overview',
+    sales: 'Sales',
+    stock: 'Stock',
+    orders: 'Orders',
+    alerts: 'Alerts',
+    reports: 'Reports',
+    assistant: 'AI Assistant',
+    import: 'Data import',
+    users: 'Users',
+    settings: 'Settings',
+    subscription: 'Subscription',
+  },
+  common: {
+    loading: 'Loading…',
+    search: 'Search',
+    all: 'All',
+    export: 'Export',
+    cancel: 'Cancel',
+    save: 'Save',
+    close: 'Close',
+    seeAll: 'See all',
+    product: 'Product',
+    category: 'Category',
+    supplier: 'Supplier',
+    quantity: 'Quantity',
+    revenue: 'Revenue',
+    margin: 'Margin',
+    total: 'Total',
+    status: 'Status',
+    actions: 'Actions',
+    days: '{{count}} d',
+    vsPrevious: 'vs previous period',
+    period: { '7': '7 days', '30': '30 days', '90': '90 days' },
+    periodLabel: 'Period',
+    signOut: 'Sign out',
+    language: 'Language',
+    account: 'Account',
+  },
+  mode: {
+    demo: 'Demo',
+    live: 'Live data',
+    demoBanner: 'Demo mode — all data shown is fictitious and is not saved.',
+    exitDemo: 'Leave demo',
+    demoData: 'Fictitious data',
+  },
+  integration: { toConnect: 'To connect', partial: 'Partial', ready: 'Live' },
+  auth: {
+    loginTitle: 'Sign in',
+    loginSubtitle: 'Access your pharmacy dashboard.',
+    signupTitle: 'Create an account',
+    email: 'Email address',
+    password: 'Password',
+    fullName: 'Full name',
+    pharmacyName: 'Pharmacy name',
+    forgot: 'Forgot password?',
+    submitLogin: 'Sign in',
+    submitSignup: 'Create my account',
+    noAccount: 'No account yet?',
+    hasAccount: 'Already have an account?',
+    goSignup: 'Sign up',
+    goLogin: 'Sign in',
+    or: 'or',
+    demoCta: 'Explore the demo',
+    demoHint: 'Fictitious data, no sign-up required.',
+  },
+}
+
+export default en
