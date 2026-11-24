@@ -32,7 +32,9 @@ Le gérant les renomme dans **Plus › Équipe et accès** (et peut en ajouter).
 ## Règles de saisie
 
 - **Caisse** : date, caisse du matin ou du soir, puis :
-  - **Espèces dans le tiroir** : ce que la caissière a réellement compté ;
+  - **Espèces comptées dans le tiroir, fond de caisse compris** : l'application retire le **fond de caisse**
+    (réglé par la gérante dans Plus › Fond de caisse, modifiable sur une caisse). Le fond reste dans le tiroir :
+    il n'est ni compté dans les ventes, ni versé, ni dans aucun compte ;
   - les **sorties payées avec l'argent de la caisse** (enregistrées dans « Sorties », compte Caisse, matin ou soir)
     sont **ajoutées automatiquement** aux ventes de cette caisse, même si on les saisit après : la caisse ne paraît pas en manque ;
   - Orange Money, MTN MoMo, chèques, crédit clients ;

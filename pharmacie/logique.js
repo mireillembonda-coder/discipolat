@@ -9,7 +9,7 @@
  * Pour changer une liste (catégories de sorties, modes de paiement…), c'est ici.
  */
 
-var PH_VERSION = '1.3';
+var PH_VERSION = '1.4';
 
 /* ------------------------------------------------------------------ */
 /* Rôles et droits                                                     */
@@ -89,8 +89,8 @@ var PH_CATEGORIES_SORTIE = [
 ];
 var PH_CATEGORIE_FRAIS = 'Frais de retrait / transfert';
 
+// (le fond de caisse n'est pas une entrée : il reste dans le tiroir et n'est jamais versé)
 var PH_CATEGORIES_ENTREE = [
-  { nom: 'Fond de caisse' },
   { nom: 'Règlement crédit client' },
   { nom: 'Apport du gérant' },
   { nom: 'Autre entrée' }
@@ -121,7 +121,7 @@ var PH_TABLES = {
                  'total', 'logiciel', 'ecart', 'observation', 'saisiParId', 'saisiPar', 'saisiLe', 'modifiePar', 'modifieLe',
                  // especesComptees = ce qui reste dans le tiroir ; sortiesCaisse = payé avec l'argent de cette caisse ;
                  // especes = especesComptees + sortiesCaisse (les vraies ventes en espèces) ; annules = tickets annulés
-                 'especesComptees', 'sortiesCaisse', 'annules'],
+                 'especesComptees', 'sortiesCaisse', 'annules', 'fond'],
   Mouvements:   ['id', 'date', 'sens', 'categorie', 'fournisseurId', 'fournisseur', 'reference', 'libelle', 'montant', 'mode',
                  'saisiParId', 'saisiPar', 'saisiLe', 'modifiePar', 'modifieLe', 'compte', 'rapproche', 'rapprocheLe', 'session'],
   // argent qui passe d'un compte à un autre (versements, retraits Orange Money, dépôts en banque…)
@@ -137,7 +137,7 @@ var PH_TABLES = {
 };
 // Colonnes qui contiennent des nombres (les autres sont du texte)
 var PH_NUMERIQUES = ['especes', 'orangeMoney', 'mtnMomo', 'carte', 'cheque', 'assurance', 'credit', 'total', 'logiciel',
-  'ecart', 'montant', 'essais', 'frais', 'montantRecu', 'calcule', 'especesComptees', 'sortiesCaisse', 'annules'];
+  'ecart', 'montant', 'essais', 'frais', 'montantRecu', 'calcule', 'especesComptees', 'sortiesCaisse', 'annules', 'fond'];
 
 var PH_PROFILS_DEPART = [
   ['Gérant(e)', 'admin'],
@@ -320,6 +320,7 @@ function creerPharmacie(store, outils) {
       version: PH_VERSION,
       aujourdhui: aujourdhui,
       nomPharmacie: parametre('nomPharmacie', 'Pharmacie Jireh'),
+      fondCaisse: Number(parametre('fondCaisse', 0)),
       user: publicUser(u),
       pinAChanger: oui(u.pinAChanger),
       droits: droits(u),
@@ -462,8 +463,12 @@ function creerPharmacie(store, outils) {
     if (PH_SESSIONS_CAISSE.indexOf(s) === -1) erreur('Choisissez la caisse du matin ou du soir.');
     var ligne = { date: d, session: s, observation: txt(r.observation, 500) };
     PH_ENCAISSEMENTS.forEach(function (e) { ligne[e.cle] = montant(r[e.cle], e.nom); });
-    // « Espèces » saisies = ce qui est réellement dans le tiroir
-    ligne.especesComptees = ligne.especes;
+    // « Espèces » saisies = tout ce qui est compté dans le tiroir, fond de caisse compris ;
+    // le fond reste dans le tiroir : il ne fait pas partie des ventes et n'est pas versé.
+    ligne.fond = r.fond === '' || r.fond == null ? Number(parametre('fondCaisse', 0)) : montant(r.fond, 'fond de caisse');
+    if (ligne.especes && ligne.especes < ligne.fond) erreur('Les espèces comptées sont plus petites que le fond de caisse : vérifiez (comptez bien le fond avec).');
+    ligne.especesComptees = Math.max(0, ligne.especes - ligne.fond);
+    ligne.especes = ligne.especesComptees;
     ligne.annules = montant(r.annules, 'tickets annulés');
     ligne.logiciel = r.logiciel === '' || r.logiciel == null ? '' : montant(r.logiciel, 'logiciel');
     if (ligne.annules && ligne.logiciel !== '' && ligne.annules > ligne.logiciel) erreur('Les tickets annulés dépassent le chiffre du logiciel.');
@@ -1044,6 +1049,16 @@ function creerPharmacie(store, outils) {
     return n;
   };
 
+  api.reglerFondCaisse = function (jeton, valeur) {
+    var u = session(jeton);
+    exiger(u, 'equipe');
+    var v = montant(valeur, 'fond de caisse');
+    if (store.lire('Parametres').some(function (p) { return p.cle === 'fondCaisse'; })) store.maj('Parametres', 'cle', 'fondCaisse', { valeur: String(v) });
+    else store.ajouter('Parametres', { cle: 'fondCaisse', valeur: String(v) });
+    journaliser(u, 'Fond de caisse', String(v));
+    return v;
+  };
+
   api.journal = function (jeton) {
     var u = session(jeton);
     exiger(u, 'journal');
@@ -1059,4 +1074,4 @@ var PH_FONCTIONS = ['profils', 'connexion', 'deconnexion', 'changerPin', 'charge
   'nouvelleDemande', 'repondreRemplacement', 'traiterDemande', 'annulerDemande', 'historiqueDemandes', 'bilan',
   'equipe', 'enregistrerUtilisateur', 'reinitialiserPin', 'renommerPharmacie', 'journal',
   'tresorerie', 'nouveauTransfert', 'confirmerTransfert', 'annulerTransfert', 'controlerSolde', 'definirSoldeDepart',
-  'banque', 'pointer', 'enregistrerReleve'];
+  'banque', 'pointer', 'enregistrerReleve', 'reglerFondCaisse'];

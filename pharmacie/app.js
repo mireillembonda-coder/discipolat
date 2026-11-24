@@ -445,10 +445,13 @@
     }
     var sorties = Number(r.sortiesCaisse || 0), comptees = r.especesComptees === '' || r.especesComptees == null ? Number(r.especes || 0) - sorties : Number(r.especesComptees);
     var det = S.d.listes.encaissements.filter(function (e) { return Number(r[e.cle]); }).map(function (e) {
-      if (e.cle === 'especes' && sorties) {
-        return '<span class="k">Espèces dans le tiroir</span><span class="num droite">' + F(comptees) + '</span>' +
-          '<span class="k">+ Sorties payées avec la caisse</span><span class="num droite">' + F(sorties) + '</span>' +
-          '<span class="k"><b>= Ventes en espèces</b></span><span class="num droite"><b>' + F(r.especes) + '</b></span>';
+      var fd = Number(r.fond || 0);
+      var lignesFond = e.cle === 'especes' && fd ? '<span class="k">Compté dans le tiroir</span><span class="num droite">' + F(comptees + fd) + '</span>' +
+        '<span class="k">− Fond de caisse (reste)</span><span class="num droite">' + F(fd) + '</span>' : '';
+      if (e.cle === 'especes' && (sorties || fd)) {
+        return lignesFond + '<span class="k">' + (fd ? '= Espèces à verser' : 'Espèces dans le tiroir') + '</span><span class="num droite">' + F(comptees) + '</span>' +
+          (sorties ? '<span class="k">+ Sorties payées avec la caisse</span><span class="num droite">' + F(sorties) + '</span>' +
+            '<span class="k"><b>= Ventes en espèces</b></span><span class="num droite"><b>' + F(r.especes) + '</b></span>' : '');
       }
       return '<span class="k">' + esc(e.nom) + '</span><span class="num droite">' + F(r[e.cle]) + '</span>';
     }).join('');
@@ -481,6 +484,8 @@
     var sess = r.session || (new Date().getHours() < 14 ? 'Matin' : 'Soir');
     var date = r.date || (S.onglet === 'caisse' ? S.dateCaisse : S.d.aujourdhui);
     var comptees = r.id ? (r.especesComptees === '' || r.especesComptees == null ? Number(r.especes || 0) - Number(r.sortiesCaisse || 0) : Number(r.especesComptees)) : 0;
+    var fond = r.id ? Number(r.fond || 0) : Number(S.d.fondCaisse || 0);
+    if (r.id) comptees += fond;   // on réaffiche tout ce qui était dans le tiroir, fond compris
     var html = '<form id="fCaisse" autocomplete="off">' +
       '<div class="champ"><label>Caisse</label><div class="segment" id="segSession">' + L.sessions.map(function (s) {
         return '<button type="button" data-v="' + s + '" class="' + (s === sess ? 'actif' : '') + '">' + s + '</button>';
@@ -489,10 +494,12 @@
       '<div class="section-titre" style="margin-top:6px">Encaissements (en francs CFA)</div><div class="carte" style="padding:8px 14px">' +
       L.encaissements.map(function (e) {
         var val = e.cle === 'especes' ? comptees : Number(r[e.cle] || 0);
-        var nom = e.cle === 'especes' ? 'Espèces dans le tiroir<br><span class="petit doux">ce que vous avez compté</span>' : esc(e.nom);
+        var nom = e.cle === 'especes' ? 'Espèces comptées dans le tiroir<br><span class="petit doux">tout l\'argent, fond de caisse compris</span>' : esc(e.nom);
         return '<div class="montant-ligne"><label for="m_' + e.cle + '">' + nom + '</label><input id="m_' + e.cle + '" data-m="' + e.cle +
           '" inputmode="numeric" placeholder="0" value="' + (val ? formatSaisie(val) : '') + '"></div>' +
-          (e.cle === 'especes' ? '<div id="cSorties"></div>' : '');
+          (e.cle === 'especes' ? '<div class="montant-ligne"><label for="cFond">− Fond de caisse<br><span class="petit doux">reste dans le tiroir</span></label>' +
+            '<input id="cFond" inputmode="numeric" placeholder="0" value="' + (fond ? formatSaisie(fond) : '') + '"></div>' +
+            '<p class="petit" style="margin:0 0 6px;text-align:right">= Espèces à verser : <b class="num" id="cVerser">0 F</b></p><div id="cSorties"></div>' : '');
       }).join('') + '</div>' +
       '<div class="total-bloc"><span>Total des ventes</span><span class="num" id="cTotal">0 F</span></div>' +
       '<div class="champ"><label for="cLogiciel">Chiffre indiqué par le logiciel / ticket Z</label><input id="cLogiciel" inputmode="numeric" placeholder="Facultatif" value="' +
@@ -531,6 +538,10 @@
       function calc() {
         var t = sortiesCaisse;
         v.querySelectorAll('[data-m]').forEach(function (i) { t += Number(lireMontant(i.value) || 0); });
+        var compte = Number(lireMontant(v.querySelector('#m_especes').value) || 0), fd = Number(lireMontant(v.querySelector('#cFond').value) || 0);
+        var aVerser = Math.max(0, compte - fd);
+        t -= compte - aVerser;
+        v.querySelector('#cVerser').textContent = F(aVerser);
         v.querySelector('#cTotal').textContent = F(t);
         var lg = lireMontant(v.querySelector('#cLogiciel').value), an = Number(lireMontant(v.querySelector('#cAnnules').value) || 0);
         var ec = v.querySelector('#cEcart');
@@ -539,7 +550,7 @@
         ec.innerHTML = '<div class="ecart ' + (e === 0 ? 'ok' : 'ko') + '">' + (an ? 'Attendu : ' + F(lg) + ' − ' + F(an) + ' = <b class="num">' + F(attendu) + '</b><br>' : '') +
           (e === 0 ? 'Caisse juste ✓' : (e < 0 ? 'Manque : ' : 'Excédent : ') + '<b class="num">' + F(Math.abs(e)) + '</b>') + '</div>';
       }
-      v.querySelectorAll('[data-m], #cLogiciel, #cAnnules').forEach(function (i) {
+      v.querySelectorAll('[data-m], #cLogiciel, #cAnnules, #cFond').forEach(function (i) {
         i.addEventListener('input', function () {
           var pos = i.value.length - i.selectionStart;
           i.value = formatSaisie(i.value);
@@ -551,7 +562,8 @@
       f.onsubmit = function (ev) {
         ev.preventDefault();
         var o = { id: r.id || '', date: v.querySelector('#cDate').value, session: sess, observation: v.querySelector('#cObs').value,
-          logiciel: lireMontant(v.querySelector('#cLogiciel').value), annules: lireMontant(v.querySelector('#cAnnules').value) };
+          logiciel: lireMontant(v.querySelector('#cLogiciel').value), annules: lireMontant(v.querySelector('#cAnnules').value),
+          fond: lireMontant(v.querySelector('#cFond').value) || '0' };
         v.querySelectorAll('[data-m]').forEach(function (i) { o[i.dataset.m] = lireMontant(i.value); });
         var deja = S.journee[o.date] && S.journee[o.date].recettes.filter(function (x) { return x.session === o.session && x.id !== o.id; });
         if (deja && deja.length && !confirm('Une caisse du ' + o.session.toLowerCase() + ' existe déjà pour ce jour (saisie par ' + deja[0].saisiPar + '). En ajouter une autre ?')) return;
@@ -1066,6 +1078,7 @@
     if (peut('fournisseurs')) items.push(['fournisseurs', 'camion', 'Fournisseurs', (S.d.fournisseurs || []).filter(function (f) { return f.actif; }).length + ' actifs']);
     if (peut('equipe')) items.push(['equipe', 'equipe', 'Équipe et accès', S.d.equipe.length + ' profils']);
     if (peut('equipe')) items.push(['nomPharmacie', 'nom', 'Nom de la pharmacie', S.d.nomPharmacie]);
+    if (peut('equipe')) items.push(['fondCaisse', 'caisse', 'Fond de caisse', F(S.d.fondCaisse || 0) + ' — reste dans le tiroir']);
     if (peut('journal')) items.push(['journal', 'journal', 'Journal d\'activité', 'Qui a fait quoi']);
     items.push(['monCode', 'cle', 'Changer mon code', '']);
     items.push(['deconnexion', 'sortir', 'Se déconnecter', '']);
@@ -1192,6 +1205,19 @@
     });
   }
 
+  function formFondCaisse() {
+    ouvrirFeuille('Fond de caisse', '<form id="fFond"><p class="doux" style="margin-top:0">La monnaie qui reste dans le tiroir en permanence. Elle n\'est ni comptée dans les ventes ni versée : ' +
+      'la caissière compte tout le tiroir et l\'application retire ce montant.</p><div class="champ"><label for="fdV">Montant du fond de caisse</label>' +
+      '<input id="fdV" inputmode="numeric" value="' + formatSaisie(S.d.fondCaisse || 0) + '"></div><button class="btn bloc" type="submit">Enregistrer</button></form>', function (v) {
+      var i = v.querySelector('#fdV');
+      i.addEventListener('input', function () { i.value = formatSaisie(i.value); });
+      v.querySelector('#fFond').onsubmit = function (ev) {
+        ev.preventDefault();
+        appel('reglerFondCaisse', jeton(), lireMontant(i.value) || '0').then(function (n) { S.d.fondCaisse = n; fermerFeuille(); toast('Fond de caisse : ' + F(n) + ' ✓'); afficher('plus'); }, erreur);
+      };
+    });
+  }
+
   function formNomPharmacie() {
     ouvrirFeuille('Nom de la pharmacie', '<form id="fN"><div class="champ"><label for="nP">Nom affiché en haut de l\'application</label><input id="nP" required value="' + esc(S.d.nomPharmacie) +
       '"></div><button class="btn bloc" type="submit">Enregistrer</button></form>', function (v) {
@@ -1267,6 +1293,7 @@
     journal: feuilleJournal,
     monCode: formMonCode,
     nomPharmacie: formNomPharmacie,
+    fondCaisse: formFondCaisse,
     deconnexion: function () { if (confirm('Se déconnecter ?')) deconnexion(); }
   };
 
