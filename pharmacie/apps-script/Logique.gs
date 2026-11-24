@@ -9,7 +9,7 @@
  * Pour changer une liste (catégories de sorties, modes de paiement…), c'est ici.
  */
 
-var PH_VERSION = '1.0';
+var PH_VERSION = '1.1';
 
 /* ------------------------------------------------------------------ */
 /* Rôles et droits                                                     */
@@ -25,7 +25,7 @@ var PH_ROLES = {
   },
   caissiere: {
     nom: 'Caissière',
-    droits: ['recettes', 'demandes']
+    droits: ['recettes', 'mouvements', 'journee', 'demandes']
   },
   employe: {
     nom: 'Employé(e)',

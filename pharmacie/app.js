@@ -862,7 +862,7 @@
           (!u.actif ? '<span class="puce neutre">Désactivé</span>' : u.pinAChanger ? '<span class="puce attente">Code 0000</span>' : '') + '</div><div class="ligne2">' + esc(u.roleNom) + '</div></div><span class="doux">›</span></li>';
       }).join('') + '</ul></div><p class="petit doux">Un nouveau profil (ou un code réinitialisé) se connecte avec le code <b>0000</b>, puis choisit son propre code.</p>' +
         '<div class="carte petit"><b>Qui peut faire quoi</b><br><br><b>Gérant(e)</b> : tout (bilan, validation des demandes, équipe, journal).<br>' +
-        '<b>Caissière principale</b> : caisses, sorties et entrées, fournisseurs, résumé du jour.<br><b>Caissière</b> : saisie des caisses du matin et du soir.<br>' +
+        '<b>Caissière principale</b> : caisses, sorties et entrées, fournisseurs, résumé du jour.<br><b>Caissière</b> : caisses, sorties et entrées, résumé du jour.<br>' +
         '<b>Employé(e)</b> : demandes de permission et remplacements.<br><br>Tout le monde peut faire des demandes.</div>';
       ouvrirFeuille('Équipe et accès', html, function (v) {
         v.querySelector('[data-e=ajouter]').onclick = function () { formUtilisateur({ role: 'employe', actif: true }); };

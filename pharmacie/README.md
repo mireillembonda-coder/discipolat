@@ -11,7 +11,7 @@ Adresse (après mise en ligne) : **https://discipolat-psi.vercel.app/pharmacie/*
 |---|---|
 | **Gérant(e)** | Tout : bilan du mois, validation des demandes, équipe et codes, fournisseurs, journal d'activité, correction de n'importe quelle saisie |
 | **Caissière principale** | Caisses du matin et du soir, **sorties** (fournisseurs, ENEO, CAMWATER, loyer…) et **entrées**, fournisseurs, résumé du jour |
-| **Caissière** | Saisie des caisses du matin et du soir (elle voit le détail de ses caisses, pas celui des autres) |
+| **Caissière** | Caisses du matin et du soir, **sorties** et **entrées**, résumé du jour (comme la principale, sauf la gestion de la liste des fournisseurs) |
 | **Employé(e)** | Demandes de permission, congé, absence maladie, remplacement, échange de poste |
 
 Tout le monde fait ses propres demandes et voit les absences prévues de l'équipe.
