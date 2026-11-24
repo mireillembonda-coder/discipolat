@@ -443,17 +443,28 @@
       return '<div class="carte"><div class="carte-titre"><h2>Caisse du ' + esc(r.session.toLowerCase()) + '</h2><span class="puce">Saisie ✓</span></div>' +
         '<p class="petit doux" style="margin:0">Saisie par ' + esc(r.saisiPar) + '</p></div>';
     }
+    var sorties = Number(r.sortiesCaisse || 0), comptees = r.especesComptees === '' || r.especesComptees == null ? Number(r.especes || 0) - sorties : Number(r.especesComptees);
     var det = S.d.listes.encaissements.filter(function (e) { return Number(r[e.cle]); }).map(function (e) {
+      var fd = Number(r.fond || 0);
+      var lignesFond = e.cle === 'especes' && fd ? '<span class="k">Compté dans le tiroir</span><span class="num droite">' + F(comptees + fd) + '</span>' +
+        '<span class="k">− Fond de caisse (reste)</span><span class="num droite">' + F(fd) + '</span>' : '';
+      if (e.cle === 'especes' && (sorties || fd)) {
+        return lignesFond + '<span class="k">' + (fd ? '= Espèces à verser' : 'Espèces dans le tiroir') + '</span><span class="num droite">' + F(comptees) + '</span>' +
+          (sorties ? '<span class="k">+ Sorties payées avec la caisse</span><span class="num droite">' + F(sorties) + '</span>' +
+            '<span class="k"><b>= Ventes en espèces</b></span><span class="num droite"><b>' + F(r.especes) + '</b></span>' : '');
+      }
       return '<span class="k">' + esc(e.nom) + '</span><span class="num droite">' + F(r[e.cle]) + '</span>';
     }).join('');
     var ecart = '';
     if (r.logiciel !== '' && r.logiciel != null) {
-      var ec = Number(r.ecart || 0);
-      ecart = '<div class="ecart ' + (ec === 0 ? 'ok' : 'ko') + '" style="margin:10px 0 0">Logiciel : <b class="num">' + F(r.logiciel) + '</b> · ' +
+      var ec = Number(r.ecart || 0), an = Number(r.annules || 0);
+      ecart = '<div class="ecart ' + (ec === 0 ? 'ok' : 'ko') + '" style="margin:10px 0 0">Logiciel : <b class="num">' + F(r.logiciel) + '</b>' +
+        (an ? ' − tickets annulés <b class="num">' + F(an) + '</b> = <b class="num">' + F(Number(r.logiciel) - an) + '</b>' : '') + '<br>' +
         (ec === 0 ? 'Caisse juste ✓' : (ec < 0 ? 'Manque ' : 'Excédent ') + '<b class="num">' + F(Math.abs(ec)) + '</b>') + '</div>';
     }
     return '<div class="carte"><div class="carte-titre"><h2>Caisse du ' + esc(r.session.toLowerCase()) + '</h2><b class="num" style="font-size:1.15rem">' + F(r.total) + '</b></div>' +
       '<div class="detail">' + det + '</div>' + ecart +
+      (sorties || comptees ? '<p class="petit" style="margin:10px 0 0">À verser à la caissière principale : <b class="num">' + F(comptees) + '</b></p>' : '') +
       (r.observation ? '<p class="petit" style="margin:10px 0 0">« ' + esc(r.observation) + ' »</p>' : '') +
       '<p class="petit doux" style="margin:10px 0 0">Saisie par ' + esc(r.saisiPar) + ' à ' + esc(heure(r.saisiLe)) +
       (r.modifiePar ? ' · modifiée par ' + esc(r.modifiePar) + ' le ' + esc(dateCourte(r.modifieLe)) + ' à ' + esc(heure(r.modifieLe)) : '') + '</p>' +
@@ -472,6 +483,9 @@
     var L = S.d.listes;
     var sess = r.session || (new Date().getHours() < 14 ? 'Matin' : 'Soir');
     var date = r.date || (S.onglet === 'caisse' ? S.dateCaisse : S.d.aujourdhui);
+    var comptees = r.id ? (r.especesComptees === '' || r.especesComptees == null ? Number(r.especes || 0) - Number(r.sortiesCaisse || 0) : Number(r.especesComptees)) : 0;
+    var fond = r.id ? Number(r.fond || 0) : Number(S.d.fondCaisse || 0);
+    if (r.id) comptees += fond;   // on réaffiche tout ce qui était dans le tiroir, fond compris
     var html = '<form id="fCaisse" autocomplete="off">' +
       '<div class="champ"><label>Caisse</label><div class="segment" id="segSession">' + L.sessions.map(function (s) {
         return '<button type="button" data-v="' + s + '" class="' + (s === sess ? 'actif' : '') + '">' + s + '</button>';
@@ -479,31 +493,64 @@
       '<div class="champ"><label for="cDate">Date</label><input type="date" id="cDate" value="' + date + '" max="' + S.d.aujourdhui + '" required></div>' +
       '<div class="section-titre" style="margin-top:6px">Encaissements (en francs CFA)</div><div class="carte" style="padding:8px 14px">' +
       L.encaissements.map(function (e) {
-        return '<div class="montant-ligne"><label for="m_' + e.cle + '">' + esc(e.nom) + '</label><input id="m_' + e.cle + '" data-m="' + e.cle +
-          '" inputmode="numeric" placeholder="0" value="' + (Number(r[e.cle]) ? formatSaisie(r[e.cle]) : '') + '"></div>';
+        var val = e.cle === 'especes' ? comptees : Number(r[e.cle] || 0);
+        var nom = e.cle === 'especes' ? 'Espèces comptées dans le tiroir<br><span class="petit doux">tout l\'argent, fond de caisse compris</span>' : esc(e.nom);
+        return '<div class="montant-ligne"><label for="m_' + e.cle + '">' + nom + '</label><input id="m_' + e.cle + '" data-m="' + e.cle +
+          '" inputmode="numeric" placeholder="0" value="' + (val ? formatSaisie(val) : '') + '"></div>' +
+          (e.cle === 'especes' ? '<div class="montant-ligne"><label for="cFond">− Fond de caisse<br><span class="petit doux">reste dans le tiroir</span></label>' +
+            '<input id="cFond" inputmode="numeric" placeholder="0" value="' + (fond ? formatSaisie(fond) : '') + '"></div>' +
+            '<p class="petit" style="margin:0 0 6px;text-align:right">= Espèces à verser : <b class="num" id="cVerser">0 F</b></p><div id="cSorties"></div>' : '');
       }).join('') + '</div>' +
-      '<div class="total-bloc"><span>Total encaissé</span><span class="num" id="cTotal">0 F</span></div>' +
+      '<div class="total-bloc"><span>Total des ventes</span><span class="num" id="cTotal">0 F</span></div>' +
       '<div class="champ"><label for="cLogiciel">Chiffre indiqué par le logiciel / ticket Z</label><input id="cLogiciel" inputmode="numeric" placeholder="Facultatif" value="' +
-      (r.logiciel !== '' && r.logiciel != null ? formatSaisie(r.logiciel) : '') + '"><div class="aide">Pour calculer automatiquement le manque ou l\'excédent.</div></div>' +
+      (r.logiciel !== '' && r.logiciel != null ? formatSaisie(r.logiciel) : '') + '"></div>' +
+      '<div class="champ"><label for="cAnnules">Tickets annulés (client parti sans payer)</label><input id="cAnnules" inputmode="numeric" placeholder="0" value="' +
+      (Number(r.annules) ? formatSaisie(r.annules) : '') + '"><div class="aide">Montant total des tickets émis par le logiciel mais pas encaissés. Il est retiré du chiffre du logiciel.</div></div>' +
       '<div id="cEcart"></div>' +
-      '<div class="champ"><label for="cObs">Observation</label><textarea id="cObs" placeholder="Billet abîmé, client à crédit, erreur de rendu…">' + esc(r.observation || '') + '</textarea></div>' +
+      '<div class="champ"><label for="cObs">Observation</label><textarea id="cObs" placeholder="N° des tickets annulés, billet abîmé, erreur de rendu…">' + esc(r.observation || '') + '</textarea></div>' +
       '<button class="btn bloc" type="submit">' + (r.id ? 'Enregistrer les modifications' : 'Enregistrer la caisse') + '</button></form>';
     ouvrirFeuille(r.id ? 'Modifier la caisse' : 'Saisir une caisse', html, function (v) {
-      var f = v.querySelector('#fCaisse');
+      var f = v.querySelector('#fCaisse'), sortiesCaisse = 0, chargee = {};
+      /** Sorties payées avec l'argent du tiroir pour ce jour et cette caisse (matin / soir). */
+      function majSorties() {
+        var d = v.querySelector('#cDate').value, j = S.journee[d];
+        if (!j || !j.mouvements) {
+          if (d && !chargee[d] && peut('journee')) {
+            chargee[d] = true;
+            appel('journee', jeton(), d).then(function (x) { S.journee[d] = x; if (feuilleOuverte) majSorties(); }).catch(function () {});
+          }
+          sortiesCaisse = 0; v.querySelector('#cSorties').innerHTML = ''; calc(); return;
+        }
+        var premiere = j.recettes.filter(function (x) { return x.session === sess; }).sort(function (a, b) { return a.saisiLe < b.saisiLe ? -1 : 1; })[0];
+        var concernee = !premiere || premiere.id === r.id;
+        var liste = j.mouvements.filter(function (m) { return m.sens === 'Sortie' && m.compte === 'caisse' && m.session === sess; });
+        sortiesCaisse = concernee ? liste.reduce(function (a, m) { return a + Number(m.montant || 0); }, 0) : 0;
+        v.querySelector('#cSorties').innerHTML = liste.length && concernee ? '<div class="ecart ok" style="margin:4px 0 8px;background:var(--bleu-clair);color:var(--bleu)">' +
+          '<b>+ ' + F(sortiesCaisse) + '</b> de sorties payées avec la caisse du ' + sess.toLowerCase() + ' (comptées dans les ventes) :<br>' +
+          liste.map(function (m) { return esc(m.fournisseur || m.categorie) + ' ' + F(m.montant); }).join(' · ') + '</div>' :
+          '<p class="petit doux" style="margin:0 0 8px">Une dépense payée avec l\'argent du tiroir ? Enregistrez-la dans « Sorties » (compte Caisse, ' + sess.toLowerCase() + ') : elle sera ajoutée ici automatiquement.</p>';
+        calc();
+      }
       v.querySelectorAll('#segSession button').forEach(function (b) {
-        b.onclick = function () { sess = b.dataset.v; v.querySelectorAll('#segSession button').forEach(function (x) { x.classList.toggle('actif', x === b); }); };
+        b.onclick = function () { sess = b.dataset.v; v.querySelectorAll('#segSession button').forEach(function (x) { x.classList.toggle('actif', x === b); }); majSorties(); };
       });
+      v.querySelector('#cDate').addEventListener('change', majSorties);
       function calc() {
-        var t = 0;
+        var t = sortiesCaisse;
         v.querySelectorAll('[data-m]').forEach(function (i) { t += Number(lireMontant(i.value) || 0); });
+        var compte = Number(lireMontant(v.querySelector('#m_especes').value) || 0), fd = Number(lireMontant(v.querySelector('#cFond').value) || 0);
+        var aVerser = Math.max(0, compte - fd);
+        t -= compte - aVerser;
+        v.querySelector('#cVerser').textContent = F(aVerser);
         v.querySelector('#cTotal').textContent = F(t);
-        var lg = lireMontant(v.querySelector('#cLogiciel').value);
+        var lg = lireMontant(v.querySelector('#cLogiciel').value), an = Number(lireMontant(v.querySelector('#cAnnules').value) || 0);
         var ec = v.querySelector('#cEcart');
         if (lg === '') { ec.innerHTML = ''; return; }
-        var e = t - Number(lg);
-        ec.innerHTML = '<div class="ecart ' + (e === 0 ? 'ok' : 'ko') + '">' + (e === 0 ? 'Caisse juste ✓' : (e < 0 ? 'Manque : ' : 'Excédent : ') + '<b class="num">' + F(Math.abs(e)) + '</b>') + '</div>';
+        var attendu = Number(lg) - an, e = t - attendu;
+        ec.innerHTML = '<div class="ecart ' + (e === 0 ? 'ok' : 'ko') + '">' + (an ? 'Attendu : ' + F(lg) + ' − ' + F(an) + ' = <b class="num">' + F(attendu) + '</b><br>' : '') +
+          (e === 0 ? 'Caisse juste ✓' : (e < 0 ? 'Manque : ' : 'Excédent : ') + '<b class="num">' + F(Math.abs(e)) + '</b>') + '</div>';
       }
-      v.querySelectorAll('[data-m], #cLogiciel').forEach(function (i) {
+      v.querySelectorAll('[data-m], #cLogiciel, #cAnnules, #cFond').forEach(function (i) {
         i.addEventListener('input', function () {
           var pos = i.value.length - i.selectionStart;
           i.value = formatSaisie(i.value);
@@ -511,11 +558,12 @@
           calc();
         });
       });
-      calc();
+      majSorties();
       f.onsubmit = function (ev) {
         ev.preventDefault();
         var o = { id: r.id || '', date: v.querySelector('#cDate').value, session: sess, observation: v.querySelector('#cObs').value,
-          logiciel: lireMontant(v.querySelector('#cLogiciel').value) };
+          logiciel: lireMontant(v.querySelector('#cLogiciel').value), annules: lireMontant(v.querySelector('#cAnnules').value),
+          fond: lireMontant(v.querySelector('#cFond').value) || '0' };
         v.querySelectorAll('[data-m]').forEach(function (i) { o[i.dataset.m] = lireMontant(i.value); });
         var deja = S.journee[o.date] && S.journee[o.date].recettes.filter(function (x) { return x.session === o.session && x.id !== o.id; });
         if (deja && deja.length && !confirm('Une caisse du ' + o.session.toLowerCase() + ' existe déjà pour ce jour (saisie par ' + deja[0].saisiPar + '). En ajouter une autre ?')) return;
@@ -559,7 +607,7 @@
     if (!l.length) return '<p class="vide-msg">' + vide + '</p>';
     return '<ul class="liste">' + l.map(function (x) {
       return '<li><div class="corps"><div class="ligne1"><span>' + esc(x.fournisseur || x.categorie) + '</span><span class="num">' + F(x.montant) + '</span></div>' +
-        '<div class="ligne2">' + (x.fournisseur ? esc(x.categorie) + ' · ' : '') + esc(x.compte ? nomCompte(x.compte) + (x.compte === 'banque' ? ' (' + x.mode.toLowerCase() + ')' : '') : x.mode) +
+        '<div class="ligne2">' + (x.fournisseur ? esc(x.categorie) + ' · ' : '') + esc(x.compte ? nomCompte(x.compte) + (x.compte === 'banque' ? ' (' + x.mode.toLowerCase() + ')' : '') + (x.session ? ' du ' + x.session.toLowerCase() : '') : x.mode) +
         (x.reference ? ' · N° ' + esc(x.reference) : '') + (x.rapproche === 'oui' ? ' · <span class="puce">Passé en banque</span>' : '') +
         (x.libelle ? '<br>' + esc(x.libelle) : '') + '<br>Par ' + esc(x.saisiPar) + ' à ' + esc(heure(x.saisiLe)) +
         (x.modifiePar ? ' · modifiée par ' + esc(x.modifiePar) : '') + '</div>' +
@@ -593,6 +641,7 @@
     var parRole = { caissiere: 'caisse', principale: 'principale', admin: 'banque' };
     var compteDefaut = m.compte || (L.comptesSortie.indexOf(parRole[S.d.user.role]) !== -1 ? parRole[S.d.user.role] : L.comptesSortie[0]);
     var modeBanque = m.mode === 'Virement' ? 'Virement' : 'Chèque';
+    var sessM = m.session || (new Date().getHours() < 14 ? 'Matin' : 'Soir');
     var html = '<form id="fMvt" autocomplete="off">' +
       (m.id ? '' : '<div class="champ"><div class="segment" id="segSens"><button type="button" data-v="Sortie">Sortie (paiement)</button><button type="button" data-v="Entrée">Entrée d\'argent</button></div></div>') +
       '<div class="champ"><label for="oDate">Date</label><input type="date" id="oDate" value="' + date + '" max="' + S.d.aujourdhui + '" required></div>' +
@@ -603,6 +652,8 @@
       '<div class="champ"><label for="oCompte" id="lCompte">L\'argent sort de</label><select id="oCompte">' + L.comptesSortie.map(function (c) {
         return '<option value="' + c + '"' + (c === compteDefaut ? ' selected' : '') + '>' + esc(nomCompte(c)) + '</option>';
       }).join('') + '</select></div>' +
+      '<div class="champ" id="zSession"><label>Avec l\'argent de la caisse du</label><div class="segment" id="segSessM">' + L.sessions.map(function (x) {
+        return '<button type="button" data-v="' + x + '">' + x + '</button>'; }).join('') + '</div></div>' +
       '<div class="champ" id="zBanque"><label for="oMode">Payé par</label><div class="segment" id="segMode"><button type="button" data-v="Chèque">Chèque</button><button type="button" data-v="Virement">Virement</button></div></div>' +
       '<div class="champ" id="zRef"><label for="oRef" id="lRef">N° facture / BL</label><input id="oRef" value="' + esc(m.reference || '') + '" placeholder="Facultatif"></div>' +
       '<div class="champ"><label for="oLib">Détail</label><input id="oLib" value="' + esc(m.libelle || '') + '" placeholder="Ex. : facture de novembre, achat de sachets…"></div>' +
@@ -622,6 +673,8 @@
         nouveau.hidden = selFour.value !== '__nouveau';
         var banque = selCompte.value === 'banque';
         v.querySelector('#zBanque').hidden = !banque;
+        v.querySelector('#zSession').hidden = !(selCompte.value === 'caisse' && sens === 'Sortie');
+        v.querySelectorAll('#segSessM button').forEach(function (b) { b.classList.toggle('actif', b.dataset.v === sessM); });
         v.querySelector('#zRef').hidden = sens !== 'Sortie' && !banque;
         v.querySelector('#lRef').textContent = banque ? (modeBanque === 'Chèque' ? 'N° du chèque' : 'Référence du virement') : 'N° facture / BL';
         v.querySelector('#lCompte').textContent = sens === 'Sortie' ? 'L\'argent sort de' : 'L\'argent arrive dans';
@@ -629,6 +682,7 @@
       }
       selCompte.onchange = majFour;
       v.querySelectorAll('#segMode button').forEach(function (b) { b.onclick = function () { modeBanque = b.dataset.v; majFour(); }; });
+      v.querySelectorAll('#segSessM button').forEach(function (b) { b.onclick = function () { sessM = b.dataset.v; majFour(); }; });
       function majSens() {
         v.querySelectorAll('#segSens button').forEach(function (b) { b.classList.toggle('actif', b.dataset.v === sens); });
         v.querySelector('.feuille-entete h2').textContent = m.id ? 'Modifier l\'opération' : (sens === 'Sortie' ? 'Nouvelle sortie' : 'Nouvelle entrée');
@@ -644,7 +698,7 @@
       f.onsubmit = function (ev) {
         ev.preventDefault();
         var o = { id: m.id || '', sens: sens, date: v.querySelector('#oDate').value, categorie: selCat.value, fournisseurId: selFour.value,
-          montant: lireMontant(mt.value), compte: selCompte.value, mode: modeBanque,
+          montant: lireMontant(mt.value), compte: selCompte.value, mode: modeBanque, session: sessM,
           reference: !v.querySelector('#zRef').hidden ? v.querySelector('#oRef').value : '',
           libelle: v.querySelector('#oLib').value };
         var c = cats().filter(function (x) { return x.nom === o.categorie; })[0];
@@ -975,7 +1029,7 @@
       var html = '<div class="carte"><div class="chiffres">' + ch('Recettes du mois', F(t.recettes), 'fort') + ch('Sorties du mois', F(t.sorties)) +
         ch('Dont dépenses', F(t.charges)) + ch('Entrées diverses', F(t.entrees)) +
         ch('Recettes − sorties', Fsigne(t.recettes + t.entrees - t.sorties), (t.recettes + t.entrees - t.sorties) < 0 ? 'rouge' : '') +
-        ch('Écarts de caisse', Fsigne(t.ecart), t.ecart < 0 ? 'rouge' : '') + '</div>' +
+        ch('Écarts de caisse', Fsigne(t.ecart), t.ecart < 0 ? 'rouge' : '') + ch('Tickets annulés', F(t.annules)) + '</div>' +
         '<p class="petit doux" style="margin:10px 0 0">' + b.nbCaisses + ' caisse' + (b.nbCaisses > 1 ? 's' : '') + ' saisie' + (b.nbCaisses > 1 ? 's' : '') +
         '. « Dont dépenses » ne compte pas les versements en banque.</p></div>';
       html += '<div class="section-titre">Recettes par mode de paiement</div><div class="carte">' + barres(modes, t.recettes) + '</div>';
@@ -999,9 +1053,11 @@
     var b = S.bilan; if (!b) return;
     var L = S.d.listes, lignes;
     if (quoi === 'recettes') {
-      lignes = [['Date', 'Caisse'].concat(L.encaissements.map(function (e) { return e.nom; }), ['Total', 'Logiciel', 'Écart', 'Saisie par', 'Observation'])];
+      lignes = [['Date', 'Caisse', 'Espèces dans le tiroir', 'Sorties payées en caisse'].concat(L.encaissements.map(function (e) { return e.cle === 'especes' ? 'Ventes en espèces' : e.nom; }),
+        ['Total ventes', 'Logiciel', 'Tickets annulés', 'Écart', 'Saisie par', 'Observation'])];
       b.recettes.forEach(function (r) {
-        lignes.push([r.date, r.session].concat(L.encaissements.map(function (e) { return r[e.cle]; }), [r.total, r.logiciel, r.ecart, r.saisiPar, r.observation]));
+        lignes.push([r.date, r.session, r.especesComptees, r.sortiesCaisse].concat(L.encaissements.map(function (e) { return r[e.cle]; }),
+          [r.total, r.logiciel, r.annules, r.ecart, r.saisiPar, r.observation]));
       });
     } else {
       lignes = [['Date', 'Sens', 'Catégorie', 'Fournisseur', 'N° facture/chèque', 'Détail', 'Compte', 'Mode', 'Montant', 'Saisie par']];
@@ -1022,6 +1078,7 @@
     if (peut('fournisseurs')) items.push(['fournisseurs', 'camion', 'Fournisseurs', (S.d.fournisseurs || []).filter(function (f) { return f.actif; }).length + ' actifs']);
     if (peut('equipe')) items.push(['equipe', 'equipe', 'Équipe et accès', S.d.equipe.length + ' profils']);
     if (peut('equipe')) items.push(['nomPharmacie', 'nom', 'Nom de la pharmacie', S.d.nomPharmacie]);
+    if (peut('equipe')) items.push(['fondCaisse', 'caisse', 'Fond de caisse', F(S.d.fondCaisse || 0) + ' — reste dans le tiroir']);
     if (peut('journal')) items.push(['journal', 'journal', 'Journal d\'activité', 'Qui a fait quoi']);
     items.push(['monCode', 'cle', 'Changer mon code', '']);
     items.push(['deconnexion', 'sortir', 'Se déconnecter', '']);
@@ -1148,6 +1205,19 @@
     });
   }
 
+  function formFondCaisse() {
+    ouvrirFeuille('Fond de caisse', '<form id="fFond"><p class="doux" style="margin-top:0">La monnaie qui reste dans le tiroir en permanence. Elle n\'est ni comptée dans les ventes ni versée : ' +
+      'la caissière compte tout le tiroir et l\'application retire ce montant.</p><div class="champ"><label for="fdV">Montant du fond de caisse</label>' +
+      '<input id="fdV" inputmode="numeric" value="' + formatSaisie(S.d.fondCaisse || 0) + '"></div><button class="btn bloc" type="submit">Enregistrer</button></form>', function (v) {
+      var i = v.querySelector('#fdV');
+      i.addEventListener('input', function () { i.value = formatSaisie(i.value); });
+      v.querySelector('#fFond').onsubmit = function (ev) {
+        ev.preventDefault();
+        appel('reglerFondCaisse', jeton(), lireMontant(i.value) || '0').then(function (n) { S.d.fondCaisse = n; fermerFeuille(); toast('Fond de caisse : ' + F(n) + ' ✓'); afficher('plus'); }, erreur);
+      };
+    });
+  }
+
   function formNomPharmacie() {
     ouvrirFeuille('Nom de la pharmacie', '<form id="fN"><div class="champ"><label for="nP">Nom affiché en haut de l\'application</label><input id="nP" required value="' + esc(S.d.nomPharmacie) +
       '"></div><button class="btn bloc" type="submit">Enregistrer</button></form>', function (v) {
@@ -1223,6 +1293,7 @@
     journal: feuilleJournal,
     monCode: formMonCode,
     nomPharmacie: formNomPharmacie,
+    fondCaisse: formFondCaisse,
     deconnexion: function () { if (confirm('Se déconnecter ?')) deconnexion(); }
   };
 
